@@ -35,7 +35,7 @@ This product re-inserts the team at the highest-leverage moment: **before the ag
 
 ## 3. Stack
 
-- **Next.js 15** (App Router, `output: "standalone"`) — one Node process serves UI + API.
+- **Next.js 16** (App Router, `output: "standalone"`) — one Node process serves UI + API. _(Scaffold pulled the current stable 16.x; patterns we use are App-Router-stable across 15→16.)_
 - **Prisma 6.16+** (TypeScript/WASM engine — no platform binaries in Docker) + **SQLite** (one file on a named volume, `journal_mode=WAL`).
 - **better-auth** — `emailAndPassword` now; OIDC/OAuth plugins drop in later without rework. DB-backed sessions in SQLite. **Argon2id** hashing.
 - **CodeMirror 6** — markdown source editor (EDIT mode).

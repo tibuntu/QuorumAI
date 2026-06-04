@@ -36,4 +36,4 @@ _(Quickstart will be fleshed out as M1 lands.)_
 
 ## Stack
 
-Next.js 15 · Prisma + SQLite (WAL) · better-auth · CodeMirror 6 · react-markdown · Server-Sent Events. Packaged as a single standalone container.
+Next.js 16 · Prisma + SQLite (WAL) · better-auth · CodeMirror 6 · react-markdown · Server-Sent Events. Packaged as a single standalone container.
