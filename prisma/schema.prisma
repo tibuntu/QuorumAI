@@ -18,6 +18,12 @@ model User {
   role          String?   @default("member")
   sessions      Session[]
   accounts      Account[]
+  apiTokens        ApiToken[]
+  ownedDocuments   Document[]        @relation("DocumentOwner")
+  authoredVersions DocumentVersion[]
+  annotations      Annotation[]
+  comments         Comment[]
+  reviews          Review[]
 }
 
 model Session {
@@ -63,4 +69,100 @@ model Verification {
   updatedAt  DateTime
 
   @@index([identifier])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  label      String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Document {
+  id                String           @id @default(cuid())
+  title             String
+  ownerId           String
+  owner             User             @relation("DocumentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  state             String           @default("DRAFT")
+  requiredApprovals Int              @default(1)
+  source            String           @default("WEB")
+  agentContext      String?
+  currentVersionId  String?          @unique
+  currentVersion    DocumentVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  versions          DocumentVersion[] @relation("DocumentVersions")
+  annotations       Annotation[]
+  reviews           Review[]
+
+  @@index([ownerId])
+  @@index([state])
+}
+
+model DocumentVersion {
+  id            String   @id @default(cuid())
+  documentId    String
+  document      Document @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  markdown      String
+  contentHash   String
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  currentFor    Document? @relation("CurrentVersion")
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId])
+}
+
+model Annotation {
+  id                 String   @id @default(cuid())
+  documentId         String
+  document           Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdOnVersionId String
+  kind               String   @default("COMMENT")
+  anchorExact        String?
+  anchorPrefix       String?
+  anchorSuffix       String?
+  startOffset        Int?
+  endOffset          Int?
+  status             String   @default("ACTIVE")
+  threadStatus       String   @default("OPEN")
+  authorId           String
+  author             User     @relation(fields: [authorId], references: [id])
+  createdAt          DateTime @default(now())
+  comments           Comment[]
+
+  @@index([documentId])
+}
+
+model Comment {
+  id           String     @id @default(cuid())
+  annotationId String
+  annotation   Annotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id])
+  body         String
+  createdAt    DateTime   @default(now())
+
+  @@index([annotationId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  reviewerId  String
+  reviewer    User     @relation(fields: [reviewerId], references: [id])
+  verdict     String
+  onVersionId String
+  dismissed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
 }
