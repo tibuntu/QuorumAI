@@ -1,0 +1,33 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-04-quorum-ai-foundation.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 0: Project scaffold & tooling",
+      "status": "pending",
+      "description": "**Goal:** A buildable Next.js 15 + TypeScript + Tailwind project with Vitest and Playwright wired up, merged into the existing repo.\n\n**Verify:** pnpm build && pnpm test:unit\n\n```json:metadata\n{\"files\": [\"package.json\", \"next.config.ts\", \"vitest.config.ts\", \"playwright.config.ts\", \"tests/unit/smoke.test.ts\", \".env.example\"], \"verifyCommand\": \"pnpm build && pnpm test:unit\", \"acceptanceCriteria\": [\"pnpm build succeeds\", \"smoke test passes\", \"playwright installed\", \"README/docs/.gitignore intact\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 1: Persistence + authentication backend",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** SQLite persistence via Prisma with WAL enabled, plus a working better-auth backend (email+password, DB sessions) whose auth tables are generated into the schema.\n\n**Verify:** pnpm test:unit -- tests/unit/auth.test.ts\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"lib/db.ts\", \"lib/auth.ts\", \"lib/auth-client.ts\", \"app/api/auth/[...all]/route.ts\", \"tests/unit/auth.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/auth.test.ts\", \"acceptanceCriteria\": [\"migrate creates auth tables\", \"WAL mode active\", \"signUp then signIn returns session\", \"user.role defaults to member\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 2: Domain schema",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "**Goal:** The complete M1 domain data model exists and round-trips through Prisma, with foreign keys to the better-auth User.\n\n**Verify:** pnpm test:unit -- tests/unit/schema.test.ts\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"tests/unit/schema.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/schema.test.ts\", \"acceptanceCriteria\": [\"domain migration applies with all tables+enums\", \"document chain round-trips\", \"delete Document cascades\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 3: Auth UI + authenticated shell",
+      "status": "pending",
+      "blockedBy": [3],
+      "description": "**Goal:** Working /register and /login pages, a home showing the signed-in user + sign-out, and a guard redirecting unauthenticated users to /login.\n\n**Verify:** pnpm test:e2e -- tests/e2e/auth.spec.ts\n\n```json:metadata\n{\"files\": [\"app/login/page.tsx\", \"app/register/page.tsx\", \"app/app/layout.tsx\", \"app/app/page.tsx\", \"components/SignOutButton.tsx\", \"middleware.ts\", \"lib/session.ts\", \"app/page.tsx\", \"tests/e2e/auth.spec.ts\"], \"verifyCommand\": \"pnpm test:e2e -- tests/e2e/auth.spec.ts\", \"acceptanceCriteria\": [\"signed-out /app redirects to /login\", \"register lands on /app showing email\", \"sign out re-blocks /app\", \"e2e passes\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-04T00:00:00Z"
+}
