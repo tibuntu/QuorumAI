@@ -15,4 +15,4 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Enable WAL mode for better concurrent read performance
-prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL;").catch(() => {});
+prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL;").catch((err) => { console.error("[db] Failed to set WAL mode:", err); });
