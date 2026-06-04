@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+data
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+playwright-report
+test-results
+coverage
