@@ -24,7 +24,7 @@
     {
       "id": 4,
       "subject": "Task 3: Auth UI + authenticated shell",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [3],
       "description": "**Goal:** Working /register and /login pages, a home showing the signed-in user + sign-out, and a guard redirecting unauthenticated users to /login.\n\n**Verify:** pnpm test:e2e -- tests/e2e/auth.spec.ts\n\n```json:metadata\n{\"files\": [\"app/login/page.tsx\", \"app/register/page.tsx\", \"app/app/layout.tsx\", \"app/app/page.tsx\", \"components/SignOutButton.tsx\", \"middleware.ts\", \"lib/session.ts\", \"app/page.tsx\", \"tests/e2e/auth.spec.ts\"], \"verifyCommand\": \"pnpm test:e2e -- tests/e2e/auth.spec.ts\", \"acceptanceCriteria\": [\"signed-out /app redirects to /login\", \"register lands on /app showing email\", \"sign out re-blocks /app\", \"e2e passes\"]}\n```"
     }
