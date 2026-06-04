@@ -1,0 +1,19 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-04-quorum-ai-ci-and-docker.md",
+  "tasks": [
+    {
+      "id": 12,
+      "subject": "CD1: Dockerfile + docker-compose",
+      "status": "pending",
+      "description": "**Goal:** docker compose up builds/runs Quorum AI on :3000 with SQLite on a named volume, migrating on start.\n\n**Verify:** docker build then docker compose up + curl /login → 200\n\n```json:metadata\n{\"files\": [\"Dockerfile\", \".dockerignore\", \"docker-compose.yml\", \"next.config.ts\"], \"verifyCommand\": \"docker build -t quorum-ai . && docker compose up -d && curl -sf -o /dev/null -w '%{http_code}' http://localhost:3000/login\", \"acceptanceCriteria\": [\"docker build succeeds\", \"compose serves /login 200\", \"user persists across restart\", \"migrate on start\"]}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "CD2: GitHub Actions CI",
+      "status": "pending",
+      "blockedBy": [12],
+      "description": "**Goal:** push/PR to main runs install, lint, unit, build, e2e, and docker image build — all green.\n\n**Verify:** valid YAML; green run after push.\n\n```json:metadata\n{\"files\": [\".github/workflows/ci.yml\"], \"verifyCommand\": \"test -f .github/workflows/ci.yml && echo present\", \"acceptanceCriteria\": [\"lint-test-build green\", \"e2e job runs\", \"docker build job\", \"triggers on push+PR to main\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-04T00:00:00Z"
+}
