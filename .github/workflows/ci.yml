@@ -10,7 +10,9 @@ jobs:
   lint-test-build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: "file:./data/app.db"
+      # Absolute path so the prisma CLI (migrate) and vitest open the SAME SQLite file
+      # regardless of each process's working directory.
+      DATABASE_URL: "file:${{ github.workspace }}/data/app.db"
       BETTER_AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
       BETTER_AUTH_URL: "http://localhost:3000"
     steps:
@@ -22,15 +24,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      # DB-backed unit tests (auth, schema) need a migrated SQLite DB, like the e2e job.
-      - run: mkdir -p data && pnpm dlx prisma migrate deploy
+      # DB-backed unit tests (auth, schema) need a migrated SQLite DB. Use the project's
+      # pinned prisma (pnpm exec), not pnpm dlx (which fetches a different version).
+      - run: mkdir -p data && pnpm exec prisma migrate deploy
       - run: pnpm test:unit
       - run: pnpm build
 
   e2e:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: "file:./data/app.db"
+      DATABASE_URL: "file:${{ github.workspace }}/data/app.db"
       BETTER_AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
       BETTER_AUTH_URL: "http://localhost:3000"
     steps:
@@ -41,7 +44,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: mkdir -p data && pnpm dlx prisma migrate deploy
+      - run: mkdir -p data && pnpm exec prisma migrate deploy
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - if: failure()
