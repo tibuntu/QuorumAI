@@ -1,5 +1,8 @@
 "use client";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 type TokenRow = { id: string; label: string; lastUsedAt: Date | string | null; createdAt: Date | string };
 
@@ -47,69 +50,72 @@ export default function TokenManager({
 
   return (
     <section className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">API tokens</h1>
+      <h1 className="text-2xl font-semibold text-foreground">API tokens</h1>
 
-      <form onSubmit={onCreate} className="flex items-end gap-3 rounded border p-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm">
-          Label
-          <input
-            aria-label="token label"
-            placeholder="e.g. ci"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            className="border p-2"
-          />
-        </label>
-        <button type="submit" disabled={submitting} className="bg-black p-2 text-white disabled:opacity-50">
-          Create token
-        </button>
-      </form>
+      <Card className="p-4">
+        <form onSubmit={onCreate} className="flex items-end gap-3">
+          <label className="flex flex-1 flex-col gap-1 text-sm text-foreground">
+            Label
+            <Input
+              aria-label="token label"
+              placeholder="e.g. ci"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+            />
+          </label>
+          <Button type="submit" disabled={submitting}>
+            Create token
+          </Button>
+        </form>
+      </Card>
 
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-[var(--state-changes)]">
           {error}
         </p>
       )}
 
       {created && (
-        <div className="flex flex-col gap-2 rounded border border-green-600 bg-green-50 p-4">
-          <p className="text-sm font-medium">Copy this token now — it won&apos;t be shown again.</p>
-          <input
+        <Card className="flex flex-col gap-2 border-[var(--state-approved)] bg-[var(--state-approved-bg)] p-4">
+          <p className="text-sm font-medium text-foreground">Copy this token now — it won&apos;t be shown again.</p>
+          <Input
             data-testid="new-token"
             readOnly
             value={created}
-            className="border p-2 font-mono text-sm"
+            className="font-mono"
             onFocus={(e) => e.currentTarget.select()}
           />
-          <button onClick={() => setCreated(null)} className="self-start text-sm underline">
+          <Button variant="ghost" size="sm" onClick={() => setCreated(null)} className="self-start">
             Done
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {tokens.length === 0 ? (
-        <p className="text-sm text-gray-500">No tokens yet.</p>
+        <Card className="p-6 text-sm text-muted">No tokens yet.</Card>
       ) : (
-        <ul className="flex flex-col divide-y rounded border">
+        <ul className="flex flex-col gap-2">
           {tokens.map((t) => (
-            <li key={t.id} className="flex items-center justify-between gap-4 p-3">
-              <span className="flex flex-col">
-                <span className="font-medium">{t.label}</span>
-                <span className="text-xs text-gray-500">
-                  {t.lastUsedAt ? `Last used ${new Date(t.lastUsedAt).toLocaleString()}` : "Never used"}
+            <li key={t.id}>
+              <Card className="flex items-center justify-between gap-4 p-3">
+                <span className="flex flex-col">
+                  <span className="font-medium text-foreground">{t.label}</span>
+                  <span className="text-xs text-muted">
+                    {t.lastUsedAt ? `Last used ${new Date(t.lastUsedAt).toLocaleString()}` : "Never used"}
+                  </span>
                 </span>
-              </span>
-              <button onClick={() => onRevoke(t.id)} className="text-sm text-red-600 underline">
-                Revoke
-              </button>
+                <Button variant="danger" size="sm" onClick={() => onRevoke(t.id)}>
+                  Revoke
+                </Button>
+              </Card>
             </li>
           ))}
         </ul>
       )}
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">CLI setup</h2>
-        <pre className="overflow-x-auto rounded border bg-gray-50 p-4 text-xs">
+        <h2 className="text-lg font-semibold text-foreground">CLI setup</h2>
+        <pre className="overflow-x-auto rounded-[var(--radius-app)] border border-border bg-[var(--state-neutral-bg)] p-4 text-xs text-foreground">
 {`export QUORUM_BASE_URL="${baseUrl || "http://localhost:3000"}"
 export QUORUM_API_TOKEN="qai_…"   # the token shown above
 # /push-plan and /pull-feedback ship in this repo's .claude/commands/`}

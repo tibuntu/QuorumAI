@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 const TYPE_LABELS: Record<string, string> = {
   comment: "New comment",
@@ -42,30 +44,32 @@ export default function InboxList({ initial }: { initial: Notification[] }) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Inbox</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Inbox</h1>
         {items.length > 0 && (
-          <button onClick={onMarkAll} className="text-sm underline">
+          <Button variant="secondary" size="sm" onClick={onMarkAll}>
             Mark all read
-          </button>
+          </Button>
         )}
       </div>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-500">No notifications.</p>
+        <Card className="p-6 text-sm text-muted">No notifications.</Card>
       ) : (
-        <ul className="flex flex-col divide-y rounded border">
+        <ul className="flex flex-col gap-2">
           {items.map((n) => (
             <li key={n.id} data-testid="notification">
-              <Link
-                href={`/app/documents/${n.documentId}`}
-                onClick={() => onOpen(n.id)}
-                className={`flex items-center justify-between gap-4 p-3 hover:bg-gray-50 ${n.read ? "text-gray-500" : "font-medium"}`}
-              >
-                <span className="flex flex-col">
-                  <span>{TYPE_LABELS[n.type] ?? n.type}</span>
-                  <span className="text-xs text-gray-500">{n.document.title}</span>
-                </span>
-                <span className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleString()}</span>
-              </Link>
+              <Card className={`transition-colors hover:bg-primary-subtle ${n.read ? "" : "border-l-2 border-l-primary"}`}>
+                <Link
+                  href={`/app/documents/${n.documentId}`}
+                  onClick={() => onOpen(n.id)}
+                  className={`flex items-center justify-between gap-4 p-3 ${n.read ? "text-muted" : "font-medium text-foreground"}`}
+                >
+                  <span className="flex flex-col">
+                    <span>{TYPE_LABELS[n.type] ?? n.type}</span>
+                    <span className="text-xs text-muted">{n.document.title}</span>
+                  </span>
+                  <span className="text-xs text-muted">{new Date(n.createdAt).toLocaleString()}</span>
+                </Link>
+              </Card>
             </li>
           ))}
         </ul>

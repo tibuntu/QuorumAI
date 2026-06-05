@@ -8,7 +8,7 @@ export default async function InboxPage() {
   if (!session) redirect("/login");
   const initial = await listNotifications(session.user.id);
   return (
-    <div className="mx-auto mt-12 flex w-full max-w-3xl flex-col gap-8 px-4">
+    <div className="flex w-full max-w-3xl flex-col gap-8">
       <InboxList initial={initial} />
     </div>
   );
