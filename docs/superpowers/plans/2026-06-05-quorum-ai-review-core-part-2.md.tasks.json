@@ -1,0 +1,66 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-05-quorum-ai-review-core-part-2.md",
+  "tasks": [
+    {
+      "id": 8,
+      "subject": "Task 1: Version foreign keys (schema migration)",
+      "status": "pending",
+      "description": "**Goal:** Convert Annotation.createdOnVersionId and Review.onVersionId into real relations to DocumentVersion.\n\n**Verify:** pnpm prisma migrate dev --name version_fks; pnpm test:unit; pnpm build\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations\"], \"verifyCommand\": \"pnpm test:unit && pnpm build\", \"acceptanceCriteria\": [\"Annotation.createdOnVersion FK + index\", \"Review.onVersion FK + index\", \"DocumentVersion inverse arrays\", \"migration applies; tests+build pass\"]}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 2: Re-anchoring (relocate) in anchoring lib",
+      "status": "pending",
+      "description": "**Goal:** Pure relocate(text, quote) → ACTIVE/MOVED/ORPHANED with range.\n\n**Verify:** pnpm test:unit -- tests/unit/anchoring.relocate.test.ts\n\n```json:metadata\n{\"files\": [\"lib/anchoring.ts\", \"tests/unit/anchoring.relocate.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/anchoring.relocate.test.ts\", \"acceptanceCriteria\": [\"ACTIVE on shifted exact\", \"MOVED on light edit\", \"ORPHANED on removal\", \"threshold respected\"]}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 3: In-memory document event bus (lib/events.ts)",
+      "status": "pending",
+      "description": "**Goal:** Process-local pub/sub keyed by document id.\n\n**Verify:** pnpm test:unit -- tests/unit/events.test.ts\n\n```json:metadata\n{\"files\": [\"lib/events.ts\", \"tests/unit/events.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/events.test.ts\", \"acceptanceCriteria\": [\"delivers to same-doc subscribers\", \"isolates by doc id\", \"unsubscribe stops delivery\"]}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 4: Versions service (createVersion)",
+      "status": "pending",
+      "blockedBy": [8, 9, 10],
+      "description": "**Goal:** createVersion with optimistic concurrency, re-anchor, approval dismissal, state recompute, publish version.created.\n\n**Verify:** pnpm test:unit -- tests/unit/versions.test.ts\n\n```json:metadata\n{\"files\": [\"lib/versions.ts\", \"tests/unit/versions.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/versions.test.ts\", \"acceptanceCriteria\": [\"ConcurrencyError on stale\", \"no-op on unchanged\", \"re-anchor classifies+updates\", \"approvals dismissed+state recomputed\"]}\n```"
+    },
+    {
+      "id": 12,
+      "subject": "Task 5: PATCH version route + publish wiring",
+      "status": "pending",
+      "blockedBy": [10, 11],
+      "description": "**Goal:** PATCH /api/documents/:id → createVersion; existing services publish events.\n\n**Verify:** pnpm test:unit && pnpm build\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/route.ts\", \"lib/annotations.ts\", \"lib/reviews.ts\"], \"verifyCommand\": \"pnpm test:unit && pnpm build\", \"acceptanceCriteria\": [\"PATCH success/409/400/401\", \"services publish events\", \"tests+build pass\"]}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "Task 6: SSE stream route",
+      "status": "pending",
+      "blockedBy": [10],
+      "description": "**Goal:** GET /api/documents/:id/stream → SSE from the event bus.\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/stream/route.ts\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"401 unauth\", \"text/event-stream\", \"data frames per event\", \"teardown on cancel\"]}\n```"
+    },
+    {
+      "id": 14,
+      "subject": "Task 7: Markdown editor + save (versioning UI)",
+      "status": "pending",
+      "blockedBy": [12],
+      "description": "**Goal:** CodeMirror edit mode + live preview; Save → PATCH version (409 handled); success refetches.\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"components/DocumentEditor.tsx\", \"components/DocumentView.tsx\", \"app/app/documents/[id]/page.tsx\", \"package.json\", \"pnpm-lock.yaml\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"editor+preview toggle\", \"save PATCHes version\", \"409 reload message\", \"success re-renders new version\"]}\n```"
+    },
+    {
+      "id": 15,
+      "subject": "Task 8: Live SSE merge + MOVED/ORPHANED rendering",
+      "status": "pending",
+      "blockedBy": [13, 14],
+      "description": "**Goal:** EventSource subscription merges events; MOVED highlighted distinctly, ORPHANED grouped; shared relocate for positioning.\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"lib/highlight.ts\", \"components/DocumentView.tsx\", \"components/CommentSidebar.tsx\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"MOVED distinct, ORPHANED unmarked\", \"orphaned sidebar section\", \"live cross-client merge\", \"build passes\"]}\n```"
+    },
+    {
+      "id": 16,
+      "subject": "Task 9: E2E — versioning + live collaboration",
+      "status": "pending",
+      "blockedBy": [14, 15],
+      "description": "**Goal:** Playwright proof: edit→re-anchor (MOVED+ORPHANED), approval reset, live cross-client updates.\n\n**Verify:** pnpm test:e2e -- tests/e2e/versioning.spec.ts\n\n```json:metadata\n{\"files\": [\"tests/e2e/versioning.spec.ts\"], \"verifyCommand\": \"pnpm test:e2e -- tests/e2e/versioning.spec.ts\", \"acceptanceCriteria\": [\"MOVED after edit\", \"orphaned after delete\", \"approval resets to Open\", \"live cross-client comment\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-05T00:00:00Z"
+}
