@@ -1,8 +1,13 @@
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
-onlyBuiltDependencies:
-  - "@prisma/client"
-  - "@prisma/engines"
-  - better-sqlite3
-  - prisma
+overrides:
+  better-call: 2.0.3
+  kysely: 0.28.17
+# pnpm 11 replaced onlyBuiltDependencies/ignoredBuiltDependencies with a single
+# allowBuilds map (true = run build scripts, false = skip). strictDepBuilds is on
+# by default, so every dependency with a build script must be listed explicitly.
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  better-sqlite3: true
+  prisma: true
+  sharp: false
+  unrs-resolver: false

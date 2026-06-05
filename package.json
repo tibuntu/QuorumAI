@@ -30,12 +30,6 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"
   },
-  "pnpm": {
-    "overrides": {
-      "better-call": "2.0.3",
-      "kysely": "0.28.17"
-    }
-  },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": "eslint --fix"
   },
