@@ -28,6 +28,7 @@ export async function createAnnotation(
     include: { comments: { include: { author: { select: { name: true, email: true } } } }, author: { select: { name: true, email: true } } },
   });
   publish(documentId, { type: "annotation.created", annotation });
+  await notifyParticipants(documentId, userId, "comment").catch(() => {});
   return annotation;
 }
 
