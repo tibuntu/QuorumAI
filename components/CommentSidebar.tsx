@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import type { ClientAnnotation } from "@/components/DocumentView";
+import { Card } from "@/components/ui/Card";
+import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
 
 function authorLabel(author?: { name?: string | null; email?: string | null } | null): string {
   return author?.name ?? author?.email ?? "You";
@@ -31,47 +34,47 @@ function ThreadCard({
   }
 
   return (
-    <div
+    <Card
       data-testid="thread"
       onClick={() => onSelect(annotation.id)}
-      className={`flex flex-col gap-2 rounded border p-3 ${resolved ? "opacity-50" : ""} ${focused ? "ring-2 ring-blue-400" : ""}`}
+      className={`flex cursor-pointer flex-col gap-2 p-3 ${resolved ? "opacity-50" : ""} ${focused ? "ring-2 ring-primary/40" : ""}`}
     >
       {annotation.anchorExact && (
-        <p className="border-l-2 border-yellow-400 pl-2 text-xs italic text-gray-600">
+        <p className="border-l-2 border-[var(--state-open)] pl-2 text-xs italic text-muted">
           &ldquo;{annotation.anchorExact.slice(0, 80)}&rdquo;
-          {status === "MOVED" && <span className="text-xs text-orange-600"> moved</span>}
+          {status === "MOVED" && <span className="text-xs text-[var(--state-open)]"> moved</span>}
         </p>
       )}
       <ul className="flex flex-col gap-1">
         {annotation.comments.map((c) => (
-          <li key={c.id} className="text-sm">
+          <li key={c.id} className="text-sm text-foreground">
             <span className="font-medium">{authorLabel(c.author)}: </span>
             {c.body}
           </li>
         ))}
       </ul>
       <div className="flex flex-col gap-1">
-        <textarea
+        <Textarea
           aria-label="reply"
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           rows={2}
-          className="border p-1 text-sm"
           placeholder="Reply"
         />
         <div className="flex gap-2">
-          <button onClick={submitReply} className="rounded bg-black px-2 py-1 text-xs text-white">
+          <Button variant="primary" size="sm" onClick={submitReply}>
             Reply
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onToggleThread(annotation.id, resolved ? "OPEN" : "RESOLVED")}
-            className="rounded border px-2 py-1 text-xs"
           >
             {resolved ? "Reopen" : "Resolve"}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -95,9 +98,9 @@ export default function CommentSidebar({
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-gray-500">Comments</h2>
+      <h2 className="text-sm font-semibold text-muted">Comments</h2>
       {live.length === 0 && orphaned.length === 0 ? (
-        <p className="text-sm text-gray-400">Select text in the document to add a comment.</p>
+        <p className="text-sm text-muted">Select text in the document to add a comment.</p>
       ) : (
         <>
           {live.map((a) => (
@@ -113,7 +116,7 @@ export default function CommentSidebar({
           ))}
           {orphaned.length > 0 && (
             <div data-testid="orphaned-section" className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold uppercase text-gray-400">Orphaned comments</h3>
+              <h3 className="text-xs font-semibold uppercase text-muted">Orphaned comments</h3>
               {orphaned.map((a) => (
                 <ThreadCard key={a.id} annotation={a} status="ORPHANED" focused={focusedId === a.id}
                   onSelect={onSelectThread} onAddComment={onAddComment} onToggleThread={onToggleThread} />
