@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { listDocuments } from "@/lib/documents";
 import NewDocumentForm from "@/components/NewDocumentForm";
+import { Card } from "@/components/ui/Card";
+import { Badge, stateTone } from "@/components/ui/Badge";
 
 const STATE_LABELS: Record<string, string> = {
   DRAFT: "Draft",
@@ -14,33 +16,34 @@ export default async function Home() {
   const documents = await listDocuments();
 
   return (
-    <div className="mx-auto mt-12 flex w-full max-w-3xl flex-col gap-8 px-4">
-      <section className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold">Documents</h1>
+    <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
         {documents.length === 0 ? (
-          <p className="text-sm text-gray-500">No documents yet. Create one below.</p>
+          <Card className="p-6 text-sm text-muted">
+            No documents yet — create one below.
+          </Card>
         ) : (
-          <ul className="flex flex-col divide-y rounded border">
+          <div className="grid gap-4 sm:grid-cols-2">
             {documents.map((doc) => (
-              <li key={doc.id}>
-                <Link
-                  href={`/app/documents/${doc.id}`}
-                  className="flex items-center justify-between gap-4 p-3 hover:bg-gray-50"
-                >
-                  <span className="flex flex-col">
-                    <span className="font-medium">{doc.title}</span>
-                    <span className="text-xs text-gray-500">{doc.owner?.name ?? doc.owner?.email}</span>
-                  </span>
-                  <span className="rounded bg-gray-100 px-2 py-1 text-xs">
-                    {STATE_LABELS[doc.state] ?? doc.state}
-                  </span>
-                </Link>
-              </li>
+              <Link key={doc.id} href={`/app/documents/${doc.id}`}>
+                <Card className="flex h-full flex-col gap-2 p-4 transition-colors hover:bg-primary-subtle">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-medium text-foreground">{doc.title}</span>
+                    <Badge tone={stateTone(doc.state)}>
+                      {STATE_LABELS[doc.state] ?? doc.state}
+                    </Badge>
+                  </div>
+                  <span className="text-sm text-muted">{doc.owner?.name ?? doc.owner?.email}</span>
+                </Card>
+              </Link>
             ))}
-          </ul>
+          </div>
         )}
       </section>
-      <NewDocumentForm />
+      <Card className="p-6">
+        <NewDocumentForm />
+      </Card>
     </div>
   );
 }
