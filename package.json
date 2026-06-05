@@ -39,7 +39,7 @@
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^20",
+    "@types/node": "^24.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.8",
@@ -50,7 +50,7 @@
     "lint-staged": "^17.0.7",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
+    "typescript": "^6.0.0",
     "vitest": "^4.1.8"
   }
 }
