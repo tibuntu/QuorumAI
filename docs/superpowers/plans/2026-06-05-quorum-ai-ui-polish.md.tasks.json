@@ -1,0 +1,61 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-05-quorum-ai-ui-polish.md",
+  "tasks": [
+    {
+      "id": 28,
+      "subject": "Task 1: Design tokens + typography plugin",
+      "status": "pending",
+      "description": "**Goal:** Replace starter globals.css with violet/slate tokens (light+dark) + register @tailwindcss/typography.\n\n**Verify:** CI=true pnpm build && CI=true pnpm test:unit\n\n```json:metadata\n{\"files\": [\"app/globals.css\", \"package.json\", \"pnpm-lock.yaml\"], \"verifyCommand\": \"CI=true pnpm build && CI=true pnpm test:unit\", \"acceptanceCriteria\": [\"typography plugin registered\", \"light+dark token vars\", \"tokens via @theme inline\", \"build+30 unit pass\"]}\n```"
+    },
+    {
+      "id": 29,
+      "subject": "Task 2: UI primitives (components/ui/)",
+      "status": "pending",
+      "blockedBy": [28],
+      "description": "**Goal:** Token-driven Button/Input/Textarea/Card/Badge forwarding all props.\n\n**Verify:** CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"components/ui/Button.tsx\", \"components/ui/Input.tsx\", \"components/ui/Textarea.tsx\", \"components/ui/Card.tsx\", \"components/ui/Badge.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"Button variants forward props\", \"Input/Textarea forward aria-label\", \"Card surface\", \"Badge tone + stateTone\"]}\n```"
+    },
+    {
+      "id": 30,
+      "subject": "Task 3: App shell / branded top-nav",
+      "status": "pending",
+      "blockedBy": [29],
+      "description": "**Goal:** Branded nav (Documents/Inbox badge/Settings) making tokens+inbox reachable.\n\n**Verify:** CI=true pnpm build; CI=true pnpm test:e2e -- tests/e2e/auth.spec.ts\n\n```json:metadata\n{\"files\": [\"components/AppNav.tsx\", \"app/app/layout.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"nav links Documents/Inbox/Settings\", \"inbox-link + current-user preserved\", \"redirect+unreadCount kept\", \"auth e2e passes\"]}\n```"
+    },
+    {
+      "id": 31,
+      "subject": "Task 4: Documents list + New-document form polish",
+      "status": "pending",
+      "blockedBy": [29],
+      "description": "**Goal:** /app card grid + state badges + polished create form + empty state.\n\n**Verify:** CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"app/app/page.tsx\", \"components/NewDocumentForm.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"card grid + state badges + links\", \"empty state\", \"form labels+button preserved\", \"build passes\"]}\n```"
+    },
+    {
+      "id": 32,
+      "subject": "Task 5: Document view + sidebar + editor polish (markdown typography)",
+      "status": "pending",
+      "blockedBy": [28, 29],
+      "description": "**Goal:** Themed prose typography + restyle review bar/composer/sidebar/editor preserving hooks.\n\n**Verify:** CI=true pnpm build; CI=true pnpm test:e2e -- tests/e2e/review.spec.ts tests/e2e/versioning.spec.ts\n\n```json:metadata\n{\"files\": [\"components/DocumentView.tsx\", \"components/CommentSidebar.tsx\", \"components/DocumentEditor.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"prose typography light+dark\", \"review bar Buttons + exact doc-state text\", \"all comment/thread/editor selectors preserved\", \"review+versioning e2e pass\"]}\n```"
+    },
+    {
+      "id": 33,
+      "subject": "Task 6: Inbox + Settings/tokens polish",
+      "status": "pending",
+      "blockedBy": [29, 30],
+      "description": "**Goal:** Restyle inbox list + token-management page with primitives, preserving hooks.\n\n**Verify:** CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"components/InboxList.tsx\", \"app/app/inbox/page.tsx\", \"components/TokenManager.tsx\", \"app/app/settings/tokens/page.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"inbox Card rows + notification/links/mark-read\", \"token UI label/Create token/new-token/revoke + snippet\", \"build passes\"]}\n```"
+    },
+    {
+      "id": 34,
+      "subject": "Task 7: Auth pages + public landing page",
+      "status": "pending",
+      "blockedBy": [29],
+      "description": "**Goal:** Brand login/register + add a real public landing page at /.\n\n**Verify:** CI=true pnpm build; CI=true pnpm test:e2e -- tests/e2e/auth.spec.ts\n\n```json:metadata\n{\"files\": [\"app/login/page.tsx\", \"app/register/page.tsx\", \"app/page.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"branded auth cards preserve labels/names/redirects\", \"public landing hero + CTAs, logged-in redirect\", \"build + auth e2e pass\"]}\n```"
+    },
+    {
+      "id": 35,
+      "subject": "Task 8: Navigation e2e + full-suite verification",
+      "status": "pending",
+      "blockedBy": [30, 31, 32, 33, 34],
+      "description": "**Goal:** Nav reachability regression test + confirm whole suite + build green.\n\n**Verify:** CI=true pnpm test:e2e && CI=true pnpm test:unit && CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"tests/e2e/navigation.spec.ts\"], \"verifyCommand\": \"CI=true pnpm test:e2e && CI=true pnpm test:unit && CI=true pnpm build\", \"acceptanceCriteria\": [\"nav reaches settings+inbox\", \"landing get-started visible\", \"full e2e+unit+build green\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-05T00:00:00Z"
+}
