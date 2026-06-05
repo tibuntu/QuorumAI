@@ -4,49 +4,49 @@
     {
       "id": 5,
       "subject": "RC1: Anchoring core library",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Pure buildQuote + locate (exact, context-disambiguated, null on absence).\n\n**Verify:** pnpm test:unit -- tests/unit/anchoring.test.ts\n\n```json:metadata\n{\"files\": [\"lib/anchoring.ts\", \"tests/unit/anchoring.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/anchoring.test.ts\", \"acceptanceCriteria\": [\"buildQuote bounded context\", \"locate unique exact\", \"locate disambiguates repeats\", \"locate null when absent\"]}\n```"
     },
     {
       "id": 6,
       "subject": "RC2: Review-state library",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** computeDocumentState(reviews, requiredApprovals) → OPEN/CHANGES_REQUESTED/APPROVED.\n\n**Verify:** pnpm test:unit -- tests/unit/review-state.test.ts\n\n```json:metadata\n{\"files\": [\"lib/review-state.ts\", \"tests/unit/review-state.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/review-state.test.ts\", \"acceptanceCriteria\": [\"REQUEST_CHANGES dominates\", \"approvals threshold ⇒ APPROVED\", \"else OPEN\", \"dismissed ignored\"]}\n```"
     },
     {
       "id": 7,
       "subject": "RC3: Documents service + API",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** create/list/getDetail documents; thin auth-guarded routes.\n\n**Verify:** pnpm test:unit -- tests/unit/documents.test.ts\n\n```json:metadata\n{\"files\": [\"lib/api.ts\", \"lib/documents.ts\", \"tests/unit/documents.test.ts\", \"app/api/documents/route.ts\", \"app/api/documents/[id]/route.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/documents.test.ts\", \"acceptanceCriteria\": [\"create doc+v1+currentVersionId\", \"getDetail full graph\", \"routes 401\", \"build passes\"]}\n```"
     },
     {
       "id": 8,
       "subject": "RC4: Annotations + comments service + API",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [5, 7],
       "description": "**Goal:** createAnnotation (anchor + first comment), addComment, setThreadStatus; thin routes.\n\n**Verify:** pnpm test:unit -- tests/unit/annotations.test.ts\n\n```json:metadata\n{\"files\": [\"lib/annotations.ts\", \"tests/unit/annotations.test.ts\", \"app/api/documents/[id]/annotations/route.ts\", \"app/api/annotations/[id]/comments/route.ts\", \"app/api/annotations/[id]/route.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/annotations.test.ts\", \"acceptanceCriteria\": [\"anchor+first comment\", \"addComment appends\", \"setThreadStatus toggles\", \"routes guarded\"]}\n```"
     },
     {
       "id": 9,
       "subject": "RC5: Reviews service + API (verdict → state)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [6, 7],
       "description": "**Goal:** submitReview upserts reviewer verdict + recomputes document.state.\n\n**Verify:** pnpm test:unit -- tests/unit/reviews.test.ts\n\n```json:metadata\n{\"files\": [\"lib/reviews.ts\", \"tests/unit/reviews.test.ts\", \"app/api/documents/[id]/reviews/route.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/reviews.test.ts\", \"acceptanceCriteria\": [\"upsert+recompute\", \"change-request dominates\", \"approvals ⇒ APPROVED\", \"validate verdict\"]}\n```"
     },
     {
       "id": 10,
       "subject": "RC6: Documents list + create UI",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [7],
       "description": "**Goal:** /app lists docs + New-document form creates and navigates.\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"components/NewDocumentForm.tsx\", \"app/app/page.tsx\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"lists docs with state+links\", \"form creates+navigates\", \"empty state\"]}\n```"
     },
     {
       "id": 11,
       "subject": "RC7: Document review view (annotate + comment + verdict) + e2e",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [8, 9, 10],
       "description": "**Goal:** rendered markdown + select-to-comment (highlight) + threads + verdicts; Playwright e2e.\n\n**Verify:** pnpm test:e2e -- tests/e2e/review.spec.ts\n\n```json:metadata\n{\"files\": [\"app/app/documents/[id]/page.tsx\", \"components/DocumentView.tsx\", \"components/CommentSidebar.tsx\", \"lib/highlight.ts\", \"tests/e2e/review.spec.ts\"], \"verifyCommand\": \"pnpm test:e2e -- tests/e2e/review.spec.ts\", \"acceptanceCriteria\": [\"markdown renders\", \"select+comment ⇒ annotation+highlight+sidebar\", \"reply+resolve\", \"verdicts update badge\", \"e2e passes\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-04T00:00:00Z"
+  "lastUpdated": "2026-06-05T00:00:00Z"
 }
