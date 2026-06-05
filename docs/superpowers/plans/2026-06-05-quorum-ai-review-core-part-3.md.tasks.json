@@ -1,0 +1,79 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-05-quorum-ai-review-core-part-3.md",
+  "tasks": [
+    {
+      "id": 17,
+      "subject": "Task 1: Notification schema + migration",
+      "status": "pending",
+      "description": "**Goal:** Add a Notification model (recipient, document, type, actor, read) with inverse relations and a migration.\n\n**Verify:** pnpm prisma migrate dev --name notifications; pnpm test:unit; pnpm build\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations\"], \"verifyCommand\": \"pnpm test:unit && pnpm build\", \"acceptanceCriteria\": [\"Notification model + indexes\", \"User/Document inverse relations\", \"migration applies; tests+build pass\"]}\n```"
+    },
+    {
+      "id": 18,
+      "subject": "Task 2: API token service (lib/tokens.ts)",
+      "status": "pending",
+      "description": "**Goal:** Generate (plaintext-once), verify (hash-lookup + lastUsedAt bump), list, revoke API tokens.\n\n**Verify:** pnpm test:unit -- tests/unit/tokens.test.ts\n\n```json:metadata\n{\"files\": [\"lib/tokens.ts\", \"tests/unit/tokens.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/tokens.test.ts\", \"acceptanceCriteria\": [\"generate plaintext-once + hash stored\", \"verify roundtrip + null cases\", \"listTokens hides hash\", \"revoke invalidates\"]}\n```"
+    },
+    {
+      "id": 19,
+      "subject": "Task 3: Feedback consolidation (lib/feedback.ts)",
+      "status": "pending",
+      "description": "**Goal:** Pure consolidateFeedback(detail) → markdown digest + JSON + decision; getPlanFeedback(id) wrapper.\n\n**Verify:** pnpm test:unit -- tests/unit/feedback.test.ts\n\n```json:metadata\n{\"files\": [\"lib/feedback.ts\", \"tests/unit/feedback.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/feedback.test.ts\", \"acceptanceCriteria\": [\"decision mapping\", \"markdown digest + empty case\", \"structured arrays\", \"getPlanFeedback null on unknown\"]}\n```"
+    },
+    {
+      "id": 20,
+      "subject": "Task 4: createDocument options + requireApiUser",
+      "status": "pending",
+      "blockedBy": [18],
+      "description": "**Goal:** createDocument source/agentContext option + Bearer helper requireApiUser.\n\n**Verify:** pnpm test:unit -- tests/unit/documents.test.ts && pnpm build\n\n```json:metadata\n{\"files\": [\"lib/documents.ts\", \"lib/api.ts\", \"tests/unit/documents.test.ts\"], \"verifyCommand\": \"pnpm test:unit -- tests/unit/documents.test.ts && pnpm build\", \"acceptanceCriteria\": [\"createDocument opts persist source+agentContext\", \"defaults WEB/null\", \"requireApiUser bearer\", \"tests+build pass\"]}\n```"
+    },
+    {
+      "id": 21,
+      "subject": "Task 5: Notifications service + wiring",
+      "status": "pending",
+      "blockedBy": [17],
+      "description": "**Goal:** Participant fan-out + read helpers, wired best-effort into addComment/setThreadStatus(+userId)/submitReview/createVersion.\n\n**Verify:** pnpm test:unit\n\n```json:metadata\n{\"files\": [\"lib/notifications.ts\", \"tests/unit/notifications.test.ts\", \"lib/annotations.ts\", \"lib/reviews.ts\", \"lib/versions.ts\", \"app/api/annotations/[id]/route.ts\", \"tests/unit/annotations.test.ts\"], \"verifyCommand\": \"pnpm test:unit\", \"acceptanceCriteria\": [\"participant fan-out excludes actor\", \"list/markRead/markAllRead/unreadCount\", \"best-effort wiring in 4 services\", \"all unit tests pass\"]}\n```"
+    },
+    {
+      "id": 22,
+      "subject": "Task 6: Machine API routes (/api/plans)",
+      "status": "pending",
+      "blockedBy": [19, 20],
+      "description": "**Goal:** Bearer plan endpoints: POST create, PATCH revise, GET feedback.\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"app/api/plans/route.ts\", \"app/api/plans/[id]/route.ts\", \"app/api/plans/[id]/feedback/route.ts\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"POST creates+reviewUrl\", \"PATCH version+409\", \"GET feedback+404\", \"all Bearer-guarded 401\"]}\n```"
+    },
+    {
+      "id": 23,
+      "subject": "Task 7: Token API + Settings UI",
+      "status": "pending",
+      "blockedBy": [18],
+      "description": "**Goal:** Session-authed token CRUD + Settings→tokens page (create/revoke + setup snippet).\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"app/api/tokens/route.ts\", \"app/api/tokens/[id]/route.ts\", \"app/app/settings/tokens/page.tsx\", \"components/TokenManager.tsx\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"token CRUD session-guarded\", \"create shows plaintext once\", \"list hides hash\", \"setup snippet rendered\"]}\n```"
+    },
+    {
+      "id": 24,
+      "subject": "Task 8: Notifications API + inbox + header badge",
+      "status": "pending",
+      "blockedBy": [21],
+      "description": "**Goal:** notifications list/mark API, inbox page, header unread badge.\n\n**Verify:** pnpm build\n\n```json:metadata\n{\"files\": [\"app/api/notifications/route.ts\", \"app/app/inbox/page.tsx\", \"components/InboxList.tsx\", \"app/app/layout.tsx\"], \"verifyCommand\": \"pnpm build\", \"acceptanceCriteria\": [\"GET/PATCH session-guarded\", \"inbox rows deep-link + mark read\", \"header unread badge\", \"build passes\"]}\n```"
+    },
+    {
+      "id": 25,
+      "subject": "Task 9: CLI commands (/push-plan, /pull-feedback)",
+      "status": "pending",
+      "blockedBy": [22, 23],
+      "description": "**Goal:** Ship push-plan + pull-feedback Claude Code commands in-repo.\n\n**Verify:** command git status --porcelain .claude/commands\n\n```json:metadata\n{\"files\": [\".claude/commands/push-plan.md\", \".claude/commands/pull-feedback.md\"], \"verifyCommand\": \"command git status --porcelain .claude/commands\", \"acceptanceCriteria\": [\"push-plan posts + prints reviewUrl/id\", \"pull-feedback GETs + injects digest\", \"valid frontmatter\"]}\n```"
+    },
+    {
+      "id": 26,
+      "subject": "Task 10: Packaging — conditional standalone + compose",
+      "status": "pending",
+      "description": "**Goal:** Env-gate output: standalone (fix next start mismatch) + add docker-compose.yml.\n\n**Verify:** pnpm build && pnpm test:e2e\n\n```json:metadata\n{\"files\": [\"next.config.ts\", \"Dockerfile\", \"docker-compose.yml\"], \"verifyCommand\": \"pnpm build && pnpm test:e2e\", \"acceptanceCriteria\": [\"standalone gated on BUILD_STANDALONE\", \"Dockerfile sets flag\", \"compose file valid\", \"build no-warning + e2e pass\"]}\n```"
+    },
+    {
+      "id": 27,
+      "subject": "Task 11: E2E — machine API token flow + notifications",
+      "status": "pending",
+      "blockedBy": [22, 23, 24],
+      "description": "**Goal:** Prove token→push plan→feedback + participant notifications end-to-end.\n\n**Verify:** pnpm test:e2e -- tests/e2e/integration.spec.ts\n\n```json:metadata\n{\"files\": [\"tests/e2e/integration.spec.ts\"], \"verifyCommand\": \"pnpm test:e2e -- tests/e2e/integration.spec.ts\", \"acceptanceCriteria\": [\"token→POST plan→feedback pending\", \"unauth 401\", \"comment notifies owner inbox\", \"e2e passes\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-05T00:00:00Z"
+}
