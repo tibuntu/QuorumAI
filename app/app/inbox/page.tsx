@@ -1,0 +1,15 @@
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { listNotifications } from "@/lib/notifications";
+import InboxList from "@/components/InboxList";
+
+export default async function InboxPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const initial = await listNotifications(session.user.id);
+  return (
+    <div className="mx-auto mt-12 flex w-full max-w-3xl flex-col gap-8 px-4">
+      <InboxList initial={initial} />
+    </div>
+  );
+}
