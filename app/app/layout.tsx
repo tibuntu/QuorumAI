@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { unreadCount } from "@/lib/notifications";
-import { SignOutButton } from "@/components/SignOutButton";
+import { AppNav } from "@/components/AppNav";
 
 export default async function AppLayout({
   children,
@@ -14,18 +14,9 @@ export default async function AppLayout({
   const unread = await unreadCount(session.user.id);
 
   return (
-    <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b p-4">
-        <span className="font-semibold">Quorum AI</span>
-        <div className="flex items-center gap-4 text-sm">
-          <a href="/app/inbox" data-testid="inbox-link" className="text-sm underline">
-            Inbox{unread > 0 ? ` (${unread})` : ""}
-          </a>
-          <span data-testid="current-user">{session.user.email}</span>
-          <SignOutButton />
-        </div>
-      </header>
-      <main className="p-6">{children}</main>
+    <div className="min-h-screen bg-background">
+      <AppNav email={session.user.email} unread={unread} />
+      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
     </div>
   );
 }
