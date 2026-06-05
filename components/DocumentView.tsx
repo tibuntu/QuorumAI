@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import { buildQuote, locate, type Quote } from "@/lib/anchoring";
 import { applyHighlights, type HighlightRange } from "@/lib/highlight";
 import CommentSidebar from "@/components/CommentSidebar";
+import DocumentEditor from "@/components/DocumentEditor";
 
 export interface ClientComment {
   id: string;
@@ -19,12 +20,14 @@ export interface ClientAnnotation {
   startOffset: number | null;
   endOffset: number | null;
   threadStatus: string;
+  status: string;
   comments: ClientComment[];
 }
 export interface ClientDocument {
   id: string;
   title: string;
   state: string;
+  versionNumber: number;
   markdown: string;
   annotations: ClientAnnotation[];
 }
@@ -57,6 +60,12 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
   const [pendingBody, setPendingBody] = useState("");
   const [docState, setDocState] = useState(doc.state);
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [mode, setMode] = useState<"review" | "edit">("review");
+  const [markdown, setMarkdown] = useState(doc.markdown);
+  const [draft, setDraft] = useState(doc.markdown);
+  const [versionNumber, setVersionNumber] = useState(doc.versionNumber);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Capture text selections via selectionchange so both real pointer selection
   // and programmatic selection (Playwright selectText) are picked up.
@@ -83,6 +92,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
 
   // Re-apply highlights whenever the annotation set changes.
   useEffect(() => {
+    if (mode !== "review") return;
     const container = containerRef.current;
     if (!container) return;
     const containerText = container.textContent ?? "";
@@ -96,7 +106,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
       if (loc) ranges.push({ id: a.id, start: loc.start, end: loc.end });
     }
     applyHighlights(container, ranges);
-  }, [annotations]);
+  }, [annotations, markdown, mode]);
 
   const onContainerClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -126,12 +136,47 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
         startOffset: annotation.startOffset,
         endOffset: annotation.endOffset,
         threadStatus: annotation.threadStatus,
+        status: annotation.status ?? "ACTIVE",
         comments: (annotation.comments ?? []).map((c: ClientComment) => ({ id: c.id, body: c.body, author: c.author })),
       };
       setAnnotations((prev) => [...prev, created]);
       setSelection(null);
       setPendingBody("");
       setFocusedId(created.id);
+    }
+  }
+
+  const refetchDetail = useCallback(async () => {
+    const res = await fetch(`/api/documents/${doc.id}`);
+    if (!res.ok) return;
+    const { document } = await res.json();
+    setMarkdown(document.currentVersion?.markdown ?? "");
+    setVersionNumber(document.currentVersion?.versionNumber ?? versionNumber);
+    setDocState(document.state);
+    setAnnotations(
+      document.annotations.map((a: ClientAnnotation) => ({
+        id: a.id, anchorExact: a.anchorExact, anchorPrefix: a.anchorPrefix, anchorSuffix: a.anchorSuffix,
+        startOffset: a.startOffset, endOffset: a.endOffset, threadStatus: a.threadStatus, status: a.status,
+        comments: a.comments,
+      }))
+    );
+  }, [doc.id, versionNumber]);
+
+  async function saveVersion() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch(`/api/documents/${doc.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ baseVersionNumber: versionNumber, markdown: draft }),
+      });
+      if (res.status === 409) { setSaveError("This document changed since you opened the editor. Reload to get the latest."); return; }
+      if (!res.ok) { setSaveError("Save failed."); return; }
+      await refetchDetail();
+      setMode("review");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -177,15 +222,24 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
   return (
     <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
       <div className="min-w-0 flex-1">
-        <h1 className="mb-4 text-2xl font-semibold">{doc.title}</h1>
-        <div
-          ref={containerRef}
-          data-testid="doc-body"
-          onClick={onContainerClick}
-          className="prose max-w-none rounded border p-4"
-        >
-          <RenderedMarkdown markdown={doc.markdown} />
+        <div className="mb-4 flex items-center gap-3">
+          <h1 className="text-2xl font-semibold">{doc.title}</h1>
+          {mode === "review" && (
+            <button onClick={() => { setDraft(markdown); setMode("edit"); }} className="rounded border px-2 py-1 text-sm">Edit</button>
+          )}
         </div>
+        {mode === "edit" ? (
+          <DocumentEditor value={draft} onChange={setDraft} onSave={saveVersion} onCancel={() => { setDraft(markdown); setMode("review"); }} saving={saving} error={saveError} />
+        ) : (
+          <div
+            ref={containerRef}
+            data-testid="doc-body"
+            onClick={onContainerClick}
+            className="prose max-w-none rounded border p-4"
+          >
+            <RenderedMarkdown key={versionNumber} markdown={markdown} />
+          </div>
+        )}
       </div>
 
       <aside className="flex w-80 shrink-0 flex-col gap-4">

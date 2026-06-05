@@ -11,6 +11,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     id: doc.id,
     title: doc.title,
     state: doc.state,
+    versionNumber: doc.currentVersion?.versionNumber ?? 1,
     markdown: doc.currentVersion?.markdown ?? "",
     annotations: doc.annotations.map((a) => ({
       id: a.id,
@@ -20,6 +21,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       startOffset: a.startOffset,
       endOffset: a.endOffset,
       threadStatus: a.threadStatus,
+      status: a.status,
       comments: a.comments.map((c) => ({ id: c.id, body: c.body, author: c.author })),
     })),
   };
