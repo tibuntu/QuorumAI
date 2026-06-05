@@ -13,7 +13,7 @@ describe("annotations service", () => {
     const start = md.indexOf("cloud setup");
     const ann = await createAnnotation(user.id, docId, { quote: buildQuote(md, start, start + "cloud setup".length), startOffset: start, endOffset: start + 11 }, "infra concern");
     await addComment(user.id, ann.id, "agree");
-    await setThreadStatus(ann.id, "RESOLVED");
+    await setThreadStatus(user.id, ann.id, "RESOLVED");
     const loaded = await prisma.annotation.findUnique({ where: { id: ann.id }, include: { comments: true } });
     expect(loaded?.comments).toHaveLength(2);
     expect(loaded?.threadStatus).toBe("RESOLVED");

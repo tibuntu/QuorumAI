@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import type { Quote } from "@/lib/anchoring";
 import type { AnnotationKind, ThreadStatus } from "@/lib/enums";
 import { publish } from "@/lib/events";
+import { notifyParticipants } from "@/lib/notifications";
 
 export async function createAnnotation(
   userId: string,
@@ -37,11 +38,13 @@ export async function addComment(userId: string, annotationId: string, body: str
   });
   const ann = await prisma.annotation.findUnique({ where: { id: annotationId }, select: { documentId: true } });
   if (ann) publish(ann.documentId, { type: "comment.created", annotationId, comment });
+  if (ann) await notifyParticipants(ann.documentId, userId, "comment").catch(() => {});
   return comment;
 }
 
-export async function setThreadStatus(annotationId: string, status: ThreadStatus) {
+export async function setThreadStatus(userId: string, annotationId: string, status: ThreadStatus) {
   const annotation = await prisma.annotation.update({ where: { id: annotationId }, data: { threadStatus: status } });
   publish(annotation.documentId, { type: "annotation.updated", annotationId, threadStatus: status });
+  await notifyParticipants(annotation.documentId, userId, "resolve").catch(() => {});
   return annotation;
 }

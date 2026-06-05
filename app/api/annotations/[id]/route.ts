@@ -11,6 +11,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!body || !THREAD_STATUSES.includes(body.threadStatus as ThreadStatus)) {
     return NextResponse.json({ error: "valid threadStatus required" }, { status: 400 });
   }
-  const annotation = await setThreadStatus(id, body.threadStatus as ThreadStatus);
+  const annotation = await setThreadStatus(user.id, id, body.threadStatus as ThreadStatus);
   return NextResponse.json({ annotation });
 }

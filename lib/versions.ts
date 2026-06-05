@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { relocate } from "@/lib/anchoring";
 import { computeDocumentState } from "@/lib/review-state";
 import { publish } from "@/lib/events";
+import { notifyParticipants } from "@/lib/notifications";
 import type { ReviewVerdict } from "@/lib/enums";
 
 export class ConcurrencyError extends Error {
@@ -77,5 +78,6 @@ export async function createVersion(userId: string, documentId: string, baseVers
 
   // Publish only after the transaction has committed.
   publish(documentId, { type: "version.created", versionNumber: version.versionNumber, summary });
+  await notifyParticipants(documentId, userId, "version").catch(() => {});
   return { unchanged: false as const, version, summary, state };
 }
