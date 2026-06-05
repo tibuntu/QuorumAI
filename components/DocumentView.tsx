@@ -284,7 +284,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
         )}
       </div>
 
-      <aside className="flex w-80 shrink-0 flex-col gap-4">
+      <aside className="sticky top-4 flex max-h-[calc(100vh-2rem)] w-80 shrink-0 flex-col gap-4 self-start overflow-y-auto">
         <Card className="flex items-center justify-between gap-2 p-3">
           <Badge tone={stateTone(docState)} data-testid="doc-state">
             {STATE_LABELS[docState] ?? docState}
