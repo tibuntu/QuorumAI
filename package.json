@@ -37,6 +37,7 @@
     "@better-auth/cli": "^1.4.21",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.0.0",
     "@types/react": "^19",

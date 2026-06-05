@@ -1,26 +1,66 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #faf9fc;
+  --surface: #ffffff;
+  --border: #e7e5ef;
+  --foreground: #1e1b2e;
+  --muted: #6b6780;
+  --primary: #6d28d9;
+  --primary-hover: #5b21b6;
+  --primary-fg: #ffffff;
+  --primary-subtle: #ede9fe;
+  --state-open: #b45309;
+  --state-open-bg: #fef3c7;
+  --state-changes: #b91c1c;
+  --state-changes-bg: #fee2e2;
+  --state-approved: #15803d;
+  --state-approved-bg: #dcfce7;
+  --state-neutral: #475569;
+  --state-neutral-bg: #f1f5f9;
+  --radius: 0.625rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0e0c15;
+    --surface: #17141f;
+    --border: #2a2536;
+    --foreground: #ece9f5;
+    --muted: #a09bb3;
+    --primary: #a78bfa;
+    --primary-hover: #c4b5fd;
+    --primary-fg: #1e1b2e;
+    --primary-subtle: #2a2440;
+    --state-open: #fcd34d;
+    --state-open-bg: #3a2e0a;
+    --state-changes: #fca5a5;
+    --state-changes-bg: #3a1414;
+    --state-approved: #86efac;
+    --state-approved-bg: #0f2e1a;
+    --state-neutral: #cbd5e1;
+    --state-neutral-bg: #1e293b;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-subtle: var(--primary-subtle);
+  --radius-app: var(--radius);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
