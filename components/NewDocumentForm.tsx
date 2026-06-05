@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
 
 export default function NewDocumentForm() {
   const router = useRouter();
@@ -32,31 +35,30 @@ export default function NewDocumentForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3 rounded border p-4">
-      <h2 className="text-lg font-semibold">New document</h2>
-      <input
+    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <h2 className="text-lg font-semibold text-foreground">New document</h2>
+      <Input
         aria-label="title"
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="border p-2"
       />
-      <textarea
+      <Textarea
         aria-label="markdown"
         placeholder="# Markdown content"
         value={markdown}
         onChange={(e) => setMarkdown(e.target.value)}
         rows={8}
-        className="border p-2 font-mono text-sm"
+        className="font-mono"
       />
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-[var(--state-changes)]">
           {error}
         </p>
       )}
-      <button type="submit" disabled={submitting} className="bg-black p-2 text-white disabled:opacity-50">
+      <Button type="submit" disabled={submitting} className="self-start">
         Create document
-      </button>
+      </Button>
     </form>
   );
 }
