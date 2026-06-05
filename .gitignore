@@ -30,3 +30,4 @@ test-results/
 
 # The user's global ~/.gitignore ignores *.sql; Prisma migrations MUST be tracked.
 !prisma/migrations/**/*.sql
+.superpowers/
