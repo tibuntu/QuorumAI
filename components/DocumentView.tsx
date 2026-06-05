@@ -6,6 +6,10 @@ import { buildQuote, relocate, type Quote } from "@/lib/anchoring";
 import { applyHighlights, type HighlightRange } from "@/lib/highlight";
 import CommentSidebar from "@/components/CommentSidebar";
 import DocumentEditor from "@/components/DocumentEditor";
+import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Textarea";
+import { Card } from "@/components/ui/Card";
+import { Badge, stateTone } from "@/components/ui/Badge";
 
 export interface ClientComment {
   id: string;
@@ -258,12 +262,12 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
+    <div className="flex w-full gap-6">
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">{doc.title}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{doc.title}</h1>
           {mode === "review" && (
-            <button onClick={() => { setDraft(markdown); setMode("edit"); }} className="rounded border px-2 py-1 text-sm">Edit</button>
+            <Button variant="secondary" size="sm" onClick={() => { setDraft(markdown); setMode("edit"); }}>Edit</Button>
           )}
         </div>
         {mode === "edit" ? (
@@ -273,7 +277,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
             ref={containerRef}
             data-testid="doc-body"
             onClick={onContainerClick}
-            className="prose max-w-none rounded border p-4"
+            className="prose prose-violet max-w-none rounded-[var(--radius-app)] border border-border bg-surface p-6"
           >
             <RenderedMarkdown key={versionNumber} markdown={markdown} />
           </div>
@@ -281,46 +285,46 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
       </div>
 
       <aside className="flex w-80 shrink-0 flex-col gap-4">
-        <div className="flex items-center justify-between gap-2 rounded border p-3">
-          <span data-testid="doc-state" className="rounded bg-gray-100 px-2 py-1 text-sm">
+        <Card className="flex items-center justify-between gap-2 p-3">
+          <Badge tone={stateTone(docState)} data-testid="doc-state">
             {STATE_LABELS[docState] ?? docState}
-          </span>
+          </Badge>
           <div className="flex gap-2">
-            <button onClick={() => submitReview("APPROVE")} className="rounded bg-green-600 px-2 py-1 text-sm text-white">
+            <Button variant="primary" size="sm" onClick={() => submitReview("APPROVE")}>
               Approve
-            </button>
-            <button onClick={() => submitReview("REQUEST_CHANGES")} className="rounded bg-red-600 px-2 py-1 text-sm text-white">
+            </Button>
+            <Button variant="danger" size="sm" onClick={() => submitReview("REQUEST_CHANGES")}>
               Request changes
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
 
         {selection && (
-          <div className="flex flex-col gap-2 rounded border p-3">
-            <p className="text-xs text-gray-500">Commenting on: “{selection.quote.exact.slice(0, 60)}”</p>
-            <textarea
+          <Card className="flex flex-col gap-2 p-3">
+            <p className="text-xs text-muted">Commenting on: “{selection.quote.exact.slice(0, 60)}”</p>
+            <Textarea
               aria-label="comment"
               value={pendingBody}
               onChange={(e) => setPendingBody(e.target.value)}
               rows={3}
-              className="border p-2 text-sm"
               placeholder="Add a comment"
             />
             <div className="flex gap-2">
-              <button onClick={submitComment} className="rounded bg-black px-2 py-1 text-sm text-white">
+              <Button variant="primary" size="sm" onClick={submitComment}>
                 Comment
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   setSelection(null);
                   setPendingBody("");
                 }}
-                className="rounded border px-2 py-1 text-sm"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
 
         <CommentSidebar
