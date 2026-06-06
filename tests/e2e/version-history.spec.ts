@@ -54,3 +54,28 @@ test("versions API: participant 200, unauthenticated 401, absent doc 404", async
   await ctxAnon.close();
   await ctxA.close();
 });
+
+async function editAndSave(page: Page, text: string) {
+  await page.getByRole("button", { name: "Edit" }).click();
+  await setEditorText(page, text);
+  await page.getByRole("button", { name: "Save" }).click();
+  // Successful save refetches and returns to review mode (Edit button reappears).
+  await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+}
+
+test("history lists versions and diffs the selected pair", async ({ page }) => {
+  await register(page);
+  await createDoc(page, "History Plan", "The quick brown fox jumps over the lazy dog.");
+  await editAndSave(page, "The quick brown wolf jumps over the lazy dog.");
+  await editAndSave(page, "The quick brown wolf leaps over the lazy dog.");
+
+  await page.getByTestId("history-link").click();
+  await expect(page).toHaveURL(/\/history$/);
+  await expect(page.getByTestId("from-select")).toHaveValue("2");
+  await expect(page.getByTestId("to-select")).toHaveValue("3");
+  await expect(page.getByTestId("diff")).toBeVisible();
+
+  await page.getByTestId("from-select").selectOption("1");
+  await expect(page).toHaveURL(/from=1&to=3/);
+  await expect(page.getByTestId("diff")).toBeVisible();
+});

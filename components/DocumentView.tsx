@@ -1,5 +1,6 @@
 "use client";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { buildQuote, relocate, type Quote } from "@/lib/anchoring";
@@ -269,6 +270,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
           {mode === "review" && (
             <Button variant="secondary" size="sm" onClick={() => { setDraft(markdown); setMode("edit"); }}>Edit</Button>
           )}
+          <Link href={`/app/documents/${doc.id}/history`} data-testid="history-link" className="text-sm text-primary hover:underline">History</Link>
         </div>
         {mode === "edit" ? (
           <DocumentEditor value={draft} onChange={setDraft} onSave={saveVersion} onCancel={() => { setDraft(markdown); setMode("review"); }} saving={saving} error={saveError} />
