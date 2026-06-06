@@ -4,42 +4,42 @@
     {
       "id": 1,
       "subject": "P2 Task 1: User.emailNotifications preference (schema + migration)",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Add a per-user email on/off flag defaulting to ON, backfilling existing users.\n\n**Files:** prisma/schema.prisma (User), prisma/migrations/<ts>_user_email_notifications/migration.sql, tests/unit/schema.test.ts\n\n**Acceptance Criteria:** emailNotifications Boolean @default(true); migration backfills true; prisma generate succeeds.\n\n**Verify:** CI=true pnpm test:unit tests/unit/schema.test.ts\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"tests/unit/schema.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/schema.test.ts\", \"acceptanceCriteria\": [\"User.emailNotifications Boolean default true\", \"migration backfills existing rows\", \"prisma generate succeeds\"]}\n```"
     },
     {
       "id": 2,
       "subject": "P2 Task 2: Email transport (lib/email.ts)",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Env-gated nodemailer transport that no-ops when unconfigured; JSON capture transport for tests.\n\n**Files:** lib/email.ts, package.json (+nodemailer,@types/nodemailer), .env.example, tests/unit/email.test.ts\n\n**Acceptance Criteria:** isEmailConfigured gated on env; sendMail no-ops unconfigured; json transport captures.\n\n**Verify:** CI=true pnpm test:unit tests/unit/email.test.ts\n\n```json:metadata\n{\"files\": [\"lib/email.ts\", \"package.json\", \".env.example\", \"tests/unit/email.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/email.test.ts\", \"acceptanceCriteria\": [\"isEmailConfigured env-gated\", \"sendMail no-ops unconfigured\", \"json transport captures\"]}\n```"
     },
     {
       "id": 3,
       "subject": "P2 Task 3: Email templates (lib/email-templates.ts)",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Pure renderActivityEmail -> {subject, html, text} with absolute deep link.\n\n**Files:** lib/email-templates.ts, tests/unit/email-templates.test.ts\n\n**Acceptance Criteria:** absolute BETTER_AUTH_URL link in html+text; singular/plural count phrasing; multi-actor collapse.\n\n**Verify:** CI=true pnpm test:unit tests/unit/email-templates.test.ts\n\n```json:metadata\n{\"files\": [\"lib/email-templates.ts\", \"tests/unit/email-templates.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/email-templates.test.ts\", \"acceptanceCriteria\": [\"absolute deep link\", \"count phrasing\", \"multi-actor collapse\"]}\n```"
     },
     {
       "id": 4,
       "subject": "P2 Task 4: Email digest buffer (lib/email-digest.ts)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2, 3],
       "description": "**Goal:** Coalesce a burst of events for one (user,doc) into one email after a debounce; no-op when unconfigured.\n\n**Files:** lib/email-digest.ts, tests/unit/email-digest.test.ts\n\n**Acceptance Criteria:** burst -> one sendMail; separate keys -> separate sends; no-op when unconfigured.\n\n**Verify:** CI=true pnpm test:unit tests/unit/email-digest.test.ts\n\n```json:metadata\n{\"files\": [\"lib/email-digest.ts\", \"tests/unit/email-digest.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/email-digest.test.ts\", \"acceptanceCriteria\": [\"burst coalesces\", \"separate keys separate sends\", \"no-op unconfigured\"]}\n```"
     },
     {
       "id": 5,
       "subject": "P2 Task 5: Wire email into notifyParticipants",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1, 4],
       "description": "**Goal:** Enqueue email for opted-in non-actor recipients on comment/review/version; resolve stays in-app only; in-app unchanged.\n\n**Files:** lib/notifications.ts, tests/unit/notifications.test.ts\n\n**Acceptance Criteria:** opted-out excluded; actor excluded; resolve no email; in-app createMany unchanged.\n\n**Verify:** CI=true pnpm test:unit tests/unit/notifications.test.ts\n\n```json:metadata\n{\"files\": [\"lib/notifications.ts\", \"tests/unit/notifications.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/notifications.test.ts\", \"acceptanceCriteria\": [\"opted-out excluded\", \"actor excluded\", \"resolve no email\", \"in-app unchanged\"]}\n```"
     },
     {
       "id": 6,
       "subject": "P2 Task 6: Notification settings UI + settings sub-nav",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** Settings page with email on/off toggle, PATCH API, and settings sub-nav reaching Tokens + Notifications.\n\n**Files:** app/app/settings/layout.tsx, app/app/settings/notifications/page.tsx, components/NotificationSettings.tsx, app/api/settings/notifications/route.ts, components/AppNav.tsx, tests/e2e/notifications-pref.spec.ts\n\n**Acceptance Criteria:** page shows current pref; toggle persists via PATCH; sub-nav reaches both; API 401 unauthenticated.\n\n**Verify:** CI=true pnpm test:e2e tests/e2e/notifications-pref.spec.ts\n\n```json:metadata\n{\"files\": [\"app/app/settings/layout.tsx\", \"app/app/settings/notifications/page.tsx\", \"components/NotificationSettings.tsx\", \"app/api/settings/notifications/route.ts\", \"components/AppNav.tsx\", \"tests/e2e/notifications-pref.spec.ts\"], \"verifyCommand\": \"CI=true pnpm test:e2e tests/e2e/notifications-pref.spec.ts\", \"acceptanceCriteria\": [\"shows current pref\", \"toggle persists\", \"sub-nav reaches both\", \"API 401 unauthenticated\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-06T00:00:00Z"
+  "lastUpdated": "2026-06-06T20:25:00Z"
 }
