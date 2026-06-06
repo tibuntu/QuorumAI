@@ -4,29 +4,29 @@
     {
       "id": 0,
       "subject": "P4 Task 1: Theme core (lib/theme.ts) — resolver + script source",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Pure ThemeChoice, resolveDark, STORAGE_KEY, and THEME_SCRIPT (inline boot script source).\n\n**Files:** lib/theme.ts, tests/unit/theme.test.ts\n\n**Acceptance Criteria:** resolveDark explicit + system cases; THEME_SCRIPT references storage key + classList.\n\n**Verify:** CI=true pnpm test:unit tests/unit/theme.test.ts\n\n```json:metadata\n{\"files\": [\"lib/theme.ts\", \"tests/unit/theme.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/theme.test.ts\", \"acceptanceCriteria\": [\"resolveDark explicit\", \"resolveDark system\", \"THEME_SCRIPT references storage+classList\"]}\n```"
     },
     {
       "id": 1,
       "subject": "P4 Task 2: Class-based dark tokens (app/globals.css)",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Move dark tokens from @media (prefers-color-scheme) to :root.dark; light default unchanged; @theme inline unchanged.\n\n**Files:** app/globals.css\n\n**Acceptance Criteria:** dark tokens under :root.dark; light default on :root; build succeeds; class flips palette.\n\n**Verify:** CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"app/globals.css\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"dark tokens on :root.dark\", \"light default preserved\", \"build succeeds\"]}\n```"
     },
     {
       "id": 2,
       "subject": "P4 Task 3: No-flash script injection (app/layout.tsx)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0, 1],
       "description": "**Goal:** Inject THEME_SCRIPT in <head> so .dark is set before paint; keep suppressHydrationWarning.\n\n**Files:** app/layout.tsx\n\n**Acceptance Criteria:** script in <head> runs pre-body; suppressHydrationWarning retained; no hydration errors.\n\n**Verify:** CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"app/layout.tsx\"], \"verifyCommand\": \"CI=true pnpm build\", \"acceptanceCriteria\": [\"script in head pre-paint\", \"suppressHydrationWarning kept\", \"no hydration errors\"]}\n```"
     },
     {
       "id": 3,
       "subject": "P4 Task 4: ThemeToggle control + e2e",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2],
       "description": "**Goal:** 3-way header control persisting choice to localStorage, applying class live, tracking OS while system.\n\n**Files:** components/ThemeToggle.tsx, components/AppNav.tsx, tests/e2e/theme.spec.ts\n\n**Acceptance Criteria:** light/dark/system updates localStorage + html.dark; persists across reload; system tracks OS live; sits in header.\n\n**Verify:** CI=true pnpm test:e2e tests/e2e/theme.spec.ts\n\n```json:metadata\n{\"files\": [\"components/ThemeToggle.tsx\", \"components/AppNav.tsx\", \"tests/e2e/theme.spec.ts\"], \"verifyCommand\": \"CI=true pnpm test:e2e tests/e2e/theme.spec.ts\", \"acceptanceCriteria\": [\"3-way updates storage+class\", \"persists across reload\", \"system tracks OS\", \"placed in header\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-06T00:00:00Z"
+  "lastUpdated": "2026-06-06T22:45:00Z"
 }
