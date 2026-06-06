@@ -262,7 +262,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
   }
 
   return (
-    <div className="flex w-full gap-6">
+    <div className="flex w-full flex-col gap-6 lg:flex-row">
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{doc.title}</h1>
@@ -284,7 +284,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
         )}
       </div>
 
-      <aside className="sticky top-4 flex max-h-[calc(100vh-2rem)] w-80 shrink-0 flex-col gap-4 self-start overflow-y-auto">
+      <aside className="flex w-full shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-80 lg:self-start lg:overflow-y-auto">
         <Card className="flex items-center justify-between gap-2 p-3">
           <Badge tone={stateTone(docState)} data-testid="doc-state">
             {STATE_LABELS[docState] ?? docState}

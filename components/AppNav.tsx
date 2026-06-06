@@ -13,7 +13,7 @@ export function AppNav({ email, unread }: { email: string; unread: number }) {
   const pathname = usePathname();
   return (
     <header className="border-b border-border bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
         <div className="flex items-center gap-6">
           <Link href="/app" className="font-semibold text-foreground">◆ Quorum</Link>
           <nav className="flex items-center gap-1 text-sm">
@@ -28,7 +28,7 @@ export function AppNav({ email, unread }: { email: string; unread: number }) {
                 >
                   {l.label}
                   {l.href === "/app/inbox" && unread > 0 && (
-                    <span className="ml-1.5 rounded-full bg-[var(--state-changes)] px-1.5 text-xs text-white">{unread}</span>
+                    <span className="ml-1.5 rounded-full bg-danger px-1.5 text-xs text-danger-fg">{unread}</span>
                   )}
                 </Link>
               );
@@ -36,7 +36,7 @@ export function AppNav({ email, unread }: { email: string; unread: number }) {
           </nav>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span data-testid="current-user" className="text-muted">{email}</span>
+          <span data-testid="current-user" className="max-w-[45vw] truncate text-muted sm:max-w-[220px] md:max-w-none">{email}</span>
           <SignOutButton />
         </div>
       </div>

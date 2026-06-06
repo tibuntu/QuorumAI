@@ -19,6 +19,8 @@
   --state-approved-bg: #dcfce7;
   --state-neutral: #475569;
   --state-neutral-bg: #f1f5f9;
+  --danger: #dc2626;
+  --danger-fg: #ffffff;
   --radius: 0.625rem;
 }
 
@@ -41,6 +43,8 @@
     --state-approved-bg: #0f2e1a;
     --state-neutral: #cbd5e1;
     --state-neutral-bg: #1e293b;
+    --danger: #b91c1c;
+    --danger-fg: #ffffff;
   }
 }
 
@@ -54,6 +58,8 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-fg: var(--primary-fg);
   --color-primary-subtle: var(--primary-subtle);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
   --radius-app: var(--radius);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -63,6 +69,30 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* --- Markdown (prose) theming --- */
+
+/* Drive @tailwindcss/typography off our token system. Because the tokens flip
+   under prefers-color-scheme, this gives correct contrast in light AND dark
+   (the plugin's defaults are light-only, which left dark-mode prose invisible). */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted);
+  --tw-prose-bullets: var(--muted);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--state-neutral-bg);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
 }
 
 /* --- Markdown (prose) refinements --- */

@@ -7,7 +7,7 @@ const VARIANTS: Record<Variant, string> = {
   primary: "bg-primary text-primary-fg hover:bg-primary-hover",
   secondary: "border border-border bg-surface text-foreground hover:bg-primary-subtle",
   ghost: "text-foreground hover:bg-primary-subtle",
-  danger: "bg-[var(--state-changes)] text-white hover:opacity-90",
+  danger: "bg-danger text-danger-fg hover:opacity-90",
 };
 const SIZES: Record<Size, string> = { sm: "px-2.5 py-1 text-sm", md: "px-3.5 py-2 text-sm" };
 

@@ -37,20 +37,26 @@ export default function NewDocumentForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold text-foreground">New document</h2>
-      <Input
-        aria-label="title"
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <Textarea
-        aria-label="markdown"
-        placeholder="# Markdown content"
-        value={markdown}
-        onChange={(e) => setMarkdown(e.target.value)}
-        rows={8}
-        className="font-mono"
-      />
+      <label className="flex flex-col gap-1 text-sm text-foreground">
+        Title
+        <Input
+          aria-label="title"
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm text-foreground">
+        Markdown
+        <Textarea
+          aria-label="markdown"
+          placeholder="# Markdown content"
+          value={markdown}
+          onChange={(e) => setMarkdown(e.target.value)}
+          rows={8}
+          className="font-mono"
+        />
+      </label>
       {error && (
         <p role="alert" className="text-sm text-[var(--state-changes)]">
           {error}

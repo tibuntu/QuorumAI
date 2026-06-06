@@ -23,7 +23,7 @@ export default function DocumentEditor({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <div data-testid="editor" className="overflow-hidden rounded-[var(--radius-app)] border border-border">
           <CodeMirror
             value={value}

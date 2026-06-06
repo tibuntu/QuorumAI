@@ -3,6 +3,7 @@ import { listDocuments } from "@/lib/documents";
 import NewDocumentForm from "@/components/NewDocumentForm";
 import { Card } from "@/components/ui/Card";
 import { Badge, stateTone } from "@/components/ui/Badge";
+import { relativeTime } from "@/lib/time";
 
 const STATE_LABELS: Record<string, string> = {
   DRAFT: "Draft",
@@ -34,7 +35,9 @@ export default async function Home() {
                       {STATE_LABELS[doc.state] ?? doc.state}
                     </Badge>
                   </div>
-                  <span className="text-sm text-muted">{doc.owner?.name ?? doc.owner?.email}</span>
+                  <span className="text-sm text-muted">
+                    {doc.owner?.name ?? doc.owner?.email} · {relativeTime(doc.updatedAt)}
+                  </span>
                 </Card>
               </Link>
             ))}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { relativeTime } from "@/lib/time";
 
 const TYPE_LABELS: Record<string, string> = {
   comment: "New comment",
@@ -67,7 +68,7 @@ export default function InboxList({ initial }: { initial: Notification[] }) {
                     <span>{TYPE_LABELS[n.type] ?? n.type}</span>
                     <span className="text-xs text-muted">{n.document.title}</span>
                   </span>
-                  <span className="text-xs text-muted">{new Date(n.createdAt).toLocaleString()}</span>
+                  <span className="shrink-0 text-xs text-muted">{relativeTime(n.createdAt)}</span>
                 </Link>
               </Card>
             </li>
