@@ -28,4 +28,12 @@ describe("domain schema", () => {
     await prisma.document.delete({ where: { id: doc.id } });
     expect(await prisma.annotation.findUnique({ where: { id: ann.id } })).toBeNull();
   });
+
+  it("User has emailNotifications defaulting to true", async () => {
+    const now = new Date();
+    const u = await prisma.user.create({
+      data: { id: `pref-${Date.now()}`, name: "Pref", email: `pref-${Date.now()}@e.com`, emailVerified: false, createdAt: now, updatedAt: now },
+    });
+    expect(u.emailNotifications).toBe(true);
+  });
 });
