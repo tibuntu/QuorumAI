@@ -10,6 +10,11 @@ test("nav reaches settings and inbox", async ({ page }) => {
   await expect(page).toHaveURL(/\/app/);
 
   await page.getByRole("link", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/\/app\/settings\/notifications/);
+  await expect(page.getByTestId("email-pref")).toBeVisible();
+
+  // Settings sub-nav reaches API tokens.
+  await page.getByRole("link", { name: "API tokens" }).click();
   await expect(page).toHaveURL(/\/app\/settings\/tokens/);
   await expect(page.getByLabel("token label")).toBeVisible();
 

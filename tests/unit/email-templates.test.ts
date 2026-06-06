@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { it, expect, beforeEach } from "vitest";
 import { renderActivityEmail, type ActivityEvent } from "../../lib/email-templates";
 
 beforeEach(() => { process.env.BETTER_AUTH_URL = "https://q.example"; });
