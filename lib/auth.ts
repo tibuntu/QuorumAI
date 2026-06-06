@@ -3,8 +3,14 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@/lib/db";
 
+const trustedOrigins = [
+  process.env.BETTER_AUTH_URL,
+  ...(process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()) ?? []),
+].filter((o): o is string => Boolean(o));
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
+  trustedOrigins,
   // Rate limiting is enabled in production by default. Allow the automated
   // test environment (which runs a production build) to opt out so the e2e
   // suite's burst of registrations isn't throttled. Production deployments
