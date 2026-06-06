@@ -1,0 +1,81 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-06-quorum-ai-m2-p1-authorization.md",
+  "tasks": [
+    {
+      "id": 6,
+      "subject": "Task 1: Participant table + token columns + migration/backfill",
+      "status": "pending",
+      "description": "Add DocumentParticipant model + ApiToken.expiresAt/scopes; migrate with one-time backfill (owner ∪ annotation ∪ comment ∪ review authors); seed owner participant in createDocument.\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations\", \"lib/documents.ts\", \"tests/unit/documents.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit -- documents\", \"acceptanceCriteria\": [\"DocumentParticipant table with unique (documentId,userId)\", \"ApiToken.expiresAt + scopes default\", \"migration backfills existing docs\", \"createDocument seeds owner participant\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 2: lib/authz.ts guard + unit tests",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "Implement ensureParticipant / isParticipant / isOwner / documentIdForAnnotation with unit tests (TDD).\n\n```json:metadata\n{\"files\": [\"lib/authz.ts\", \"tests/unit/authz.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit -- authz\", \"acceptanceCriteria\": [\"ensureParticipant joins/false-on-missing\", \"isParticipant check-only\", \"isOwner owner-only\", \"documentIdForAnnotation resolve/null\"]}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 3: Scope document listing to participants (T-M1-17)",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "listDocuments(userId) participant-scoped; wire GET /api/documents + home page to session user.\n\n```json:metadata\n{\"files\": [\"lib/documents.ts\", \"app/api/documents/route.ts\", \"app/app/page.tsx\", \"tests/unit/documents.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit -- documents\", \"acceptanceCriteria\": [\"listDocuments(userId) participant-scoped\", \"GET /api/documents passes user id\", \"home page session-guarded + scoped\"]}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 4: Document read, page, and SSE guards (T-M1-10, T-M1-16)",
+      "status": "pending",
+      "blockedBy": [7],
+      "description": "Auto-join on detail read + page (link-grant); gate SSE on isParticipant (404).\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/route.ts\", \"app/app/documents/[id]/page.tsx\", \"app/api/documents/[id]/stream/route.ts\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit\", \"acceptanceCriteria\": [\"GET detail auto-joins / 404 missing\", \"page auto-joins / notFound / login redirect\", \"stream 404 non-participant\"]}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 5: Web write guards — versions/annotations/comments/reviews/thread (T-M1-11web/12/13/14)",
+      "status": "pending",
+      "blockedBy": [7],
+      "description": "Owner-only version PATCH (403); participant-only annotate/review/comment/thread-status (404), resolving annotation sub-resources to document.\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/route.ts\", \"app/api/documents/[id]/annotations/route.ts\", \"app/api/documents/[id]/reviews/route.ts\", \"app/api/annotations/[id]/route.ts\", \"app/api/annotations/[id]/comments/route.ts\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit\", \"acceptanceCriteria\": [\"version PATCH owner-only 403\", \"annotate/review 404 non-participant\", \"comment/thread resolve+gate 404\"]}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 6: Machine API hardening — token expiry/scope + owner-strict plans (T-M1-11machine/15/18 backend)",
+      "status": "pending",
+      "blockedBy": [6, 7],
+      "description": "verifyToken {user,scopes}+expiry reject; generateToken opts; machine routes owner(404)-then-scope(403); tokens POST accepts expiry/scopes.\n\n```json:metadata\n{\"files\": [\"lib/tokens.ts\", \"lib/api.ts\", \"app/api/plans/route.ts\", \"app/api/plans/[id]/route.ts\", \"app/api/plans/[id]/feedback/route.ts\", \"app/api/tokens/route.ts\", \"tests/unit/tokens.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit -- tokens && CI=true pnpm exec tsc --noEmit\", \"acceptanceCriteria\": [\"verifyToken {user,scopes}+expiry reject\", \"generateToken opts\", \"machine owner 404 + scope 403\", \"tokens POST expiry/scopes\"]}\n```"
+    },
+    {
+      "id": 12,
+      "subject": "Task 7: Token-creation UI — expiry + scope (T-M1-18 frontend)",
+      "status": "pending",
+      "blockedBy": [11],
+      "description": "TokenManager: expiry selector (Never/30/90/365) + scope checkboxes; send expiresInDays+scopes; preserve existing test hooks.\n\n```json:metadata\n{\"files\": [\"components/TokenManager.tsx\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit\", \"acceptanceCriteria\": [\"expiry selector + scope checkboxes\", \"sends expiresInDays+scopes\", \"preserves existing test hooks\"]}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "Task 8: better-auth trustedOrigins (T-M1-19)",
+      "status": "pending",
+      "description": "Add trustedOrigins from BETTER_AUTH_URL + optional TRUSTED_ORIGINS env to better-auth config.\n\n```json:metadata\n{\"files\": [\"lib/auth.ts\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit\", \"acceptanceCriteria\": [\"trustedOrigins from BETTER_AUTH_URL + TRUSTED_ORIGINS, filtered\"]}\n```"
+    },
+    {
+      "id": 14,
+      "subject": "Task 9: notifyParticipants reads the participant table",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "Source notification recipients from DocumentParticipant (owner + joined) instead of activity recompute.\n\n```json:metadata\n{\"files\": [\"lib/notifications.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit -- notifications\", \"acceptanceCriteria\": [\"notifies participant rows except actor\", \"existing test passes\"]}\n```"
+    },
+    {
+      "id": 15,
+      "subject": "Task 10: End-to-end authorization matrix",
+      "status": "pending",
+      "blockedBy": [8, 9, 10, 11, 12, 13, 14],
+      "description": "tests/e2e/authorization.spec.ts: two-user web matrix (link-grant, list isolation, owner-only edit 403/200, non-participant writes 404) + machine owner-strict (404/401). Then full suite for regressions.\n\n```json:metadata\n{\"files\": [\"tests/e2e/authorization.spec.ts\"], \"verifyCommand\": \"lsof -ti:3000 | xargs kill -9 2>/dev/null; CI=true pnpm test:e2e -- authorization\", \"acceptanceCriteria\": [\"link-grant + list isolation\", \"owner-only edit 403/200\", \"non-participant writes 404\", \"machine owner-strict 404 + 401\"]}\n```"
+    },
+    {
+      "id": 16,
+      "subject": "Task 11: Update the M1 security register",
+      "status": "pending",
+      "blockedBy": [15],
+      "description": "Flip T-M1-10..T-M1-19 to closed with disposition + evidence; frontmatter threats_open 0 / status verified; update summary/sign-off/audit-trail.\n\n```json:metadata\n{\"files\": [\"docs/superpowers/security/2026-06-06-quorum-ai-m1-security.md\"], \"verifyCommand\": \"grep -c 'open (HIGH)' docs/superpowers/security/2026-06-06-quorum-ai-m1-security.md\", \"acceptanceCriteria\": [\"all T-M1-10..19 closed with evidence\", \"frontmatter threats_open 0 + verified\", \"summary/signoff/audit-trail updated\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-06"
+}
