@@ -6,7 +6,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 const LINKS = [
   { href: "/app", label: "Documents", testid: undefined as string | undefined },
   { href: "/app/inbox", label: "Inbox", testid: "inbox-link" },
-  { href: "/app/settings/tokens", label: "Settings", testid: undefined },
+  { href: "/app/settings/notifications", label: "Settings", testid: "settings-link" },
 ];
 
 export function AppNav({ email, unread }: { email: string; unread: number }) {
