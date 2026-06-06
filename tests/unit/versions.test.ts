@@ -4,7 +4,7 @@ import { createDocument } from "@/lib/documents";
 import { createAnnotation } from "@/lib/annotations";
 import { submitReview } from "@/lib/reviews";
 import { buildQuote } from "@/lib/anchoring";
-import { createVersion, ConcurrencyError } from "@/lib/versions";
+import { createVersion, ConcurrencyError, listVersions, getVersionMarkdown } from "@/lib/versions";
 
 async function makeUser() {
   const now = new Date();
@@ -54,6 +54,33 @@ describe("versions service", () => {
 
     const reviews = await prisma.review.findMany({ where: { documentId: docId } });
     expect(reviews.every((r) => r.dismissed)).toBe(true);
+
+    await prisma.document.delete({ where: { id: docId } });
+  });
+});
+
+describe("version read helpers", () => {
+  it("listVersions returns metadata newest-first", async () => {
+    const user = await makeUser();
+    const docId = await createDocument(user.id, "Doc", "v1 content here");
+    await createVersion(user.id, docId, 1, "v2 content here");
+
+    const list = await listVersions(docId);
+    expect(list.map((v) => v.versionNumber)).toEqual([2, 1]);
+    expect(list[0].createdBy.name).toBeTruthy();
+    expect(list[0].contentHash).toBeTruthy();
+
+    await prisma.document.delete({ where: { id: docId } });
+  });
+
+  it("getVersionMarkdown returns snapshot or null", async () => {
+    const user = await makeUser();
+    const docId = await createDocument(user.id, "Doc", "v1 content here");
+    await createVersion(user.id, docId, 1, "v2 content here");
+
+    expect(await getVersionMarkdown(docId, 1)).toContain("v1 content");
+    expect(await getVersionMarkdown(docId, 2)).toContain("v2 content");
+    expect(await getVersionMarkdown(docId, 999)).toBeNull();
 
     await prisma.document.delete({ where: { id: docId } });
   });

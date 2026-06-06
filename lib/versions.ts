@@ -6,6 +6,22 @@ import { publish } from "@/lib/events";
 import { notifyParticipants } from "@/lib/notifications";
 import type { ReviewVerdict } from "@/lib/enums";
 
+export async function listVersions(documentId: string) {
+  return prisma.documentVersion.findMany({
+    where: { documentId },
+    orderBy: { versionNumber: "desc" },
+    select: { versionNumber: true, createdAt: true, contentHash: true, createdBy: { select: { name: true } } },
+  });
+}
+
+export async function getVersionMarkdown(documentId: string, versionNumber: number): Promise<string | null> {
+  const v = await prisma.documentVersion.findUnique({
+    where: { documentId_versionNumber: { documentId, versionNumber } },
+    select: { markdown: true },
+  });
+  return v?.markdown ?? null;
+}
+
 export class ConcurrencyError extends Error {
   constructor(message = "stale base version") {
     super(message);
