@@ -101,7 +101,7 @@ export default function TokenManager({
               </label>
             ))}
           </fieldset>
-          <Button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={submitting || scopes.length === 0}>
             Create token
           </Button>
         </form>
