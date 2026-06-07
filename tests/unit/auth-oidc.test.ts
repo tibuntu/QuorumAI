@@ -19,10 +19,8 @@ describe("auth account-linking policy (env-independent)", () => {
 
   it("does not trust the oidc provider (IdP email must be verified to link)", async () => {
     const auth = await freshAuth();
-    // trustedProviders lives under account.accountLinking in better-auth's schema.
-    // We never set it, so it is undefined — "oidc" is intentionally absent.
-    const tp = (auth.options as Record<string, unknown>).trustedProviders;
-    expect(tp ?? []).not.toContain("oidc");
+    const trustedProviders = (auth.options.account?.accountLinking as { trustedProviders?: string[] } | undefined)?.trustedProviders;
+    expect(trustedProviders ?? []).not.toContain("oidc");
   });
 });
 
