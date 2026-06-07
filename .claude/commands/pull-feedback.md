@@ -21,5 +21,38 @@ Requires env vars: `QUORUM_BASE_URL` and `QUORUM_API_TOKEN`. The plan id is `$AR
    ```
 
 2. If the loop exhausts all 10 iterations with `decision` still `"pending"`: tell the user the plan is still pending after 10 waits (~5 minutes) and stop. Do not block indefinitely.
-3. Parse the final response `{ decision, state, markdown, threads, reviews }`.
-4. Present the `markdown` digest, then revise the plan to address every comment. If the user approves the revision, post it back with `PATCH $QUORUM_BASE_URL/api/plans/$ARGUMENTS` `{ markdown, baseVersionNumber }`.
+3. Parse the final response. The shape depends on the server version:
+
+   - **Structured response (`schemaVersion >= 1`)** — the body includes `schemaVersion`, `rollup`, enriched `threads[]`, `currentVersion`, `versions`, and the legacy `markdown` field (kept for backward compatibility).
+   - **Legacy response (no `schemaVersion`)** — fall back to rendering the `markdown` field directly (old behaviour).
+
+4. **Present feedback and revise.**
+
+   **If `schemaVersion >= 1`:**
+
+   a. Lead with the rollup summary:
+      ```
+      rollup.blocking   — must-fix blockers (severity == BLOCKER)
+      rollup.unresolved — open threads (status == OPEN)
+      rollup.byCategory — counts per category
+      ```
+      Note: rollup counts always reflect **unfiltered totals**, even when threads are filtered below.
+
+   b. To focus the revision on actionable items, fetch the filtered thread list:
+      ```
+      curl -s "$QUORUM_BASE_URL/api/plans/$ARGUMENTS/feedback?include=blocking,unresolved" \
+        -H "Authorization: Bearer $QUORUM_API_TOKEN"
+      ```
+      The returned `threads[]` will be narrowed to blocking / open items. The `rollup` in this response still reflects the full unfiltered totals, so the overall picture is preserved.
+
+   c. Group and present threads in severity order: **BLOCKER → MAJOR → MINOR → NIT → (null/unset last)**. For each thread show:
+      - `quote` (the anchored text)
+      - latest comment body
+      - `category`
+      - `raisedOnVersion`
+
+   d. Revise the plan to address every comment, prioritising BLOCKERs first. If the user approves the revision, post it back with `PATCH $QUORUM_BASE_URL/api/plans/$ARGUMENTS` `{ markdown, baseVersionNumber }`.
+
+   **If `schemaVersion` is absent (legacy server):**
+
+   Present the `markdown` digest, then revise the plan to address every comment. If the user approves the revision, post it back with `PATCH $QUORUM_BASE_URL/api/plans/$ARGUMENTS` `{ markdown, baseVersionNumber }`.
