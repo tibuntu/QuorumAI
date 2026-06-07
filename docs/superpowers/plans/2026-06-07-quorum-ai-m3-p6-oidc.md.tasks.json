@@ -3,43 +3,54 @@
   "tasks": [
     {
       "id": 1,
-      "subject": "Task 1: lib/oidc.ts — pure gating + provider builder",
-      "status": "pending",
+      "subject": "Task 1: lib/oidc.ts \u2014 pure gating + provider builder",
+      "status": "completed",
       "description": "**Goal:** Dependency-light module deciding whether OIDC is configured and building the genericOAuth plugin, unit-testable from a plain env object.\n\n**Files:**\n- Create: lib/oidc.ts\n- Test: tests/unit/oidc.test.ts\n\n**Acceptance Criteria:**\n- isOidcConfigured(env) true only when all three OIDC vars non-empty\n- oidcDiscoveryUrl strips trailing slash + appends /.well-known/openid-configuration\n- oidcPlugins returns [] unconfigured / one generic-oauth plugin configured\n- config uses providerId oidc, scopes openid/email/profile, pkce true\n\n**Verify:** pnpm vitest run tests/unit/oidc.test.ts\n\n```json:metadata\n{\"files\": [\"lib/oidc.ts\", \"tests/unit/oidc.test.ts\"], \"verifyCommand\": \"pnpm vitest run tests/unit/oidc.test.ts\", \"acceptanceCriteria\": [\"isOidcConfigured true only when all three vars set\", \"oidcDiscoveryUrl strips trailing slash + appends well-known path\", \"oidcPlugins [] unconfigured / one generic-oauth configured\", \"config providerId oidc + openid/email/profile + pkce true\"]}\n```"
     },
     {
       "id": 2,
-      "subject": "Task 2: Wire OIDC into lib/auth.ts — linking policy + signup gate",
-      "status": "pending",
-      "blockedBy": [1],
+      "subject": "Task 2: Wire OIDC into lib/auth.ts \u2014 linking policy + signup gate",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
       "description": "**Goal:** Register OIDC conditionally, set link-by-IdP-verified-email policy (requireLocalEmailVerified:false, provider untrusted), disable self-service signup under SSO.\n\n**Files:**\n- Modify: lib/auth.ts\n- Test: tests/unit/auth-oidc.test.ts\n\n**Acceptance Criteria:**\n- accountLinking enabled true + requireLocalEmailVerified false\n- trustedProviders excludes oidc\n- env unset: no generic-oauth plugin + disableSignUp falsy\n- env set: generic-oauth plugin present + disableSignUp true\n- env set: auth.api.signUpEmail rejects\n\n**Verify:** pnpm vitest run tests/unit/auth-oidc.test.ts tests/unit/auth.test.ts && rtk tsc --noEmit\n\n```json:metadata\n{\"files\": [\"lib/auth.ts\", \"tests/unit/auth-oidc.test.ts\"], \"verifyCommand\": \"pnpm vitest run tests/unit/auth-oidc.test.ts tests/unit/auth.test.ts && rtk tsc --noEmit\", \"acceptanceCriteria\": [\"accountLinking enabled+requireLocalEmailVerified false\", \"trustedProviders excludes oidc\", \"env unset: no plugin + disableSignUp falsy\", \"env set: plugin present + disableSignUp true\", \"env set: signUpEmail rejects\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 3: Client plugin + Sign in with SSO button",
-      "status": "pending",
-      "blockedBy": [2],
+      "status": "completed",
+      "blockedBy": [
+        2
+      ],
       "description": "**Goal:** Expose signIn.oauth2 via genericOAuthClient and render an SSO button on login when NEXT_PUBLIC_OIDC_ENABLED===true.\n\n**Files:**\n- Modify: lib/auth-client.ts\n- Modify: app/login/page.tsx\n\n**Acceptance Criteria:**\n- authClient uses genericOAuthClient()\n- SSO button shown only when NEXT_PUBLIC_OIDC_ENABLED===true\n- button calls signIn.oauth2({providerId:oidc, callbackURL:/app, errorCallbackURL:/login?error=sso})\n- password login unchanged\n\n**Verify:** rtk tsc --noEmit && pnpm build\n\n```json:metadata\n{\"files\": [\"lib/auth-client.ts\", \"app/login/page.tsx\"], \"verifyCommand\": \"rtk tsc --noEmit && pnpm build\", \"acceptanceCriteria\": [\"authClient uses genericOAuthClient()\", \"button shown only when flag true\", \"button calls signIn.oauth2 providerId oidc + callbackURL /app\", \"password login unchanged\"]}\n```"
     },
     {
       "id": 4,
       "subject": "Task 4: Guard app/register/page.tsx under SSO",
-      "status": "pending",
-      "blockedBy": [2],
+      "status": "completed",
+      "blockedBy": [
+        2
+      ],
       "description": "**Goal:** When SSO active, register page shows an SSO notice + /login link instead of the password form (mirrors server disableSignUp, D5a).\n\n**Files:**\n- Modify: app/register/page.tsx\n\n**Acceptance Criteria:**\n- flag set: SSO notice + /login link, no form\n- flag unset: existing form unchanged\n\n**Verify:** rtk tsc --noEmit && pnpm build\n\n```json:metadata\n{\"files\": [\"app/register/page.tsx\"], \"verifyCommand\": \"rtk tsc --noEmit && pnpm build\", \"acceptanceCriteria\": [\"flag set: notice + /login link, no form\", \"flag unset: form unchanged\"]}\n```"
     },
     {
       "id": 5,
       "subject": "Task 5: e2e default-state regression spec",
-      "status": "pending",
-      "blockedBy": [3, 4],
+      "status": "completed",
+      "blockedBy": [
+        3,
+        4
+      ],
       "description": "**Goal:** Lock default no-OIDC behavior: SSO button hidden, password login works, register form present.\n\n**Files:**\n- Create: tests/e2e/oidc.spec.ts\n\n**Acceptance Criteria:**\n- /login: no SSO button + password form present by default\n- /register: form present (not SSO notice) by default\n- file comment documents deferred enabled-path coverage (mock IdP)\n\n**Verify:** pnpm playwright test tests/e2e/oidc.spec.ts\n\n```json:metadata\n{\"files\": [\"tests/e2e/oidc.spec.ts\"], \"verifyCommand\": \"pnpm playwright test tests/e2e/oidc.spec.ts\", \"acceptanceCriteria\": [\"login: no SSO button + password form\", \"register: form not notice\", \"comment documents deferred enabled path\"]}\n```"
     },
     {
       "id": 6,
-      "subject": "Task 6: Documentation — .env.example + README",
-      "status": "pending",
-      "blockedBy": [2],
+      "subject": "Task 6: Documentation \u2014 .env.example + README",
+      "status": "completed",
+      "blockedBy": [
+        2
+      ],
       "description": "**Goal:** Document optional SSO config + signup-disable side effect.\n\n**Files:**\n- Modify: .env.example\n- Modify: README.md\n\n**Acceptance Criteria:**\n- .env.example has four OIDC vars + signup-disable comment\n- README Single sign-on section: vars, NEXT_PUBLIC_OIDC_ENABLED=true, redirect URI, linking + signup behavior, ADR link\n\n**Verify:** grep -q OIDC_ISSUER .env.example && grep -qi \"single sign-on\" README.md\n\n```json:metadata\n{\"files\": [\".env.example\", \"README.md\"], \"verifyCommand\": \"grep -q OIDC_ISSUER .env.example && grep -qi \\\"single sign-on\\\" README.md && echo OK\", \"acceptanceCriteria\": [\".env.example four vars + comment\", \"README SSO section complete + ADR link\"]}\n```"
     }
   ],
