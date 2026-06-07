@@ -114,12 +114,13 @@ export async function deliverWebhook(payload: unknown): Promise<void> {
   if (!isDeliverPayload(payload)) throw new Error("webhook.deliver: malformed payload");
   const wh = await prisma.webhook.findUnique({ where: { id: payload.webhookId } });
   if (!wh) return; // webhook deleted between enqueue and delivery — nothing to do
-  validateWebhookUrl(wh.url); // re-check at delivery (DNS-rebinding guard)
 
   const body = JSON.stringify(payload);
-  const secret = decryptSecret(wh.secretEnc);
   const timestamp = new Date().toISOString();
+  let recorded = false; // true once we've written a status row for this attempt
   try {
+    validateWebhookUrl(wh.url); // re-check at delivery (DNS-rebinding / policy guard)
+    const secret = decryptSecret(wh.secretEnc);
     const res = await fetch(wh.url, {
       method: "POST",
       headers: {
@@ -132,14 +133,16 @@ export async function deliverWebhook(payload: unknown): Promise<void> {
     });
     if (res.status < 200 || res.status >= 300) {
       await prisma.webhook.update({ where: { id: wh.id }, data: { lastStatus: String(res.status), lastError: `non-2xx: ${res.status}` } });
+      recorded = true;
       throw new Error(`webhook delivery failed: ${res.status}`); // → outbox retries
     }
     await prisma.webhook.update({ where: { id: wh.id }, data: { lastStatus: String(res.status), lastDeliveredAt: new Date(), lastError: null } });
   } catch (err) {
-    if (err instanceof Error && /webhook delivery failed/.test(err.message)) throw err; // already recorded
-    const msg = err instanceof Error ? err.message : String(err);
-    await prisma.webhook.update({ where: { id: wh.id }, data: { lastStatus: "ERR", lastError: msg } });
-    throw err; // network error → outbox retries
+    if (!recorded) {
+      const msg = err instanceof Error ? err.message : String(err);
+      await prisma.webhook.update({ where: { id: wh.id }, data: { lastStatus: "ERR", lastError: msg } });
+    }
+    throw err; // rethrow so the outbox retries / dead-letters
   }
 }
 
