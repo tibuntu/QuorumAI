@@ -14,12 +14,32 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
+  const oidcEnabled = process.env.NEXT_PUBLIC_OIDC_ENABLED === "true";
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     const { error } = await signUp.email({ email, password, name });
     if (error) return setError(error.message ?? "Sign up failed");
     router.push("/app");
+  }
+
+  if (oidcEnabled) {
+    return (
+      <Card className="mx-auto mt-24 max-w-sm p-6">
+        <div className="flex flex-col gap-3">
+          <span className="text-sm font-semibold text-primary">◆ Quorum</span>
+          <h1 className="text-xl font-semibold text-foreground">Sign-up is via SSO</h1>
+          <p className="text-sm text-muted">
+            This workspace uses single sign-on. Create your account by signing in
+            with your identity provider.
+          </p>
+          <Link href="/login" className="text-sm text-muted hover:underline">
+            Go to <span className="font-medium text-primary">Log in</span>
+          </Link>
+        </div>
+      </Card>
+    );
   }
 
   return (
