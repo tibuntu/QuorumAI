@@ -124,6 +124,7 @@ model DocumentVersion {
   createdAt     DateTime @default(now())
   currentFor         Document?    @relation("CurrentVersion")
   annotationsCreated Annotation[] @relation("AnnotationVersion")
+  appliedSuggestions Annotation[] @relation("AnnotationAppliedVersion")
   reviewsOn          Review[]     @relation("ReviewVersion")
 
   @@unique([documentId, versionNumber])
@@ -151,10 +152,14 @@ model Annotation {
   author             User     @relation(fields: [authorId], references: [id])
   createdAt          DateTime @default(now())
   comments           Comment[]
+  suggestedText      String?
+  appliedInVersionId String?
+  appliedInVersion   DocumentVersion? @relation("AnnotationAppliedVersion", fields: [appliedInVersionId], references: [id], onDelete: Restrict)
 
   @@index([documentId])
   @@index([createdOnVersionId])
   @@index([authorId])
+  @@index([appliedInVersionId])
 }
 
 model Comment {
