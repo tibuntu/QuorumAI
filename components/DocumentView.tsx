@@ -26,6 +26,9 @@ export interface ClientAnnotation {
   endOffset: number | null;
   threadStatus: string;
   status: string;
+  kind: string;
+  suggestedText: string | null;
+  appliedInVersionNumber: number | null;
   comments: ClientComment[];
 }
 export interface ClientDocument {
@@ -58,11 +61,14 @@ interface PendingSelection {
   endOffset: number;
 }
 
-export default function DocumentView({ doc }: { doc: ClientDocument }) {
+export default function DocumentView({ doc, isOwner }: { doc: ClientDocument; isOwner: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [annotations, setAnnotations] = useState<ClientAnnotation[]>(doc.annotations);
   const [selection, setSelection] = useState<PendingSelection | null>(null);
   const [pendingBody, setPendingBody] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestDraft, setSuggestDraft] = useState("");
+  const [applyError, setApplyError] = useState<string | null>(null);
   const [docState, setDocState] = useState(doc.state);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [mode, setMode] = useState<"review" | "edit">("review");
@@ -142,11 +148,53 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
         endOffset: annotation.endOffset,
         threadStatus: annotation.threadStatus,
         status: annotation.status ?? "ACTIVE",
+        kind: annotation.kind ?? "COMMENT",
+        suggestedText: annotation.suggestedText ?? null,
+        appliedInVersionNumber: null,
         comments: (annotation.comments ?? []).map((c: ClientComment) => ({ id: c.id, body: c.body, author: c.author })),
       };
       setAnnotations((prev) => (prev.some((x) => x.id === created.id) ? prev : [...prev, created]));
       setSelection(null);
       setPendingBody("");
+      setFocusedId(created.id);
+    }
+  }
+
+  async function submitSuggestion() {
+    if (!selection) return;
+    const res = await fetch(`/api/documents/${doc.id}/annotations`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        quote: selection.quote,
+        startOffset: selection.startOffset,
+        endOffset: selection.endOffset,
+        body: pendingBody.trim() || "Suggested edit",
+        kind: "SUGGESTION",
+        suggestedText: suggestDraft,
+      }),
+    });
+    if (res.status === 201) {
+      const { annotation } = await res.json();
+      const created: ClientAnnotation = {
+        id: annotation.id,
+        anchorExact: annotation.anchorExact,
+        anchorPrefix: annotation.anchorPrefix,
+        anchorSuffix: annotation.anchorSuffix,
+        startOffset: annotation.startOffset,
+        endOffset: annotation.endOffset,
+        threadStatus: annotation.threadStatus,
+        status: annotation.status ?? "ACTIVE",
+        kind: annotation.kind ?? "SUGGESTION",
+        suggestedText: annotation.suggestedText ?? null,
+        appliedInVersionNumber: null,
+        comments: (annotation.comments ?? []).map((c: ClientComment) => ({ id: c.id, body: c.body, author: c.author })),
+      };
+      setAnnotations((prev) => (prev.some((x) => x.id === created.id) ? prev : [...prev, created]));
+      setSelection(null);
+      setPendingBody("");
+      setSuggesting(false);
+      setSuggestDraft("");
       setFocusedId(created.id);
     }
   }
@@ -159,13 +207,38 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
     setVersionNumber(document.currentVersion?.versionNumber ?? versionNumber);
     setDocState(document.state);
     setAnnotations(
-      document.annotations.map((a: ClientAnnotation) => ({
+      document.annotations.map((a: ClientAnnotation & { appliedInVersion?: { versionNumber: number } | null }) => ({
         id: a.id, anchorExact: a.anchorExact, anchorPrefix: a.anchorPrefix, anchorSuffix: a.anchorSuffix,
         startOffset: a.startOffset, endOffset: a.endOffset, threadStatus: a.threadStatus, status: a.status,
+        kind: a.kind ?? "COMMENT", suggestedText: a.suggestedText ?? null,
+        appliedInVersionNumber: a.appliedInVersion?.versionNumber ?? a.appliedInVersionNumber ?? null,
         comments: a.comments,
       }))
     );
   }, [doc.id, versionNumber]);
+
+  const applySuggestion = useCallback(async (annotationId: string) => {
+    setApplyError(null);
+    const res = await fetch(`/api/annotations/${annotationId}/apply`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ baseVersionNumber: versionNumber }),
+    });
+    if (res.status === 409) {
+      setApplyError("This document changed since you opened it. Reloading the latest.");
+      await refetchDetail();
+      return;
+    }
+    if (res.status === 422) {
+      setApplyError("Can't apply — the suggested text's anchor changed. Reject and re-request.");
+      return;
+    }
+    if (!res.ok) {
+      setApplyError("Apply failed.");
+      return;
+    }
+    await refetchDetail();
+  }, [versionNumber, refetchDetail]);
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -183,6 +256,7 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
           setAnnotations((prev) => prev.some((x) => x.id === a.id) ? prev : [...prev, {
             id: a.id, anchorExact: a.anchorExact, anchorPrefix: a.anchorPrefix, anchorSuffix: a.anchorSuffix,
             startOffset: a.startOffset, endOffset: a.endOffset, threadStatus: a.threadStatus, status: a.status ?? "ACTIVE",
+            kind: a.kind ?? "COMMENT", suggestedText: a.suggestedText ?? null, appliedInVersionNumber: null,
             comments: (a.comments ?? []).map((c: ClientComment) => ({ id: c.id, body: c.body, author: c.author })),
           }]);
         } else if (e.type === "annotation.updated") {
@@ -303,24 +377,60 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
 
         {selection && (
           <Card className="flex flex-col gap-2 p-3">
-            <p className="text-xs text-muted">Commenting on: “{selection.quote.exact.slice(0, 60)}”</p>
+            <p className="text-xs text-muted">
+              {suggesting ? "Suggesting an edit to" : "Commenting on"}: “{selection.quote.exact.slice(0, 60)}”
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={suggesting ? "secondary" : "primary"}
+                size="sm"
+                onClick={() => {
+                  if (suggesting) {
+                    setSuggesting(false);
+                    setSuggestDraft("");
+                  } else {
+                    setSuggesting(true);
+                    setSuggestDraft(selection.quote.exact);
+                  }
+                }}
+              >
+                {suggesting ? "Switch to comment" : "Suggest edit"}
+              </Button>
+            </div>
+            {suggesting && (
+              <Textarea
+                aria-label="proposed text"
+                value={suggestDraft}
+                onChange={(e) => setSuggestDraft(e.target.value)}
+                rows={3}
+                placeholder="Proposed text"
+              />
+            )}
             <Textarea
               aria-label="comment"
               value={pendingBody}
               onChange={(e) => setPendingBody(e.target.value)}
               rows={3}
-              placeholder="Add a comment"
+              placeholder={suggesting ? "Rationale (optional)" : "Add a comment"}
             />
             <div className="flex gap-2">
-              <Button variant="primary" size="sm" onClick={submitComment}>
-                Comment
-              </Button>
+              {suggesting ? (
+                <Button variant="primary" size="sm" onClick={submitSuggestion}>
+                  Suggest
+                </Button>
+              ) : (
+                <Button variant="primary" size="sm" onClick={submitComment}>
+                  Comment
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => {
                   setSelection(null);
                   setPendingBody("");
+                  setSuggesting(false);
+                  setSuggestDraft("");
                 }}
               >
                 Cancel
@@ -329,13 +439,17 @@ export default function DocumentView({ doc }: { doc: ClientDocument }) {
           </Card>
         )}
 
+        {applyError && <p className="text-sm text-danger">{applyError}</p>}
+
         <CommentSidebar
           annotations={annotations}
           focusedId={focusedId}
           statusById={statusById}
+          isOwner={isOwner}
           onSelectThread={setFocusedId}
           onAddComment={addComment}
           onToggleThread={toggleThread}
+          onApplySuggestion={applySuggestion}
         />
       </aside>
     </div>

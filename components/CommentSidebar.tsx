@@ -13,19 +13,24 @@ function ThreadCard({
   annotation,
   status,
   focused,
+  isOwner,
   onSelect,
   onAddComment,
   onToggleThread,
+  onApplySuggestion,
 }: {
   annotation: ClientAnnotation;
   status?: string;
   focused: boolean;
+  isOwner: boolean;
   onSelect: (id: string) => void;
   onAddComment: (annotationId: string, body: string) => Promise<void>;
   onToggleThread: (annotationId: string, nextStatus: string) => Promise<void>;
+  onApplySuggestion: (annotationId: string) => Promise<void>;
 }) {
   const [reply, setReply] = useState("");
   const resolved = annotation.threadStatus === "RESOLVED";
+  const isSuggestion = annotation.kind === "SUGGESTION";
 
   async function submitReply() {
     if (!reply.trim()) return;
@@ -44,6 +49,42 @@ function ThreadCard({
           &ldquo;{annotation.anchorExact.slice(0, 80)}&rdquo;
           {status === "MOVED" && <span className="text-xs text-[var(--state-open)]"> moved</span>}
         </p>
+      )}
+      {isSuggestion && (
+        <div data-testid="suggestion" className="flex flex-col gap-1 rounded-[var(--radius-app)] border border-border p-2 text-sm">
+          {annotation.anchorExact && (
+            <p className="text-[var(--state-changes)] line-through">{annotation.anchorExact}</p>
+          )}
+          <p className="text-[var(--state-approved)]">{annotation.suggestedText}</p>
+          {annotation.appliedInVersionNumber != null ? (
+            <p className="text-xs font-medium text-muted">Applied as v{annotation.appliedInVersionNumber}</p>
+          ) : isOwner && !resolved ? (
+            <div className="flex gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={status === "ORPHANED"}
+                title={status === "ORPHANED" ? "The suggested text's anchor no longer matches the document." : undefined}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApplySuggestion(annotation.id);
+                }}
+              >
+                Accept
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleThread(annotation.id, "RESOLVED");
+                }}
+              >
+                Reject
+              </Button>
+            </div>
+          ) : null}
+        </div>
       )}
       <ul className="flex flex-col gap-1">
         {annotation.comments.map((c) => (
@@ -82,16 +123,20 @@ export default function CommentSidebar({
   annotations,
   focusedId,
   statusById,
+  isOwner,
   onSelectThread,
   onAddComment,
   onToggleThread,
+  onApplySuggestion,
 }: {
   annotations: ClientAnnotation[];
   focusedId: string | null;
   statusById: Record<string, string>;
+  isOwner: boolean;
   onSelectThread: (id: string) => void;
   onAddComment: (annotationId: string, body: string) => Promise<void>;
   onToggleThread: (annotationId: string, nextStatus: string) => Promise<void>;
+  onApplySuggestion: (annotationId: string) => Promise<void>;
 }) {
   const orphaned = annotations.filter((a) => statusById[a.id] === "ORPHANED");
   const live = annotations.filter((a) => statusById[a.id] !== "ORPHANED");
@@ -109,17 +154,19 @@ export default function CommentSidebar({
               annotation={a}
               status={statusById[a.id]}
               focused={focusedId === a.id}
+              isOwner={isOwner}
               onSelect={onSelectThread}
               onAddComment={onAddComment}
               onToggleThread={onToggleThread}
+              onApplySuggestion={onApplySuggestion}
             />
           ))}
           {orphaned.length > 0 && (
             <div data-testid="orphaned-section" className="flex flex-col gap-2">
               <h3 className="text-xs font-semibold uppercase text-muted">Orphaned comments</h3>
               {orphaned.map((a) => (
-                <ThreadCard key={a.id} annotation={a} status="ORPHANED" focused={focusedId === a.id}
-                  onSelect={onSelectThread} onAddComment={onAddComment} onToggleThread={onToggleThread} />
+                <ThreadCard key={a.id} annotation={a} status="ORPHANED" focused={focusedId === a.id} isOwner={isOwner}
+                  onSelect={onSelectThread} onAddComment={onAddComment} onToggleThread={onToggleThread} onApplySuggestion={onApplySuggestion} />
               ))}
             </div>
           )}

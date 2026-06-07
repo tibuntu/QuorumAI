@@ -27,9 +27,14 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       endOffset: a.endOffset,
       threadStatus: a.threadStatus,
       status: a.status,
+      kind: a.kind,
+      suggestedText: a.suggestedText,
+      appliedInVersionNumber: a.appliedInVersion?.versionNumber ?? null,
       comments: a.comments.map((c) => ({ id: c.id, body: c.body, author: c.author })),
     })),
   };
 
-  return <DocumentView doc={serializable} />;
+  const isOwner = doc.ownerId === session.user.id;
+
+  return <DocumentView doc={serializable} isOwner={isOwner} />;
 }
