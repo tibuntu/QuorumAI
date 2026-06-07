@@ -4,6 +4,7 @@ import { relocate } from "@/lib/anchoring";
 import { computeDocumentState } from "@/lib/review-state";
 import { publish } from "@/lib/events";
 import { notifyParticipants } from "@/lib/notifications";
+import { dispatch } from "@/lib/webhooks";
 import type { ReviewVerdict } from "@/lib/enums";
 
 export async function listVersions(documentId: string) {
@@ -39,6 +40,7 @@ export async function createVersion(userId: string, documentId: string, baseVers
   const doc = await prisma.document.findUnique({ where: { id: documentId }, include: { currentVersion: true } });
   if (!doc?.currentVersion) throw new Error("document has no current version");
   if (doc.currentVersion.versionNumber !== baseVersionNumber) throw new ConcurrencyError();
+  const prevState = doc.state;
 
   const contentHash = createHash("sha256").update(markdown).digest("hex");
   if (contentHash === doc.currentVersion.contentHash) return { unchanged: true as const };
@@ -95,5 +97,9 @@ export async function createVersion(userId: string, documentId: string, baseVers
   // Publish only after the transaction has committed.
   publish(documentId, { type: "version.created", versionNumber: version.versionNumber, summary });
   await notifyParticipants(documentId, userId, "version").catch(() => {});
+  await dispatch(documentId, "version.created", { version: version.versionNumber }, userId).catch(() => {});
+  if (state !== prevState) {
+    await dispatch(documentId, "decision.changed", { decision: state.toLowerCase(), version: version.versionNumber }, userId).catch(() => {});
+  }
   return { unchanged: false as const, version, summary, state };
 }

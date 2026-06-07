@@ -3,6 +3,7 @@ import type { Quote } from "@/lib/anchoring";
 import type { AnnotationKind, Severity, ThreadStatus } from "@/lib/enums";
 import { publish } from "@/lib/events";
 import { notifyParticipants } from "@/lib/notifications";
+import { dispatch } from "@/lib/webhooks";
 
 export async function createAnnotation(
   userId: string,
@@ -31,6 +32,7 @@ export async function createAnnotation(
   });
   publish(documentId, { type: "annotation.created", annotation });
   await notifyParticipants(documentId, userId, "comment").catch(() => {});
+  await dispatch(documentId, "comment.created", { annotationId: annotation.id }, userId).catch(() => {});
   return annotation;
 }
 
@@ -42,6 +44,7 @@ export async function addComment(userId: string, annotationId: string, body: str
   const ann = await prisma.annotation.findUnique({ where: { id: annotationId }, select: { documentId: true } });
   if (ann) publish(ann.documentId, { type: "comment.created", annotationId, comment });
   if (ann) await notifyParticipants(ann.documentId, userId, "comment").catch(() => {});
+  if (ann) await dispatch(ann.documentId, "comment.created", { annotationId }, userId).catch(() => {});
   return comment;
 }
 
