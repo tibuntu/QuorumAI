@@ -21,9 +21,17 @@ describe("validateWebhookUrl", () => {
     "https://192.168.1.1/hook",
     "https://[::1]/hook",
     "not-a-url",
+    "https://[::ffff:127.0.0.1]/hook",
+    "https://[::ffff:10.0.0.1]/hook",
   ])("rejects %s in production", (url) => {
     setProd();
     expect(() => validateWebhookUrl(url)).toThrow();
+  });
+
+  it("allows a public hostname starting with fc/fd in production", () => {
+    setProd();
+    expect(() => validateWebhookUrl("https://fcdn.example.com/hook")).not.toThrow();
+    expect(() => validateWebhookUrl("https://fd-assets.example.org/hook")).not.toThrow();
   });
 
   it("allows http+localhost outside production", () => {

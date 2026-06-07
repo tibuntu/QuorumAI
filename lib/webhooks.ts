@@ -6,8 +6,23 @@ import type { WebhookEvent } from "@/lib/enums";
 
 /** True for loopback / link-local / private-range literal IPs (v4 + minimal v6). */
 export function isPrivateIp(host: string): boolean {
-  const h = host.replace(/^\[/, "").replace(/\]$/, "").toLowerCase();
-  if (h === "::1" || h === "::" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+  let h = host.replace(/^\[/, "").replace(/\]$/, "").toLowerCase();
+  // Unwrap an IPv4-mapped IPv6 address in dotted-quad form (e.g. ::ffff:127.0.0.1).
+  const mappedDotted = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(h);
+  if (mappedDotted) h = mappedDotted[1];
+  // Unwrap an IPv4-mapped IPv6 address in hex form (e.g. ::ffff:7f00:1 → 127.0.0.1).
+  // URL.hostname normalises [::ffff:127.0.0.1] → [::ffff:7f00:1] before we see it.
+  const mappedHex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(h);
+  if (mappedHex) {
+    const hi = parseInt(mappedHex[1], 16);
+    const lo = parseInt(mappedHex[2], 16);
+    h = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+  }
+  const isIpv6Literal = h.includes(":");
+  if (isIpv6Literal) {
+    // Loopback, unspecified, link-local, and unique-local (fc00::/7) IPv6.
+    if (h === "::1" || h === "::" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+  }
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
   if (!m) return false;
   const [a, b] = [Number(m[1]), Number(m[2])];
@@ -119,7 +134,7 @@ export async function deliverWebhook(payload: unknown): Promise<void> {
   const timestamp = new Date().toISOString();
   let recorded = false; // true once we've written a status row for this attempt
   try {
-    validateWebhookUrl(wh.url); // re-check at delivery (DNS-rebinding / policy guard)
+    validateWebhookUrl(wh.url); // re-check at delivery (delivery-time policy guard; literal-host only — does not resolve DNS)
     const secret = decryptSecret(wh.secretEnc);
     const res = await fetch(wh.url, {
       method: "POST",
