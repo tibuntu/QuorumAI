@@ -1,0 +1,32 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-07-quorum-ai-m3-p3-block-until-approved.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Core long-poll logic — lib/feedback-wait.ts",
+      "status": "pending",
+      "description": "**Goal:** Pure, testable wait primitive: clamp timeout; resolve on wake-event, terminal-on-connect, or timeout.\n\n**Files:** Create lib/feedback-wait.ts; Test tests/unit/feedback-wait.test.ts\n\n**Verify:** CI=true pnpm test:unit -- feedback-wait\n\n```json:metadata\n{\"files\": [\"lib/feedback-wait.ts\", \"tests/unit/feedback-wait.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit -- feedback-wait\", \"acceptanceCriteria\": [\"clampTimeout fallback + clamp\", \"subscribe before re-check; terminal-on-connect immediate\", \"wake event resolves with fresh snapshot\", \"non-wake events ignored\", \"timeout returns timedOut:true\", \"unsubscribe always called\", \"null when snapshot missing\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Route handler — app/api/plans/[id]/feedback/wait/route.ts",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Owner-strict, scope-gated GET clamping timeout via env, returning P2 body + timedOut, no-store.\n\n**Files:** Create app/api/plans/[id]/feedback/wait/route.ts\n\n**Verify:** CI=true pnpm lint && CI=true pnpm build\n\n```json:metadata\n{\"files\": [\"app/api/plans/[id]/feedback/wait/route.ts\"], \"verifyCommand\": \"CI=true pnpm lint && CI=true pnpm build\", \"acceptanceCriteria\": [\"auth ordering 401/404/403 mirrors feedback route\", \"timeoutMs clamped via FEEDBACK_WAIT_MAX_MS env\", \"200 with P2 body + timedOut + no-store\", \"404 when wait yields null\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: E2e proof — extend tests/e2e/authorization.spec.ts",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "**Goal:** Prove agent token waiting on a pending plan unblocks when a reviewer approves (200, approved, timedOut:false).\n\n**Files:** Modify tests/e2e/authorization.spec.ts\n\n**Verify:** CI=true pnpm test:e2e -- authorization\n\n```json:metadata\n{\"files\": [\"tests/e2e/authorization.spec.ts\"], \"verifyCommand\": \"CI=true pnpm test:e2e -- authorization\", \"acceptanceCriteria\": [\"agent token opens wait on pending plan\", \"owner approves while wait in flight\", \"wait resolves 200 approved timedOut:false\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Update /pull-feedback skill to loop",
+      "status": "pending",
+      "description": "**Goal:** Bounded wait loop re-arming until terminal decision or max iterations; surface still-pending.\n\n**Files:** Modify .claude/commands/pull-feedback.md\n\n**Verify:** Manual read-through — bounded loop + terminal exit.\n\n```json:metadata\n{\"files\": [\".claude/commands/pull-feedback.md\"], \"verifyCommand\": \"\", \"acceptanceCriteria\": [\"loops on feedback/wait?timeoutMs=30000\", \"stops on approved/changes_requested + presents markdown\", \"re-arms up to 10 then surfaces still-pending\", \"env vars + PATCH revise-back documented\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-07"
+}

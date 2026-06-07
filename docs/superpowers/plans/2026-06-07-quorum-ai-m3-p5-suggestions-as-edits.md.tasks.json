@@ -1,0 +1,47 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-07-quorum-ai-m3-p5-suggestions-as-edits.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Schema + migration for suggestion fields",
+      "status": "pending",
+      "description": "**Goal:** Add nullable suggestedText + appliedInVersionId (with FK relation) to the Prisma Annotation model and generate a migration.\n\n**Files:** Modify prisma/schema.prisma (Annotation + DocumentVersion back-relation); Create prisma/migrations/<ts>_p5_suggestions/migration.sql.\n\n**Acceptance Criteria:** suggestedText String? + appliedInVersionId String? exist; appliedInVersion relation (\"AnnotationAppliedVersion\", onDelete Restrict) + DocumentVersion.appliedSuggestions back-relation + @@index; prisma validate passes, client regenerated, tsc clean.\n\n**Verify:** npx prisma validate && npx prisma migrate status\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations\"], \"verifyCommand\": \"npx prisma validate && npx prisma migrate status\", \"acceptanceCriteria\": [\"suggestedText + appliedInVersionId fields exist\", \"appliedInVersion FK relation + back-relation + index\", \"prisma validate passes, tsc clean\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: applySuggestion() + createAnnotation suggestedText (lib, TDD)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Persist suggestedText on create; add applySuggestion() that re-resolves the anchor, splices in suggested text, delegates to createVersion().\n\n**Files:** Modify lib/annotations.ts; Test tests/unit/annotations.test.ts.\n\n**Acceptance Criteria:** createAnnotation persists suggestedText only for SUGGESTION; applySuggestion replaces re-resolved span + createVersion + sets appliedInVersionId + RESOLVED; MOVED applies at relocated offsets, ORPHANED throws OrphanedAnchorError; stale baseVersionNumber → ConcurrencyError; non-suggestion/already-applied/no-text throw.\n\n**Verify:** rtk vitest run tests/unit/annotations.test.ts\n\n```json:metadata\n{\"files\": [\"lib/annotations.ts\", \"tests/unit/annotations.test.ts\"], \"verifyCommand\": \"rtk vitest run tests/unit/annotations.test.ts\", \"acceptanceCriteria\": [\"createAnnotation persists suggestedText for SUGGESTION\", \"applySuggestion replaces span + createVersion + resolves\", \"MOVED re-resolves, ORPHANED throws\", \"stale → ConcurrencyError\", \"guards throw\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: API — apply route + create-annotation suggestedText",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "**Goal:** Owner-only POST /api/annotations/[id]/apply + create route accepts suggestedText.\n\n**Files:** Create app/api/annotations/[id]/apply/route.ts; Modify app/api/documents/[id]/annotations/route.ts.\n\n**Acceptance Criteria:** apply → owner 200, non-owner 403, non-participant 404, orphaned 422, stale 409, bad body 400; create forwards kind+suggestedText (no new gates).\n\n**Verify:** rtk tsc --noEmit\n\n```json:metadata\n{\"files\": [\"app/api/annotations/[id]/apply/route.ts\", \"app/api/documents/[id]/annotations/route.ts\"], \"verifyCommand\": \"rtk tsc --noEmit\", \"acceptanceCriteria\": [\"apply owner-only 403/404/409/422/400\", \"create forwards suggestedText\", \"tsc clean\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: P2 provenance — feedback shows \"applied as vN\" (TDD)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Surface accepted-suggestion provenance in the consolidated feedback contract.\n\n**Files:** Modify lib/documents.ts (include appliedInVersion.versionNumber); Modify lib/feedback.ts; Test tests/unit/feedback.test.ts.\n\n**Acceptance Criteria:** getDocumentDetail includes appliedInVersion.versionNumber; consolidateFeedback appends [applied as vN]; unapplied unaffected; FeedbackDetail exported + widened.\n\n**Verify:** rtk vitest run tests/unit/feedback.test.ts\n\n```json:metadata\n{\"files\": [\"lib/documents.ts\", \"lib/feedback.ts\", \"tests/unit/feedback.test.ts\"], \"verifyCommand\": \"rtk vitest run tests/unit/feedback.test.ts\", \"acceptanceCriteria\": [\"getDocumentDetail includes appliedInVersion.versionNumber\", \"renders [applied as vN]\", \"unapplied unaffected\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Suggestion UI — reviewer proposes, owner accepts",
+      "status": "pending",
+      "blockedBy": [3, 4],
+      "description": "**Goal:** Reviewer suggest-edit mode + owner one-click Accept/Reject diff card (D9).\n\n**Files:** Modify components/DocumentView.tsx, components/CommentSidebar.tsx, app/app/documents/[id]/page.tsx.\n\n**Acceptance Criteria:** ClientAnnotation gains kind/suggestedText/appliedInVersionNumber at all 4 mapping sites; suggest-edit posts SUGGESTION+suggestedText; diff card data-testid=suggestion; owner-only Accept/Reject, ORPHANED disabled, applied shows vN; isOwner threaded; existing hooks preserved.\n\n**Verify:** rtk tsc --noEmit\n\n```json:metadata\n{\"files\": [\"components/DocumentView.tsx\", \"components/CommentSidebar.tsx\", \"app/app/documents/[id]/page.tsx\"], \"verifyCommand\": \"rtk tsc --noEmit\", \"acceptanceCriteria\": [\"ClientAnnotation new fields at all mapping sites\", \"suggest-edit posts SUGGESTION+suggestedText\", \"diff card data-testid=suggestion\", \"owner-only Accept/Reject, ORPHANED disabled, applied vN\", \"isOwner threaded, hooks preserved\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: e2e — propose, accept, 403, provenance",
+      "status": "pending",
+      "blockedBy": [5],
+      "description": "**Goal:** e2e coverage of reviewer→owner flow, non-owner guard, provenance.\n\n**Files:** Create tests/e2e/suggestions.spec.ts.\n\n**Acceptance Criteria:** reviewer proposes, owner accepts → new version + RESOLVED + approval dismissed; non-owner apply → 403; owner detail shows appliedInVersion.versionNumber===2 and UI \"Applied as v2\".\n\n**Verify:** CI=true rtk playwright test tests/e2e/suggestions.spec.ts; then full suite green.\n\n```json:metadata\n{\"files\": [\"tests/e2e/suggestions.spec.ts\"], \"verifyCommand\": \"CI=true rtk playwright test tests/e2e/suggestions.spec.ts\", \"acceptanceCriteria\": [\"propose→accept new version resolved approval-dismissed\", \"non-owner 403\", \"detail shows applied as v2\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-07"
+}
