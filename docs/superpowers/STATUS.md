@@ -25,20 +25,20 @@ Roadmap: `specs/2026-06-05-quorum-ai-m2-roadmap.md`. All four phases landed on `
 - **P3 · Version history + diff view** ✅ — versions list + side-by-side markdown diff; `lib/diff.ts`, history route.
 - **P4 · Dark-mode toggle** ✅ — class-based light/dark/system tokens, no-flash boot script, header toggle; `lib/theme.ts`, `ThemeToggle`.
 
-### M3 — Deepen the Agent Loop + SSO + Suggestions  📋 roadmap defined, not started
+### M3 — Deepen the Agent Loop + SSO + Suggestions  ✅ shipped (all on `main`)
 
-Roadmap: `specs/2026-06-06-quorum-ai-m3-roadmap.md`. Per-phase design specs drafted (`specs/2026-06-06-quorum-ai-m3-p1..p6-*-design.md`). Phases (P1 first — foundation; P2/P3/P5/P6 parallelizable after; P4 needs P1):
-- **P1 · Foundations & durable outbox** — `OutboxJob` table + in-process worker (retry/backoff/dead-letter); email digest re-homed onto it; missing FK indexes; `Annotation.severity`/`category`. _Foundation for P4._
-- **P2 · Structured feedback contract** — versioned filterable JSON (severity/category, provenance, rollups) on `/api/plans/[id]/feedback`. _The moat._
-- **P3 · Block-until-approved long-poll** — `GET …/feedback/wait?timeoutMs=`; `/pull-feedback` skill loops to a decision.
-- **P4 · Outbound webhooks** — signed (HMAC), durable, retried delivery via the P1 outbox; CI/agent callbacks on review events.
-- **P5 · Suggestions-as-edits** — reviewer proposes concrete text; owner accepts → new version via `createVersion()`.
-- **P6 · Generic OIDC login** — one env-gated OIDC provider alongside password; account-linking by verified email (no schema change). _ADR candidate._
+Roadmap: `specs/2026-06-06-quorum-ai-m3-roadmap.md`; per-phase design specs `specs/2026-06-06-quorum-ai-m3-p1..p6-*-design.md`. All six phases implemented and on `main`. Full suite green: 150 unit + 21 e2e, lint + typecheck clean, production build 0/0.
+- **P1 · Foundations & durable outbox** ✅ — durable `OutboxJob` table + in-process tick worker (backoff/dead-letter, `onDead`); email digest re-homed onto it; FK indexes; `Annotation.severity`/`category` + `SEVERITIES`. `lib/outbox.ts`.
+- **P2 · Structured feedback contract** ✅ — `schemaVersion` JSON with severity/category, provenance, rollups + include/exclude filtering on `/api/plans/[id]/feedback`; `/pull-feedback` leads with blockers. `lib/feedback.ts`. _The moat._
+- **P3 · Block-until-approved long-poll** ✅ — `GET …/feedback/wait?timeoutMs=` over the event bus with on-connect DB re-check + clamped timeout; skill loops to a decision.
+- **P4 · Outbound webhooks** ✅ — `Webhook` model, AES-256-GCM reveal-once secret, HMAC-signed delivery via the P1 outbox handler, SSRF guard, retry/dead-letter, management UI. `lib/webhooks.ts`.
+- **P5 · Suggestions-as-edits** ✅ — `Annotation.suggestedText` + `appliedInVersion`; owner-only apply route → new version via `createVersion()`; orphan/resolved guards; suggest-edit + diff-card UI; provenance surfaced in feedback.
+- **P6 · Generic OIDC login** ✅ — env-gated generic OIDC provider alongside password, link-by-verified-email, self-service register guarded under SSO; no schema change (reuses `Account`). _ADR candidate — confirm an ADR was drafted._
 
 Deferred → M4+: Postgres & multi-instance · teams/org & multi-tenancy · presence/live "review together" · git export · dedicated Slack/Teams formatters (beyond generic webhooks) · enforced-SSO / multiple-provider / SCIM · version checkpointing/compaction · multi-hunk suggestion patches.
 
 ## Git state
-- `main`: all M1 work merged (PRs #16–#19) + this roadmap.
+- `main`: M1 + M2 + M3 all landed. M3's six phases merged into `main` (per-phase branches `m3-p1`…`m3-p6`).
 - No active feature branches locally. Merged feature branches may still exist on `origin` (cleanup optional). User manages pushes.
 
 ## Run locally
@@ -51,7 +51,7 @@ pnpm dev                      # http://localhost:3000
 Container: `BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
-M2 is complete. Start **M3 / P1 (Foundations & durable outbox)** — fresh session on a fresh branch off `main`: `brainstorming` → `writing-plans` → execute (see the M3 roadmap's "Per-phase workflow"). P1 ships first (foundation for P4); P2/P3/P5/P6 parallelize after.
+M3 is complete — all three milestones (M1–M3) shipped. No phase work outstanding. Next is a milestone-level decision: scope **M4** from the deferred list (Postgres & multi-instance, teams/org multi-tenancy, presence/live, git export, Slack/Teams formatters, enforced-SSO/SCIM) via a new roadmap, or harden/document the current surface. Start with `brainstorming` on the M4 theme when ready.
 
 ## Env/workflow notes (carried from M1)
 - This repo's **pnpm is v11** → prefix script runs with `CI=true` (avoids the no-TTY `node_modules` purge abort).
@@ -61,7 +61,7 @@ M2 is complete. Start **M3 / P1 (Foundations & durable outbox)** — fresh sessi
 - Pure libs → services → thin routes → client; value-sets in `lib/enums.ts`.
 
 ## Known follow-ups / deferrals
-- FK indexes (`Annotation.authorId`, `Comment.authorId`, `Review.reviewerId`, `DocumentVersion.createdById`) — **folded into M3 / P1**.
-- README quickstart still references pre-M1 state — update to the real `docker compose up` + agent-loop flow (**M3 / P6** also touches README).
-- `gsd-ui-review` visual audit — **landed via PR #21** (UI-review remediation).
-- Stale local branches/worktree to prune: `ui-review-remediation` (merged → PR #21), `worktree-docker-push-action` (merged → PR #22).
+- FK indexes — ✅ done in M3 / P1.
+- README quickstart — refreshed in M3 / P6 (verify it covers the full agent-loop + OIDC env).
+- M3 / P6 was flagged an ADR candidate (OIDC auth-architecture) — confirm an ADR was drafted, else draft via the `adr` skill.
+- New `OIDC_*` / `OUTBOX_*` / webhook env vars — ensure `.env.example` + deploy docs cover them.
