@@ -46,6 +46,9 @@ suggestions authored by the machine API (reviewer-side UI only this phase).
 | # | Decision | Choice |
 |---|----------|--------|
 | D1 | Where the proposed text lives | **New nullable `Annotation.suggestedText`**, meaningful only when `kind=SUGGESTION`. Reuses the existing `anchorExact`/`startOffset`/`endOffset` range — no new anchor model. |
+| D7 | How `appliedInVersionId` is modeled | **Proper nullable FK relation to `DocumentVersion`** (not a bare string), restrict-delete, matching the existing `createdOnVersion` relation pattern. Lets feedback/UI resolve the applied version *number* directly. _(resolved 2026-06-07)_ |
+| D8 | P2 provenance surfacing | **In scope this phase.** Extend `getDocumentDetail` + `lib/feedback.ts` to carry `suggestedText`/applied-version-number and render `[applied as vN]`. _(resolved 2026-06-07)_ |
+| D9 | Accept UX | **Diff card + one-click Accept.** The old-span→new-text diff on the suggestion card IS the preview; no separate confirm modal. Accept disabled (with explanation) when anchor is `ORPHANED`. _(resolved 2026-06-07)_ |
 | D2 | How apply produces content | **Server computes the new markdown** by replacing the anchored span in the current version's markdown with `suggestedText`, then calls the existing `createVersion()`. Single source of truth for re-anchoring/approval-dismissal stays in `lib/versions.ts`. |
 | D3 | Who can accept | **Owner only** (consistent with M2 P1 D3: only the owner creates versions). Reviewers propose; owner disposes. |
 | D4 | Stale anchor handling | If the suggestion's anchor is `MOVED`, **re-resolve by exact text**; if `ORPHANED` (text gone), **block accept** with a clear "can't apply — text changed" and let the owner reject/re-request. No silent mis-application. |
@@ -60,8 +63,12 @@ suggestions authored by the machine API (reviewer-side UI only this phase).
 
 ```prisma
 // on Annotation:
-  suggestedText   String?   // proposed replacement for the anchored span (kind=SUGGESTION)
-  appliedInVersionId String?  // set when accepted → which version applied it
+  suggestedText      String?           // proposed replacement for the anchored span (kind=SUGGESTION)
+  appliedInVersionId String?           // set when accepted → which version applied it
+  appliedInVersion   DocumentVersion?  @relation("AnnotationAppliedVersion", fields: [appliedInVersionId], references: [id], onDelete: Restrict)
+
+// on DocumentVersion (back-relation):
+  appliedSuggestions Annotation[]      @relation("AnnotationAppliedVersion")
 ```
 
 Additive, nullable. No backfill.
