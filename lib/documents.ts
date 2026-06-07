@@ -39,11 +39,16 @@ export async function getDocumentDetail(id: string) {
     include: {
       currentVersion: true,
       owner: { select: { name: true, email: true } },
+      versions: {
+        orderBy: { versionNumber: "asc" },
+        select: { versionNumber: true, createdAt: true, createdBy: { select: { name: true, email: true } } },
+      },
       annotations: {
         orderBy: { createdAt: "asc" },
         include: {
           author: { select: { name: true, email: true } },
           comments: { orderBy: { createdAt: "asc" }, include: { author: { select: { name: true, email: true } } } },
+          createdOnVersion: { select: { versionNumber: true } },
         },
       },
       reviews: { include: { reviewer: { select: { name: true, email: true } } } },

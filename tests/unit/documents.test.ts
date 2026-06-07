@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { prisma } from "@/lib/db";
 import { createDocument, getDocumentDetail, listDocuments } from "@/lib/documents";
+import { createAnnotation } from "@/lib/annotations";
+import { buildQuote } from "@/lib/anchoring";
 
 async function makeUser() {
   const now = new Date();
@@ -47,5 +49,19 @@ describe("documents service", () => {
     });
     expect(row).toBeTruthy();
     await prisma.document.delete({ where: { id } });
+  });
+
+  it("getDocumentDetail exposes versions and per-annotation createdOnVersion", async () => {
+    const now = new Date();
+    const user = await prisma.user.create({ data: { id: `u-${Date.now()}-prov`, name: "Alex", email: `u-${Date.now()}-prov@ex.com`, emailVerified: false, createdAt: now, updatedAt: now } });
+    const md = "The cloud setup needs review.";
+    const docId = await createDocument(user.id, "Plan", md);
+    const start = md.indexOf("cloud setup");
+    await createAnnotation(user.id, docId, { quote: buildQuote(md, start, start + 11), startOffset: start, endOffset: start + 11 }, "c");
+    const detail = await getDocumentDetail(docId);
+    expect(detail?.versions?.[0]?.versionNumber).toBe(1);
+    expect(detail?.versions?.[0]?.createdBy?.name).toBe("Alex");
+    expect(detail?.annotations?.[0]?.createdOnVersion?.versionNumber).toBe(1);
+    await prisma.document.delete({ where: { id: docId } });
   });
 });
