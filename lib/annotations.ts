@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import type { Quote } from "@/lib/anchoring";
+import { relocate } from "@/lib/anchoring";
+import { createVersion } from "@/lib/versions";
 import type { AnnotationKind, Severity, ThreadStatus } from "@/lib/enums";
 import { publish } from "@/lib/events";
 import { notifyParticipants } from "@/lib/notifications";
@@ -8,7 +10,7 @@ import { dispatch } from "@/lib/webhooks";
 export async function createAnnotation(
   userId: string,
   documentId: string,
-  anchor: { quote: Quote; startOffset: number; endOffset: number; kind?: AnnotationKind; severity?: Severity | null; category?: string | null },
+  anchor: { quote: Quote; startOffset: number; endOffset: number; kind?: AnnotationKind; severity?: Severity | null; category?: string | null; suggestedText?: string | null },
   body: string
 ) {
   const doc = await prisma.document.findUnique({ where: { id: documentId }, select: { currentVersionId: true } });
@@ -25,6 +27,7 @@ export async function createAnnotation(
       endOffset: anchor.endOffset,
       severity: anchor.severity ?? null,
       category: anchor.category ?? null,
+      suggestedText: anchor.kind === "SUGGESTION" ? (anchor.suggestedText ?? null) : null,
       authorId: userId,
       comments: { create: { authorId: userId, body } },
     },
@@ -53,4 +56,55 @@ export async function setThreadStatus(userId: string, annotationId: string, stat
   publish(annotation.documentId, { type: "annotation.updated", annotationId, threadStatus: status });
   await notifyParticipants(annotation.documentId, userId, "resolve").catch(() => {});
   return annotation;
+}
+
+export class OrphanedAnchorError extends Error {
+  constructor(message = "anchor text no longer present") {
+    super(message);
+    this.name = "OrphanedAnchorError";
+  }
+}
+
+/**
+ * Owner-accepts a SUGGESTION: re-resolve its anchor against the *current*
+ * markdown (D4), splice in `suggestedText`, and create a new version via the
+ * existing createVersion() (which owns re-anchoring + approval dismissal — D2).
+ * On success the thread is RESOLVED and `appliedInVersionId` records the result.
+ *
+ * Authorization (owner-only, D3) is enforced at the route, not here.
+ */
+export async function applySuggestion(userId: string, annotationId: string, baseVersionNumber: number) {
+  const annotation = await prisma.annotation.findUnique({
+    where: { id: annotationId },
+    include: { document: { include: { currentVersion: true } } },
+  });
+  if (!annotation) throw new Error("annotation not found");
+  if (annotation.kind !== "SUGGESTION") throw new Error("not a suggestion");
+  if (annotation.suggestedText == null) throw new Error("suggestion has no proposed text");
+  if (annotation.appliedInVersionId) throw new Error("suggestion already applied");
+  const current = annotation.document.currentVersion;
+  if (!current) throw new Error("document has no current version");
+
+  const reloc = relocate(current.markdown, {
+    exact: annotation.anchorExact ?? "",
+    prefix: annotation.anchorPrefix ?? "",
+    suffix: annotation.anchorSuffix ?? "",
+  });
+  if (reloc.status === "ORPHANED" || !reloc.range) throw new OrphanedAnchorError();
+
+  const { start, end } = reloc.range;
+  const newMarkdown = current.markdown.slice(0, start) + annotation.suggestedText + current.markdown.slice(end);
+
+  const result = await createVersion(userId, annotation.documentId, baseVersionNumber, newMarkdown);
+
+  const appliedVersionId = result.unchanged ? current.id : result.version.id;
+  const appliedVersionNumber = result.unchanged ? current.versionNumber : result.version.versionNumber;
+
+  const updated = await prisma.annotation.update({
+    where: { id: annotationId },
+    data: { appliedInVersionId: appliedVersionId, threadStatus: "RESOLVED" },
+  });
+  publish(annotation.documentId, { type: "annotation.updated", annotationId, threadStatus: "RESOLVED" });
+
+  return { version: { id: appliedVersionId, versionNumber: appliedVersionNumber }, annotation: updated };
 }
