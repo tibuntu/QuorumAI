@@ -161,7 +161,7 @@ export default function DocumentView({ doc, isOwner }: { doc: ClientDocument; is
   }
 
   async function submitSuggestion() {
-    if (!selection) return;
+    if (!selection || !suggestDraft.trim()) return;
     const res = await fetch(`/api/documents/${doc.id}/annotations`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -415,7 +415,7 @@ export default function DocumentView({ doc, isOwner }: { doc: ClientDocument; is
             />
             <div className="flex gap-2">
               {suggesting ? (
-                <Button variant="primary" size="sm" onClick={submitSuggestion}>
+                <Button variant="primary" size="sm" onClick={submitSuggestion} disabled={!suggestDraft.trim()}>
                   Suggest
                 </Button>
               ) : (
