@@ -3,7 +3,7 @@ milestone: M3
 phase: P2
 slug: quorum-ai-m3-p2-structured-feedback
 title: Structured feedback contract
-status: design-draft
+status: design-final
 created: 2026-06-06
 related:
   - docs/superpowers/specs/2026-06-06-quorum-ai-m3-roadmap.md
@@ -52,7 +52,10 @@ diffs inside the feedback payload (that's the version-diff UI from M2 P3).
 | D1 | Versioning | **`schemaVersion: 1` literal** in the response. Agents/skills branch on it; future changes bump it additively. |
 | D2 | Severity source | **`Annotation.severity`** (added in P1). Nullable → treated as `MINOR` for rollups but reported as `null` (honest). Author/reviewer sets it when creating a comment; optional. |
 | D3 | Backward compatibility | **Keep `markdown` and the existing top-level keys** (`decision`, `state`, `threads`, `reviews`). Add new fields; don't remove. Existing `/pull-feedback` callers keep working pre-skill-update. |
-| D4 | Filtering semantics | **`include` / `exclude` CSV** of tags: `blocking` (severity BLOCKER or thread on an active REQUEST_CHANGES), `unresolved` (threadStatus OPEN), `resolved`, `orphaned`. Filters affect `threads[]` only; rollups always reflect the **unfiltered** totals (so the agent sees the true picture). |
+| D4 | Filtering semantics | **`include` / `exclude` CSV** of tags: `blocking` (**`severity === "BLOCKER"` only** — annotations have no per-thread link to a review, so the REQUEST_CHANGES dimension stays at the document `decision` level), `unresolved` (threadStatus OPEN), `resolved` (threadStatus RESOLVED), `orphaned` (anchorState ORPHANED). Filters affect `threads[]` only; rollups always reflect the **unfiltered** totals (so the agent sees the true picture). |
+| D6 | Severity input affordance | **API field only this phase.** `createAnnotation` + `POST /api/documents/[id]/annotations` accept optional `severity` (validated against `SEVERITIES`, else 400) and `category` (free-form short string). No web UI control — deferred to the UI phase. |
+| D7 | Null handling | Null `category` → `"uncategorized"` bucket in `byCategory`. Null `severity` → reported as `null`, never counted as blocking, does not affect `byCategory`. `unresolved` counts `threadStatus === "OPEN"` regardless of severity. `byVersion` keyed by `raisedOnVersion` (string keys). |
+| D8 | Data fetching | `getDocumentDetail` (`lib/documents.ts`) must be extended: annotations include `createdOnVersion { versionNumber }`; document includes `versions { versionNumber, createdAt, createdBy }` ordered. Provenance is derivable from existing **rows** but is not currently **fetched**. |
 | D5 | Provenance shape | Per thread: `raisedOnVersion` (number) + `currentAnchorState` (ACTIVE/MOVED/ORPHANED). Top level: `currentVersion` (number) + `versions: [{number, createdBy, createdAt}]`. All already derivable from existing rows. |
 
 ---
