@@ -82,4 +82,31 @@ describe("outbox engine", () => {
     expect(row?.maxAttempts).toBe(3);
     delete process.env.OUTBOX_MAX_ATTEMPTS;
   });
+
+  it("invokes onDead once on attempt exhaustion, not on retries", async () => {
+    process.env.OUTBOX_BACKOFF_MS = "0";
+    const onDead = vi.fn(async () => {});
+    registerHandler("test.dead", async () => { throw new Error("nope"); }, onDead);
+    const id = await enqueue("test.dead", { k: 1 });
+    await prisma.outboxJob.update({ where: { id }, data: { maxAttempts: 2 } });
+
+    await tick(); // attempt 1 -> PENDING, no onDead
+    expect(onDead).not.toHaveBeenCalled();
+
+    await tick(); // attempt 2 -> DEAD, onDead fires
+    expect(onDead).toHaveBeenCalledTimes(1);
+    expect(onDead).toHaveBeenCalledWith({ k: 1 }, expect.stringMatching(/nope/));
+    expect((await prisma.outboxJob.findUnique({ where: { id } }))?.status).toBe("DEAD");
+    delete process.env.OUTBOX_BACKOFF_MS;
+  });
+
+  it("a throwing onDead does not break tick and the job stays DEAD", async () => {
+    process.env.OUTBOX_BACKOFF_MS = "0";
+    registerHandler("test.dead2", async () => { throw new Error("boom"); }, async () => { throw new Error("onDead failed"); });
+    const id = await enqueue("test.dead2", {});
+    await prisma.outboxJob.update({ where: { id }, data: { maxAttempts: 1 } });
+    await expect(tick()).resolves.not.toThrow();
+    expect((await prisma.outboxJob.findUnique({ where: { id } }))?.status).toBe("DEAD");
+    delete process.env.OUTBOX_BACKOFF_MS;
+  });
 });

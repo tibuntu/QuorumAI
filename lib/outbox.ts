@@ -17,21 +17,27 @@ export function computeBackoffMs(attempts: number): number {
 }
 
 type Handler = (payload: unknown) => Promise<void>;
+type DeadHandler = (payload: unknown, lastError: string) => Promise<void> | void;
 
 const globalForOutbox = globalThis as unknown as {
   outboxHandlers?: Map<string, Handler>;
+  outboxDeadHandlers?: Map<string, DeadHandler>;
   outboxTimer?: ReturnType<typeof setInterval>;
 };
 const handlers: Map<string, Handler> = globalForOutbox.outboxHandlers ?? new Map();
 globalForOutbox.outboxHandlers = handlers;
+const deadHandlers: Map<string, DeadHandler> = globalForOutbox.outboxDeadHandlers ?? new Map();
+globalForOutbox.outboxDeadHandlers = deadHandlers;
 
-export function registerHandler(type: string, fn: Handler): void {
+export function registerHandler(type: string, fn: Handler, onDead?: DeadHandler): void {
   handlers.set(type, fn);
+  if (onDead) deadHandlers.set(type, onDead);
 }
 
 /** Test hook: clear the handler registry between tests. */
 export function __resetHandlers(): void {
   handlers.clear();
+  deadHandlers.clear();
 }
 
 export async function enqueue(
@@ -87,6 +93,11 @@ export async function tick(): Promise<void> {
         const lastError = err instanceof Error ? err.message : String(err);
         if (attempts >= job.maxAttempts) {
           await prisma.outboxJob.update({ where: { id: job.id }, data: { status: "DEAD", attempts, lastError } });
+          const onDead = deadHandlers.get(job.type);
+          if (onDead) {
+            try { await onDead(JSON.parse(job.payload), lastError); }
+            catch { /* best-effort: dead-letter visibility must not crash the worker */ }
+          }
         } else {
           await prisma.outboxJob.update({
             where: { id: job.id },
