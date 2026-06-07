@@ -143,6 +143,17 @@ describe("applySuggestion", () => {
     expect(reloaded?.appliedInVersionId).not.toBeNull();
   });
 
+  it("refuses to apply a rejected (RESOLVED) suggestion", async () => {
+    const md = "The cloud setup needs review.";
+    const { userId, docId } = await setup(md);
+    const ann = await createAnnotation(userId, docId, suggestAnchor(md, "cloud setup", "k8s cluster"), "rename");
+    await setThreadStatus(userId, ann.id, "RESOLVED"); // reject
+
+    await expect(applySuggestion(userId, ann.id, 1)).rejects.toThrow(/resolved/);
+    const reloaded = await prisma.annotation.findUnique({ where: { id: ann.id } });
+    expect(reloaded?.appliedInVersionId).toBeNull();
+  });
+
   it("rejects non-suggestion and already-applied annotations", async () => {
     const md = "The cloud setup needs review.";
     const { userId, docId } = await setup(md);

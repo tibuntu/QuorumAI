@@ -82,6 +82,7 @@ export async function applySuggestion(userId: string, annotationId: string, base
   if (annotation.kind !== "SUGGESTION") throw new Error("not a suggestion");
   if (annotation.suggestedText == null) throw new Error("suggestion has no proposed text");
   if (annotation.appliedInVersionId) throw new Error("suggestion already applied");
+  if (annotation.threadStatus === "RESOLVED") throw new Error("suggestion thread is resolved");
   const current = annotation.document.currentVersion;
   if (!current) throw new Error("document has no current version");
 
