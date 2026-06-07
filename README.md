@@ -65,6 +65,10 @@ Quorum supports one generic OIDC provider (Keycloak, Authentik, Azure AD, Auth0,
 | `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` | OAuth client credentials from your IdP |
 | `NEXT_PUBLIC_OIDC_ENABLED` | Set to `true` to render the "Sign in with SSO" button |
 
+Set `NEXT_PUBLIC_OIDC_ENABLED=true` **only together with** the three `OIDC_*` vars: the
+public flag just controls the button, so enabling it alone shows a button whose sign-in
+request 404s (no provider registered server-side).
+
 Configure your IdP's redirect URI to `<BETTER_AUTH_URL>/api/auth/oauth2/callback/oidc`.
 
 **Account linking.** An SSO sign-in whose email the IdP marks *verified* is linked
