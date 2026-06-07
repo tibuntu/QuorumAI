@@ -49,6 +49,7 @@ export async function getDocumentDetail(id: string) {
           author: { select: { name: true, email: true } },
           comments: { orderBy: { createdAt: "asc" }, include: { author: { select: { name: true, email: true } } } },
           createdOnVersion: { select: { versionNumber: true } },
+          appliedInVersion: { select: { versionNumber: true } },
         },
       },
       reviews: { include: { reviewer: { select: { name: true, email: true } } } },

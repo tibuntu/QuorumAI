@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { consolidateFeedback, filterThreads, getPlanFeedback } from "@/lib/feedback";
+import { consolidateFeedback, filterThreads, getPlanFeedback, type FeedbackDetail } from "@/lib/feedback";
 import { prisma } from "@/lib/db";
 import { createDocument } from "@/lib/documents";
 import { createAnnotation, setThreadStatus } from "@/lib/annotations";
@@ -135,4 +135,37 @@ it("getPlanFeedback: rollups stay unfiltered while threads are filtered", async 
   expect(filtered?.threads[0].severity).toBe("BLOCKER");
   expect(filtered?.rollup.total).toBe(2); // unfiltered totals preserved
   await prisma.document.delete({ where: { id: docId } });
+});
+
+describe("consolidateFeedback provenance", () => {
+  it("marks an applied suggestion as applied-in-vN", () => {
+    const detail: FeedbackDetail = {
+      state: "OPEN",
+      annotations: [
+        {
+          anchorExact: "cloud setup",
+          status: "ORPHANED",
+          threadStatus: "RESOLVED",
+          kind: "SUGGESTION",
+          suggestedText: "k8s cluster",
+          appliedInVersion: { versionNumber: 2 },
+          comments: [{ body: "rename it", author: { name: "Rev" } }],
+        },
+      ],
+      reviews: [],
+    };
+    const { markdown } = consolidateFeedback(detail);
+    expect(markdown).toContain("[applied as v2]");
+  });
+
+  it("does not mark unapplied threads", () => {
+    const detail: FeedbackDetail = {
+      state: "OPEN",
+      annotations: [
+        { anchorExact: "cloud setup", status: "ACTIVE", threadStatus: "OPEN", comments: [{ body: "hm" }] },
+      ],
+      reviews: [],
+    };
+    expect(consolidateFeedback(detail).markdown).not.toContain("applied as");
+  });
 });
