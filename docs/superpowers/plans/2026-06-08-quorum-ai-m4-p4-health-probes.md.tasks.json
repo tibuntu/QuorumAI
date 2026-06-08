@@ -1,0 +1,19 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-08-quorum-ai-m4-p4-health-probes.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: /healthz + /readyz route handlers",
+      "status": "pending",
+      "description": "**Goal:** Liveness returns 200 unconditionally; readiness returns 200 when the DB answers SELECT 1, else 503.\n\n**Files:**\n- Create: `app/healthz/route.ts`\n- Create: `app/readyz/route.ts`\n- Test: `tests/unit/healthz.test.ts`\n- Test: `tests/unit/readyz.test.ts`\n\n**Acceptance Criteria:**\n- [ ] GET /healthz → 200 `{status:'ok'}`, no DB access\n- [ ] GET /readyz → 200 `{status:'ok'}` when SELECT 1 succeeds\n- [ ] GET /readyz → 503 `{status:'unavailable'}` when DB query throws\n- [ ] Both export dynamic = 'force-dynamic'\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/healthz.test.ts tests/unit/readyz.test.ts` → PASS.\n\n**Steps:** TDD — RED (routes missing); implement healthz (Response.json ok) + readyz (try prisma.$queryRaw`SELECT 1` → ok / catch → 503); mock prisma.$queryRaw reject for the 503 test; confirm prisma import path matches existing routes; tsc+lint clean.\n\n```json:metadata\n{\"files\": [\"app/healthz/route.ts\", \"app/readyz/route.ts\", \"tests/unit/healthz.test.ts\", \"tests/unit/readyz.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/healthz.test.ts tests/unit/readyz.test.ts\", \"acceptanceCriteria\": [\"healthz 200 no DB\", \"readyz 200 on SELECT 1\", \"readyz 503 on DB throw\", \"force-dynamic\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: Container healthchecks + README docs",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "**Goal:** Docker image and compose service report health via /readyz; README documents the probes.\n\n**Files:**\n- Modify: `Dockerfile` (HEALTHCHECK)\n- Modify: `docker-compose.yml` (app healthcheck)\n- Modify: `README.md` (probe paths + k8s snippet)\n\n**Acceptance Criteria:**\n- [ ] Dockerfile HEALTHCHECK hits /readyz via node fetch one-liner (no curl/wget)\n- [ ] compose app service has equivalent healthcheck block\n- [ ] README documents /healthz + /readyz + k8s liveness/readiness/startup snippet\n\n**Verify:** docker build + run shows container reaching healthy (or dev-server curl /healthz /readyz if Docker unavailable, noted manual).\n\n**Steps:** add HEALTHCHECK before node server.js CMD; add compose healthcheck block; README Health checks subsection with k8s probe yaml; verify; commit.\n\n```json:metadata\n{\"files\": [\"Dockerfile\", \"docker-compose.yml\", \"README.md\"], \"verifyCommand\": \"docker build -t quorum-health-test . (or pnpm dev + curl /healthz /readyz)\", \"acceptanceCriteria\": [\"Dockerfile HEALTHCHECK on /readyz\", \"compose healthcheck\", \"README probes + k8s snippet\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-08T00:00:00Z"
+}

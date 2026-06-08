@@ -39,13 +39,15 @@ Deferred → M5+: Postgres & multi-instance · teams/org & multi-tenancy · pres
 
 ### M4 — Governance, Lifecycle & Notification Polish  🚧 in progress
 
-Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`. Resolved-marker bug fix already shipped to `main` (commit `33c192a`). Design specs + implementation plans (+ `.tasks.json`) written for all three remaining phases; ready to execute in dedicated sessions.
+Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`. P1–P3 implemented (executed in dedicated sessions per their `.tasks.json`). Two operational phases (P4, P5) surfaced mid-milestone and are now planned (specs + plans + `.tasks.json`), ready to execute.
 - **P2 · resolved-comment marker bug** ✅ — shipped (`buildHighlightRanges()` excludes RESOLVED threads).
-- **P1 · Ownership governance** 📋 planned — block all owner verdicts (403 + hide verdict UI); owner-only hard delete via transactional ordered delete (works around `DocumentVersion` `Restrict` FKs). Spec `specs/…m4-p1-ownership-governance-design.md`; plan `plans/…m4-p1-ownership-governance.md` (4 tasks).
-- **P2 · Edit-UI flag** 📋 planned — `EDIT_UI_ENABLED` (server-prop, default on) hides the Edit button; API ungated. Spec `…m4-p2-edit-ui-flag-design.md`; plan `…m4-p2-edit-ui-flag.md` (2 tasks).
-- **P3 · Live notifications** 📋 planned — per-user SSE stream + tab-title count + opt-in Web Notifications (`User.desktopNotifications` migration). Spec `…m4-p3-live-notifications-design.md`; plan `…m4-p3-live-notifications.md` (7 tasks).
+- **P1 · Ownership governance** ✅ — implemented (block owner verdicts 403 + hide UI; owner-only hard delete via transactional ordered delete).
+- **P2 · Edit-UI flag** ✅ — implemented (`EDIT_UI_ENABLED`, UI-only, default on).
+- **P3 · Live notifications** ✅ — implemented (per-user SSE stream + tab-title count + opt-in Web Notifications; `User.desktopNotifications`).
+- **P4 · Health & readiness probes** 📋 planned — `/healthz` (liveness) + `/readyz` (DB `SELECT 1`) + Docker/compose healthcheck + k8s probe docs. Spec `…m4-p4-health-probes-design.md`; plan `…m4-p4-health-probes.md` (2 tasks).
+- **P5 · Generic env vars** 📋 planned — hard rename `BETTER_AUTH_URL`→`BASE_URL`, `BETTER_AUTH_SECRET`→`AUTH_SECRET`; wire into `betterAuth()` explicitly; `baseUrl()` helper. Spec `…m4-p5-generic-env-vars-design.md`; plan `…m4-p5-generic-env-vars.md` (3 tasks).
 
-Execute each phase in its own session: `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p1-ownership-governance.md` (then p2, p3). Phases are independent; any order.
+Execute P4/P5 each in its own session, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p4-health-probes.md`. Independent; any order. Note: P5 is a **breaking** env rename.
 
 ## Git state
 - `main`: M1 + M2 + M3 all landed. M3's six phases merged into `main` (per-phase branches `m3-p1`…`m3-p6`).
@@ -61,7 +63,7 @@ pnpm dev                      # http://localhost:3000
 Container: `BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
-M4 is planned: design specs + implementation plans (+ `.tasks.json`) exist for P1/P2(flag)/P3; the resolved-marker bug already shipped. Next: **execute each phase in a dedicated session** in a fresh worktree off `main`, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p1-ownership-governance.md`. Phases are independent — any order. Nothing pushed yet (main is ahead of origin).
+M4 P1–P3 are implemented. P4 (health probes) + P5 (generic env vars) are planned (specs + plans + `.tasks.json`). Next: **execute P4 and P5 in dedicated sessions** in a fresh worktree off `main`, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p4-health-probes.md`. Independent — any order. P5 is a **breaking** env rename (`BETTER_AUTH_*` → `BASE_URL`/`AUTH_SECRET`).
 
 ## Env/workflow notes (carried from M1)
 - This repo's **pnpm is v11** → prefix script runs with `CI=true` (avoids the no-TTY `node_modules` purge abort).

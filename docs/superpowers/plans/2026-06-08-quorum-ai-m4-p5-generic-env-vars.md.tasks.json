@@ -1,0 +1,26 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-08-quorum-ai-m4-p5-generic-env-vars.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: baseUrl() config helper",
+      "status": "pending",
+      "description": "**Goal:** A single source for the app's public origin, reading BASE_URL with a localhost fallback.\n\n**Files:**\n- Modify: `lib/config.ts` (add baseUrl; isEditUiEnabled already lives here)\n- Test: `tests/unit/config.baseurl.test.ts`\n\n**Acceptance Criteria:**\n- [ ] baseUrl({BASE_URL:'https://q.example'}) → 'https://q.example'\n- [ ] baseUrl({}) → 'http://localhost:3000'\n- [ ] Accepts injectable env object\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/config.baseurl.test.ts` → PASS.\n\n**Steps:** TDD — RED (not a function); add `baseUrl(env=process.env)=>env.BASE_URL ?? 'http://localhost:3000'`; GREEN; commit.\n\n```json:metadata\n{\"files\": [\"lib/config.ts\", \"tests/unit/config.baseurl.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/config.baseurl.test.ts\", \"acceptanceCriteria\": [\"BASE_URL value returned\", \"localhost fallback\", \"injectable env\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: Wire AUTH_SECRET/BASE_URL into better-auth + DRY callers",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "**Goal:** betterAuth() uses AUTH_SECRET/BASE_URL explicitly; all app-origin reads go through baseUrl().\n\n**Files:**\n- Modify: `lib/auth.ts` (explicit secret/baseURL; trustedOrigins from BASE_URL)\n- Modify: `lib/email-templates.ts` (use baseUrl())\n- Modify: `app/api/plans/route.ts` (use baseUrl())\n- Modify: `app/app/settings/tokens/page.tsx` (use baseUrl())\n- Modify: `tests/unit/email-templates.test.ts` (stub BASE_URL)\n\n**Acceptance Criteria:**\n- [ ] lib/auth.ts passes secret: process.env.AUTH_SECRET and baseURL: process.env.BASE_URL; trustedOrigins from BASE_URL + TRUSTED_ORIGINS\n- [ ] email-templates/plans route/tokens page read origin via baseUrl()\n- [ ] No BETTER_AUTH_URL reads remain in app/ or lib/\n- [ ] email-templates.test.ts stubs BASE_URL and passes\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/email-templates.test.ts && CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint` → PASS/clean.\n\n**Steps:** add secret/baseURL to betterAuth(); trustedOrigins from BASE_URL; import baseUrl() in the 3 callers (remove any local baseUrl literal in email-templates); switch test stub to BASE_URL; grep app lib for BETTER_AUTH_URL → 0.\n\n```json:metadata\n{\"files\": [\"lib/auth.ts\", \"lib/email-templates.ts\", \"app/api/plans/route.ts\", \"app/app/settings/tokens/page.tsx\", \"tests/unit/email-templates.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/email-templates.test.ts && CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint\", \"acceptanceCriteria\": [\"betterAuth gets secret+baseURL explicitly\", \"callers use baseUrl()\", \"no BETTER_AUTH_URL in app/lib\", \"test uses BASE_URL\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: Rename in deployment/config + README + grep guard",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** All operator-facing config and docs use the new names; no BETTER_AUTH_ token remains in tracked files.\n\n**Files:**\n- Modify: `.env.example`\n- Modify: `docker-compose.yml`\n- Modify: `.github/workflows/ci.yml`\n- Modify: `README.md`\n\n**Acceptance Criteria:**\n- [ ] .env.example declares AUTH_SECRET + BASE_URL, no old names\n- [ ] docker-compose.yml passes AUTH_SECRET/BASE_URL\n- [ ] ci.yml sets new names\n- [ ] README uses new names + notes breaking rename\n- [ ] grep -rn 'BETTER_AUTH_' (excl node_modules/.git/.next) → zero hits\n\n**Verify:** `grep -rn \"BETTER_AUTH_\" . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.next` → no output; `CI=true pnpm exec vitest run` → PASS.\n\n**Steps:** rename .env.example two vars + comments; compose env keys; ci.yml env (~lines 17/38); README all mentions + breaking note; grep guard 0 hits; full suite green; commit.\n\n```json:metadata\n{\"files\": [\".env.example\", \"docker-compose.yml\", \".github/workflows/ci.yml\", \"README.md\"], \"verifyCommand\": \"grep -rn 'BETTER_AUTH_' . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.next ; CI=true pnpm exec vitest run\", \"acceptanceCriteria\": [\".env.example renamed\", \"compose renamed\", \"ci.yml renamed\", \"README renamed + breaking note\", \"zero BETTER_AUTH_ hits\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-08T00:00:00Z"
+}
