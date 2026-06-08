@@ -61,7 +61,7 @@ interface PendingSelection {
   endOffset: number;
 }
 
-export default function DocumentView({ doc, isOwner }: { doc: ClientDocument; isOwner: boolean }) {
+export default function DocumentView({ doc, isOwner, editEnabled }: { doc: ClientDocument; isOwner: boolean; editEnabled: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [annotations, setAnnotations] = useState<ClientAnnotation[]>(doc.annotations);
   const [selection, setSelection] = useState<PendingSelection | null>(null);
@@ -334,7 +334,7 @@ export default function DocumentView({ doc, isOwner }: { doc: ClientDocument; is
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{doc.title}</h1>
-          {mode === "review" && (
+          {mode === "review" && editEnabled && (
             <Button variant="secondary" size="sm" onClick={() => { setDraft(markdown); setMode("edit"); }}>Edit</Button>
           )}
           <Link href={`/app/documents/${doc.id}/history`} data-testid="history-link" className="text-sm text-primary hover:underline">History</Link>

@@ -138,6 +138,10 @@ Optional and **env-gated** — when `SMTP_HOST` is unset, email is a no-op (in-a
 
 Delivery rides the same durable **outbox** worker as webhooks; tune it with `OUTBOX_POLL_MS`, `OUTBOX_BACKOFF_MS`, `OUTBOX_MAX_ATTEMPTS`, and `OUTBOX_WORKER_AUTOSTART` (see [`.env.example`](.env.example) for all variables and defaults).
 
+## Document editing UI
+
+`EDIT_UI_ENABLED` (default on) — set to `false` to hide the in-app document Edit button; the edit API is unaffected.
+
 ## Stack
 
 Next.js 16 (App Router, React 19) · Prisma 7 + SQLite (WAL, better-sqlite3 adapter) · better-auth (email/password + generic OIDC) · CodeMirror 6 · react-markdown + remark-gfm · Tailwind CSS 4 · Server-Sent Events · nodemailer · a durable in-process outbox worker. Packaged as a single standalone container.
