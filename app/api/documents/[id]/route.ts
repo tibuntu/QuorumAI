@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api";
-import { getDocumentDetail } from "@/lib/documents";
+import { getDocumentDetail, deleteDocument } from "@/lib/documents";
 import { createVersion, ConcurrencyError } from "@/lib/versions";
 import { ensureParticipant, isParticipant, isOwner } from "@/lib/authz";
 
@@ -33,4 +33,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (e instanceof ConcurrencyError) return NextResponse.json({ error: "stale version" }, { status: 409 });
     throw e;
   }
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const { id } = await params;
+  // Same ladder as PATCH: non-participants get 404 (no existence leak), a
+  // participant who is not the owner may read but not delete (403).
+  if (!(await isParticipant(user.id, id))) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!(await isOwner(user.id, id))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  await deleteDocument(id);
+  return NextResponse.json({ ok: true });
 }
