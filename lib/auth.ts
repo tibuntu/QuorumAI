@@ -1,11 +1,12 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { baseUrl } from "@/lib/config";
 import { prisma } from "@/lib/db";
 import { isOidcConfigured, oidcPlugins } from "@/lib/oidc";
 
 const trustedOrigins = [
-  process.env.BASE_URL,
+  baseUrl(),
   ...(process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()) ?? []),
 ].filter((o): o is string => Boolean(o));
 
@@ -14,7 +15,7 @@ const oidcConfigured = isOidcConfigured();
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "sqlite" }),
   secret: process.env.AUTH_SECRET,
-  baseURL: process.env.BASE_URL,
+  baseURL: baseUrl(),
   trustedOrigins,
   // Rate limiting is enabled in production by default. Allow the automated
   // test environment (which runs a production build) to opt out so the e2e
