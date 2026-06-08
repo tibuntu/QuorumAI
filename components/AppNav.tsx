@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { useNotifications } from "@/components/NotificationProvider";
 
 const LINKS = [
   { href: "/app", label: "Documents", testid: undefined as string | undefined },
@@ -10,8 +11,9 @@ const LINKS = [
   { href: "/app/settings/notifications", label: "Settings", testid: "settings-link" },
 ];
 
-export function AppNav({ email, unread }: { email: string; unread: number }) {
+export function AppNav({ email }: { email: string }) {
   const pathname = usePathname();
+  const { unread } = useNotifications();
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">

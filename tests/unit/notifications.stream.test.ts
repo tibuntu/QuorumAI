@@ -8,13 +8,13 @@ vi.mock("@/lib/api", () => ({ requireUser: vi.fn() }));
 describe("GET /api/notifications/stream", () => {
   test("401 when unauthenticated", async () => {
     vi.mocked(api.requireUser).mockResolvedValueOnce(null as never);
-    const res = await GET(new Request("http://t/api/notifications/stream"));
+    const res = await GET();
     expect(res.status).toBe(401);
   });
 
   test("streams connected + forwarded events for the user", async () => {
     vi.mocked(api.requireUser).mockResolvedValueOnce({ id: "u1" } as never);
-    const res = await GET(new Request("http://t/api/notifications/stream"));
+    const res = await GET();
     expect(res.headers.get("content-type")).toContain("text/event-stream");
     const reader = res.body!.getReader();
     const dec = new TextDecoder();

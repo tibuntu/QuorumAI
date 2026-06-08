@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/api";
 import { subscribe, type DocEvent } from "@/lib/events";
 
-export async function GET(_req: Request) {
+export async function GET() {
   const user = await requireUser();
   if (!user) return new Response("unauthorized", { status: 401 });
 
