@@ -37,14 +37,15 @@ Roadmap: `specs/2026-06-06-quorum-ai-m3-roadmap.md`; per-phase design specs `spe
 
 Deferred → M5+: Postgres & multi-instance · teams/org & multi-tenancy · presence/live "review together" · git export · dedicated Slack/Teams formatters (beyond generic webhooks) · enforced-SSO / multiple-provider / SCIM · version checkpointing/compaction · multi-hunk suggestion patches.
 
-### M4 — Governance, Lifecycle & Notification Polish  📋 roadmap approved (not started)
+### M4 — Governance, Lifecycle & Notification Polish  🚧 in progress
 
-Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`. Three independent phases scoped from user-reported gaps:
-- **P1 · Ownership governance** — block all owner verdicts on own doc (no owner check today in `submitReview()`); owner-only hard delete (no delete exists today; handle the `DocumentVersion` `Restrict` FKs).
-- **P2 · UI polish & gating** — `EDIT_UI_ENABLED` env flag (UI-only, default on); fix resolved-comment yellow marker that still renders (`lib/highlight.ts` / `DocumentView.tsx` ignore `threadStatus`).
-- **P3 · Live notifications** — global per-user SSE stream + tab-title unread count + Web Notifications API (fire only when tab hidden).
+Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`. Resolved-marker bug fix already shipped to `main` (commit `33c192a`). Design specs + implementation plans (+ `.tasks.json`) written for all three remaining phases; ready to execute in dedicated sessions.
+- **P2 · resolved-comment marker bug** ✅ — shipped (`buildHighlightRanges()` excludes RESOLVED threads).
+- **P1 · Ownership governance** 📋 planned — block all owner verdicts (403 + hide verdict UI); owner-only hard delete via transactional ordered delete (works around `DocumentVersion` `Restrict` FKs). Spec `specs/…m4-p1-ownership-governance-design.md`; plan `plans/…m4-p1-ownership-governance.md` (4 tasks).
+- **P2 · Edit-UI flag** 📋 planned — `EDIT_UI_ENABLED` (server-prop, default on) hides the Edit button; API ungated. Spec `…m4-p2-edit-ui-flag-design.md`; plan `…m4-p2-edit-ui-flag.md` (2 tasks).
+- **P3 · Live notifications** 📋 planned — per-user SSE stream + tab-title count + opt-in Web Notifications (`User.desktopNotifications` migration). Spec `…m4-p3-live-notifications-design.md`; plan `…m4-p3-live-notifications.md` (7 tasks).
 
-Suggested order: P2 marker bug (quick win) → P1 → P2 flag → P3.
+Execute each phase in its own session: `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p1-ownership-governance.md` (then p2, p3). Phases are independent; any order.
 
 ## Git state
 - `main`: M1 + M2 + M3 all landed. M3's six phases merged into `main` (per-phase branches `m3-p1`…`m3-p6`).
@@ -60,7 +61,7 @@ pnpm dev                      # http://localhost:3000
 Container: `BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
-M4 roadmap is approved (`specs/2026-06-08-quorum-ai-m4-roadmap.md`). Next: pick a phase and run its `brainstorming → writing-plans → execute` cycle in a fresh worktree off `main`. Recommended first: the **resolved-marker bug fix** (P2) as a quick win, then **P1 · Ownership governance**.
+M4 is planned: design specs + implementation plans (+ `.tasks.json`) exist for P1/P2(flag)/P3; the resolved-marker bug already shipped. Next: **execute each phase in a dedicated session** in a fresh worktree off `main`, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p1-ownership-governance.md`. Phases are independent — any order. Nothing pushed yet (main is ahead of origin).
 
 ## Env/workflow notes (carried from M1)
 - This repo's **pnpm is v11** → prefix script runs with `CI=true` (avoids the no-TTY `node_modules` purge abort).
