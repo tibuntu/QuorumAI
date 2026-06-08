@@ -29,6 +29,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:/data/app.db"
 ENV PORT=3000
+# Next standalone server.js binds to $HOSTNAME, which Docker auto-sets to the
+# container ID — leaving the server off loopback so the HEALTHCHECK's
+# 127.0.0.1 probe is refused. Bind to all interfaces (Next's documented config).
+ENV HOSTNAME="0.0.0.0"
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
@@ -44,4 +48,6 @@ COPY --from=builder /app/node_modules ./node_modules
 RUN mkdir -p /data
 VOLUME /data
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]

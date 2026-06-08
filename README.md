@@ -59,6 +59,26 @@ BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up
 
 Register a user, then create an API token under **Settings → API tokens** for the agent integration below.
 
+### Health checks
+
+- `GET /healthz` — liveness (process up; no dependencies).
+- `GET /readyz` — readiness (returns 503 if the database is unreachable).
+
+The Docker image and Compose service both ship a healthcheck that polls `/readyz`. Kubernetes example:
+
+```yaml
+livenessProbe:
+  httpGet: { path: /healthz, port: 3000 }
+  periodSeconds: 10
+readinessProbe:
+  httpGet: { path: /readyz, port: 3000 }
+  periodSeconds: 10
+startupProbe:
+  httpGet: { path: /readyz, port: 3000 }
+  failureThreshold: 30
+  periodSeconds: 2
+```
+
 ### Run locally (development)
 
 ```bash

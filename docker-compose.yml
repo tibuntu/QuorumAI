@@ -9,5 +9,11 @@ services:
       BETTER_AUTH_URL: "http://localhost:3000"
     volumes:
       - quorum-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
 volumes:
   quorum-data:
