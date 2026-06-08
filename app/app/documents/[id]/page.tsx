@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDocumentDetail } from "@/lib/documents";
 import { getSession } from "@/lib/session";
 import { ensureParticipant } from "@/lib/authz";
+import { isEditUiEnabled } from "@/lib/config";
 import DocumentView, { type ClientDocument } from "@/components/DocumentView";
 
 export default async function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   };
 
   const isOwner = doc.ownerId === session.user.id;
+  const editEnabled = isEditUiEnabled();
 
-  return <DocumentView doc={serializable} isOwner={isOwner} />;
+  return <DocumentView doc={serializable} isOwner={isOwner} editEnabled={editEnabled} />;
 }
