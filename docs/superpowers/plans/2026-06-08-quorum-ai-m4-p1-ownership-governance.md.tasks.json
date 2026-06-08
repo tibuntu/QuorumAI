@@ -4,29 +4,29 @@
     {
       "id": 0,
       "subject": "Task 1: Block owner verdicts (server guard + hide verdict UI)",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** A document owner receives 403 when POSTing a review verdict on their own document, and the verdict controls are not shown to the owner in the UI.\n\n**Files:**\n- Modify: `app/api/documents/[id]/reviews/route.ts` (add owner 403 after participant check)\n- Modify: `components/DocumentView.tsx` (wrap verdict controls in `!isOwner`)\n- Test: `tests/unit/reviews.owner-block.test.ts`\n\n**Acceptance Criteria:**\n- [ ] Owner POST to reviews → 403 `{ error: \"owners cannot review their own document\" }`\n- [ ] Non-owner participant POST unchanged (200)\n- [ ] Owner still a participant (GET/annotation flows unaffected)\n- [ ] Verdict controls absent from DOM when `isOwner`\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/reviews.owner-block.test.ts` → PASS; full suite green.\n\n**Steps:** TDD — seed owner+participant; add `if (await isOwner(user.id, id)) return 403` after the isParticipant check in the reviews route; wrap Approve/Request-changes JSX in `{!isOwner && (...)}`; tsc+lint clean; commit.\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/reviews/route.ts\", \"components/DocumentView.tsx\", \"tests/unit/reviews.owner-block.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/reviews.owner-block.test.ts\", \"acceptanceCriteria\": [\"owner POST verdict 403\", \"non-owner participant 200\", \"owner still participant\", \"verdict controls hidden for owner\"]}\n```"
     },
     {
       "id": 1,
       "subject": "Task 2: deleteDocument service with transactional cascade",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** A pure service function deletes a document and all dependents in dependency order, succeeding even when annotations/reviews reference versions via onDelete: Restrict.\n\n**Files:**\n- Modify: `lib/documents.ts` (add `deleteDocument`)\n- Test: `tests/unit/documents.delete.test.ts`\n\n**Acceptance Criteria:**\n- [ ] `deleteDocument(id)` removes the document with zero orphans across documentVersion/annotation/comment/review/documentParticipant/notification\n- [ ] Succeeds with an applied suggestion (Annotation.appliedInVersion Restrict) and a review on a version (Review.onVersion Restrict)\n- [ ] Runs in a single `$transaction`\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/documents.delete.test.ts` → PASS.\n\n**Steps:** TDD — seed a fully-populated doc (annotation+comment, review on v1, applied suggestion); RED (not a function); implement `prisma.$transaction([review.deleteMany, annotation.deleteMany, document.delete])`; GREEN. Confirm field names against schema.\n\n```json:metadata\n{\"files\": [\"lib/documents.ts\", \"tests/unit/documents.delete.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/documents.delete.test.ts\", \"acceptanceCriteria\": [\"no orphan rows after delete\", \"handles applied suggestion + review-on-version Restrict FKs\", \"single transaction\"]}\n```"
     },
     {
       "id": 2,
       "subject": "Task 3: DELETE /api/documents/[id] owner-only route",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** An owner can delete via HTTP; non-owners and strangers are rejected with the right status codes.\n\n**Files:**\n- Modify: `app/api/documents/[id]/route.ts` (add `DELETE` handler)\n- Test: `tests/unit/documents.delete-route.test.ts`\n\n**Acceptance Criteria:**\n- [ ] Unauthenticated → 401; non-participant → 404; participant non-owner → 403; owner → 200 `{ ok: true }` and document gone\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/documents.delete-route.test.ts` → PASS.\n\n**Steps:** TDD — mock requireUser for stranger/participant/owner; RED (DELETE not exported); implement handler with isParticipant 404 → isOwner 403 → deleteDocument(id) → {ok:true}; GREEN.\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/route.ts\", \"tests/unit/documents.delete-route.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/documents.delete-route.test.ts\", \"acceptanceCriteria\": [\"401 unauth\", \"404 non-participant\", \"403 participant non-owner\", \"200 owner + gone\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 4: Owner delete button + confirm modal (UI)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2],
       "description": "**Goal:** An owner sees a Delete button in the document header; confirming removes the document and navigates to /app.\n\n**Files:**\n- Modify: `components/DocumentView.tsx` (Delete button + confirm modal + handler)\n\n**Acceptance Criteria:**\n- [ ] Delete button visible only when `isOwner`\n- [ ] Confirm calls DELETE /api/documents/[id] and on ok navigates to /app\n- [ ] Cancel closes modal, no request\n\n**Verify:** `CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint` clean; manual delete redirects to /app.\n\n**Steps:** add useRouter + confirmingDelete/deleting state + handleDelete (fetch DELETE → router.push('/app')); owner-only Delete button (data-testid=delete-document); confirm modal (Card, data-testid=confirm-delete); optional light e2e; commit.\n\n```json:metadata\n{\"files\": [\"components/DocumentView.tsx\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint\", \"acceptanceCriteria\": [\"delete button owner-only\", \"confirm triggers DELETE + redirect to /app\", \"cancel no request\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-08T00:00:00Z"
+  "lastUpdated": "2026-06-08T09:00:00Z"
 }

@@ -37,20 +37,20 @@ Roadmap: `specs/2026-06-06-quorum-ai-m3-roadmap.md`; per-phase design specs `spe
 
 Deferred → M5+: Postgres & multi-instance · teams/org & multi-tenancy · presence/live "review together" · git export · dedicated Slack/Teams formatters (beyond generic webhooks) · enforced-SSO / multiple-provider / SCIM · version checkpointing/compaction · multi-hunk suggestion patches.
 
-### M4 — Governance, Lifecycle & Notification Polish  🚧 in progress
+### M4 — Governance, Lifecycle & Notification Polish  ✅ shipped
 
-Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`. P1–P3 implemented (executed in dedicated sessions per their `.tasks.json`). Two operational phases (P4, P5) surfaced mid-milestone and are now planned (specs + plans + `.tasks.json`), ready to execute.
-- **P2 · resolved-comment marker bug** ✅ — shipped (`buildHighlightRanges()` excludes RESOLVED threads).
-- **P1 · Ownership governance** ✅ — implemented (block owner verdicts 403 + hide UI; owner-only hard delete via transactional ordered delete).
-- **P2 · Edit-UI flag** ✅ — implemented (`EDIT_UI_ENABLED`, UI-only, default on).
-- **P3 · Live notifications** ✅ — implemented (per-user SSE stream + tab-title count + opt-in Web Notifications; `User.desktopNotifications`).
-- **P4 · Health & readiness probes** 📋 planned — `/healthz` (liveness) + `/readyz` (DB `SELECT 1`) + Docker/compose healthcheck + k8s probe docs. Spec `…m4-p4-health-probes-design.md`; plan `…m4-p4-health-probes.md` (2 tasks).
-- **P5 · Generic env vars** 📋 planned — hard rename `BETTER_AUTH_URL`→`BASE_URL`, `BETTER_AUTH_SECRET`→`AUTH_SECRET`; wire into `betterAuth()` explicitly; `baseUrl()` helper. Spec `…m4-p5-generic-env-vars-design.md`; plan `…m4-p5-generic-env-vars.md` (3 tasks).
+Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`; per-phase design specs `specs/2026-06-08-quorum-ai-m4-p1..p5-*-design.md`. All phases implemented (executed in dedicated sessions per their `.tasks.json`).
+- **P0 · resolved-comment marker bug** ✅ — `buildHighlightRanges()` excludes RESOLVED threads (in-text marker disappears; comment stays in sidebar).
+- **P1 · Ownership governance** ✅ — owner can't review own document (403 + hidden verdict UI); owner-only hard delete via transactional ordered delete (handles `DocumentVersion` `Restrict` FKs); delete button + confirm modal.
+- **P2 · Edit-UI flag** ✅ — `EDIT_UI_ENABLED` (server-prop, default on) hides the in-app Edit button; PATCH API ungated. `lib/config.ts` `isEditUiEnabled()`.
+- **P3 · Live notifications** ✅ — global per-user SSE stream (`/api/notifications/stream`) + tab-title unread count + opt-in Web Notifications (fire only when hidden); `User.desktopNotifications`; `NotificationProvider`.
+- **P4 · Health & readiness probes** ✅ — `/healthz` (liveness) + `/readyz` (DB `SELECT 1`, 503 on failure); Docker `HEALTHCHECK` + compose healthcheck (node `fetch`); k8s probe docs in README.
+- **P5 · Generic env vars** ✅ — hard rename `BETTER_AUTH_URL`→`BASE_URL`, `BETTER_AUTH_SECRET`→`AUTH_SECRET`; wired into `betterAuth()` explicitly (`secret`/`baseURL`); `baseUrl()` helper DRYs origin reads; `.env.example`/compose/CI/README updated.
 
-Execute P4/P5 each in its own session, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p4-health-probes.md`. Independent; any order. Note: P5 is a **breaking** env rename.
+Deferred → M5+ (unchanged): Postgres & multi-instance · teams/org & multi-tenancy · presence/live · git export · Slack/Teams formatters · enforced-SSO/SCIM · admin/moderator roles · soft-delete/trash · quorum thresholds · version checkpointing · multi-hunk patches · granular per-type notification prefs.
 
 ## Git state
-- `main`: M1 + M2 + M3 all landed. M3's six phases merged into `main` (per-phase branches `m3-p1`…`m3-p6`).
+- `main`: M1–M4 all landed locally. M4's phases committed directly to `main`. **`main` is ahead of `origin` — not yet pushed.**
 - No active feature branches locally. Merged feature branches may still exist on `origin` (cleanup optional). User manages pushes.
 
 ## Run locally
@@ -63,7 +63,7 @@ pnpm dev                      # http://localhost:3000
 Container: `AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
-M4 P1–P3 are implemented. P4 (health probes) + P5 (generic env vars) are planned (specs + plans + `.tasks.json`). Next: **execute P4 and P5 in dedicated sessions** in a fresh worktree off `main`, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p4-health-probes.md`. Independent — any order. P5 is a **breaking** env rename (`BETTER_AUTH_*` → `BASE_URL`/`AUTH_SECRET`).
+M4 is complete — all five phases implemented on local `main` (M1–M4 shipped). Next is a milestone-level decision: **push `main` to `origin`**, then scope **M5** from the deferred list (Postgres & multi-instance, teams/org multi-tenancy, presence/live, git export, Slack/Teams formatters, enforced-SSO/SCIM) via a new roadmap. Reminder: P5 was a **breaking** env rename — deploys must set `BASE_URL`/`AUTH_SECRET` before upgrading.
 
 ## Env/workflow notes (carried from M1)
 - This repo's **pnpm is v11** → prefix script runs with `CI=true` (avoids the no-TTY `node_modules` purge abort).

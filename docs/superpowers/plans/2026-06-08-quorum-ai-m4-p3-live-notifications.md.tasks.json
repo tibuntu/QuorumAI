@@ -4,50 +4,50 @@
     {
       "id": 0,
       "subject": "Task 1: Add notification event variants to the event bus",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** lib/events.ts carries notification events and exports a ClientNotification type, with no change to publish/subscribe API.\n\n**Files:**\n- Modify: `lib/events.ts`\n- Test: `tests/unit/events.notifications.test.ts`\n\n**Acceptance Criteria:**\n- [ ] publish('user-x', {type:'notification.created', notification}) received by subscribe('user-x', fn)\n- [ ] notification.read (id) and notification.read.all variants type-check\n- [ ] Existing per-document events still pass\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/events.notifications.test.ts` → PASS; tsc clean.\n\n**Steps:** TDD — RED (ClientNotification not exported); add exported ClientNotification interface + three union variants to DocEvent; ensure DocEvent exported; GREEN.\n\n```json:metadata\n{\"files\": [\"lib/events.ts\", \"tests/unit/events.notifications.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/events.notifications.test.ts\", \"acceptanceCriteria\": [\"notification.created delivered per-user\", \"read + read.all variants typed\", \"existing events unaffected\"]}\n```"
     },
     {
       "id": 1,
       "subject": "Task 2: Publish notification events from lib/notifications.ts",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0],
       "description": "**Goal:** Creating notifications and marking them read publishes the corresponding per-user events.\n\n**Files:**\n- Modify: `lib/notifications.ts` (notifyParticipants, markRead, markAllRead)\n- Test: `tests/unit/notifications.publish.test.ts`\n\n**Acceptance Criteria:**\n- [ ] notifyParticipants publishes one notification.created per recipient to user-<id> with client shape\n- [ ] markRead publishes notification.read (id); markAllRead publishes notification.read.all\n- [ ] Existing notification tests stay green (rows + email enqueue unchanged)\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/notifications.publish.test.ts tests/unit/notifications*.test.ts` → PASS.\n\n**Steps:** TDD — subscribe spy to recipient topic; switch createMany→per-recipient create to capture id/createdAt; build ClientNotification payload (select document title); publish; add read/read.all publishes; preserve EMAILABLE branch.\n\n```json:metadata\n{\"files\": [\"lib/notifications.ts\", \"tests/unit/notifications.publish.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/notifications.publish.test.ts\", \"acceptanceCriteria\": [\"created published per recipient\", \"read/read.all published\", \"no regression in existing notif tests\"]}\n```"
     },
     {
       "id": 2,
       "subject": "Task 3: Per-user SSE route /api/notifications/stream",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0],
       "description": "**Goal:** An authenticated user gets an SSE stream of their notification events.\n\n**Files:**\n- Create: `app/api/notifications/stream/route.ts`\n- Test: `tests/unit/notifications.stream.test.ts`\n\n**Acceptance Criteria:**\n- [ ] Unauthenticated → 401\n- [ ] Authenticated → text/event-stream, emits ': connected', forwards events published to user-<id>\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/notifications.stream.test.ts` → PASS.\n\n**Steps:** copy app/api/documents/[id]/stream/route.ts; drop id param; subscribe to `user-${user.id}`; same SSE headers + heartbeat + cancel; RED→GREEN.\n\n```json:metadata\n{\"files\": [\"app/api/notifications/stream/route.ts\", \"lib/events.ts\", \"tests/unit/notifications.stream.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/notifications.stream.test.ts\", \"acceptanceCriteria\": [\"401 unauth\", \"text/event-stream + connected\", \"forwards user-scoped events\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 4: User.desktopNotifications preference + migration",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** A per-user opt-in flag for OS notifications, defaulting off.\n\n**Files:**\n- Modify: `prisma/schema.prisma` (User)\n- Create: migration via `prisma migrate dev`\n\n**Acceptance Criteria:**\n- [ ] User.desktopNotifications Boolean @default(false) exists; migration applies; generated types include it\n\n**Verify:** `CI=true pnpm exec prisma migrate dev --name desktop_notifications` applies; tsc clean.\n\n**Steps:** add field next to emailNotifications; run prisma migrate dev --name desktop_notifications; verify tsc; commit schema + migration.\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations/\"], \"verifyCommand\": \"CI=true pnpm exec prisma migrate dev --name desktop_notifications && CI=true pnpm exec tsc --noEmit\", \"acceptanceCriteria\": [\"field added default false\", \"migration applies\", \"types include field\"]}\n```"
     },
     {
       "id": 4,
       "subject": "Task 5: Desktop-notifications settings toggle + API",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [3],
       "description": "**Goal:** A settings toggle that requests browser permission and persists desktopNotifications.\n\n**Files:**\n- Modify: `app/api/settings/notifications/route.ts`\n- Modify: `components/NotificationSettings.tsx`\n- Modify: `app/app/settings/notifications/page.tsx`\n- Test: `tests/unit/settings.notifications.test.ts`\n\n**Acceptance Criteria:**\n- [ ] PATCH accepts emailNotifications or desktopNotifications (boolean), updates only provided, 400 if neither\n- [ ] Toggling desktop ON calls Notification.requestPermission(); if not granted, reverts + no persist\n- [ ] Page passes both current prefs to component\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/settings.notifications.test.ts` → PASS; tsc + lint clean.\n\n**Steps:** TDD API (desktop update + 400); route accepts both fields; component → object initial + second toggle (data-testid=desktop-pref) with requestPermission flow; page selects+passes both; preserve email-pref.\n\n```json:metadata\n{\"files\": [\"app/api/settings/notifications/route.ts\", \"components/NotificationSettings.tsx\", \"app/app/settings/notifications/page.tsx\", \"tests/unit/settings.notifications.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/settings.notifications.test.ts\", \"acceptanceCriteria\": [\"PATCH both fields + 400\", \"permission gate on enable\", \"page passes both prefs\"]}\n```"
     },
     {
       "id": 5,
       "subject": "Task 6: Pure unread reducer + OS-notify predicate",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0],
       "description": "**Goal:** Testable pure functions for unread-count transitions and the OS-notify decision, decoupled from React/DOM.\n\n**Files:**\n- Create: `lib/notification-client.ts`\n- Test: `tests/unit/notification-client.test.ts`\n\n**Acceptance Criteria:**\n- [ ] nextUnread: +1 created, max(0,-1) read, 0 read.all, unchanged otherwise\n- [ ] shouldFireOsNotification: true only when desktopEnabled && permission==='granted' && visibility==='hidden' && !seen.has(id)\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/notification-client.test.ts` → PASS.\n\n**Steps:** TDD — RED (module missing); implement nextUnread switch + shouldFireOsNotification predicate over DocEvent type; GREEN.\n\n```json:metadata\n{\"files\": [\"lib/notification-client.ts\", \"tests/unit/notification-client.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/notification-client.test.ts\", \"acceptanceCriteria\": [\"unread transitions correct\", \"predicate true only when all conditions hold\"]}\n```"
     },
     {
       "id": 6,
       "subject": "Task 7: NotificationProvider — SSE, tab title, OS-notify; AppNav + InboxList",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1, 2, 4, 5],
       "description": "**Goal:** A client provider mounted app-wide drives a live unread count (badge + tab title), fires OS notifications when appropriate, and feeds the inbox list live.\n\n**Files:**\n- Create: `components/NotificationProvider.tsx`\n- Modify: `app/app/layout.tsx` (mount + seed initialUnread + desktopEnabled)\n- Modify: `components/AppNav.tsx` (read unread from context)\n- Modify: `components/InboxList.tsx` (consume items/actions from context)\n\n**Acceptance Criteria:**\n- [ ] EventSource('/api/notifications/stream') with DocumentView reconnect pattern (close+2s retry; cleanup)\n- [ ] unread seeds initialUnread, updates via nextUnread; document.title = '(N) Quorum AI' / 'Quorum AI'\n- [ ] On notification.created fires new Notification iff shouldFireOsNotification; ids deduped in a ref\n- [ ] AppNav badge + InboxList live; existing testids/aria-labels preserved\n\n**Verify:** `CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint && CI=true pnpm exec vitest run` clean/green; manual two-tab check.\n\n**Steps:** build provider+context (useNotifications), reuse EventSource pattern, title effect, OS-notify via predicate, markRead/markAllRead via PATCH /api/notifications (match existing body shape); mount in layout selecting desktop pref; AppNav reads context; InboxList sources items/actions from context; optional light e2e (two-context badge increment).\n\n```json:metadata\n{\"files\": [\"components/NotificationProvider.tsx\", \"app/app/layout.tsx\", \"components/AppNav.tsx\", \"components/InboxList.tsx\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint && CI=true pnpm exec vitest run\", \"acceptanceCriteria\": [\"SSE reconnect pattern\", \"tab title reflects unread\", \"OS-notify gated by predicate + dedup\", \"AppNav + InboxList live, testids preserved\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-08T00:00:00Z"
+  "lastUpdated": "2026-06-08T12:00:00Z"
 }

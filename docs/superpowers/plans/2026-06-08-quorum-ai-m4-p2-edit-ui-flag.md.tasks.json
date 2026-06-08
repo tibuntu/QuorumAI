@@ -4,16 +4,16 @@
     {
       "id": 0,
       "subject": "Task 1: isEditUiEnabled config helper (default on)",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** A testable helper that defaults to enabled and is disabled only by EDIT_UI_ENABLED=false (case-insensitive).\n\n**Files:**\n- Create: `lib/config.ts`\n- Test: `tests/unit/config.edit-ui.test.ts`\n\n**Acceptance Criteria:**\n- [ ] Unset → true; 'false'/'FALSE' → false; 'true'/other → true\n- [ ] Accepts an injectable env object (no process.env mutation in tests)\n\n**Verify:** `CI=true pnpm exec vitest run tests/unit/config.edit-ui.test.ts` → PASS.\n\n**Steps:** TDD — RED (not a function); implement `env.EDIT_UI_ENABLED?.toLowerCase() !== \"false\"` with injectable env param (mirror isOidcConfigured); GREEN; commit.\n\n```json:metadata\n{\"files\": [\"lib/config.ts\", \"tests/unit/config.edit-ui.test.ts\"], \"verifyCommand\": \"CI=true pnpm exec vitest run tests/unit/config.edit-ui.test.ts\", \"acceptanceCriteria\": [\"unset=true\", \"false/FALSE=false\", \"true/other=true\", \"injectable env\"]}\n```"
     },
     {
       "id": 1,
       "subject": "Task 2: Gate Edit button behind EDIT_UI_ENABLED + docs",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0],
       "description": "**Goal:** The document page passes editEnabled into DocumentView, which hides the Edit button when false; the var is documented.\n\n**Files:**\n- Modify: `app/app/documents/[id]/page.tsx` (compute + pass editEnabled)\n- Modify: `components/DocumentView.tsx` (accept prop; gate Edit button)\n- Modify: `.env.example`, `README.md`\n\n**Acceptance Criteria:**\n- [ ] EDIT_UI_ENABLED=false hides Edit button for owner; default shows it\n- [ ] No other path reaches edit mode when flag off\n- [ ] .env.example + README document the var (UI-only, default on)\n- [ ] tsc + lint clean; selectors unchanged\n\n**Verify:** `CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint` clean; manual toggle.\n\n**Steps:** import+compute isEditUiEnabled() in server page, pass editEnabled prop; extend DocumentView signature; gate `{mode===\"review\" && editEnabled && <Edit/>}`; grep for other setMode('edit'); add .env.example block + README line; verify; commit.\n\n```json:metadata\n{\"files\": [\"app/app/documents/[id]/page.tsx\", \"components/DocumentView.tsx\", \".env.example\", \"README.md\"], \"verifyCommand\": \"CI=true pnpm exec tsc --noEmit && CI=true pnpm exec next lint\", \"acceptanceCriteria\": [\"flag off hides Edit button\", \"default shows it\", \"no other edit-mode entry\", \"docs updated\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-08T00:00:00Z"
+  "lastUpdated": "2026-06-08T11:00:00Z"
 }
