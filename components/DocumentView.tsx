@@ -1,6 +1,7 @@
 "use client";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { buildQuote, type Quote } from "@/lib/anchoring";
@@ -62,6 +63,7 @@ interface PendingSelection {
 }
 
 export default function DocumentView({ doc, isOwner, editEnabled }: { doc: ClientDocument; isOwner: boolean; editEnabled: boolean }) {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [annotations, setAnnotations] = useState<ClientAnnotation[]>(doc.annotations);
   const [selection, setSelection] = useState<PendingSelection | null>(null);
@@ -78,6 +80,16 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [statusById, setStatusById] = useState<Record<string, string>>({});
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    const res = await fetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+    if (res.ok) { router.push("/app"); return; }
+    setDeleting(false);
+    setConfirmingDelete(false);
+  }
 
   // Capture text selections via selectionchange so both real pointer selection
   // and programmatic selection (Playwright selectText) are picked up.
@@ -331,6 +343,22 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
 
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row">
+      {confirmingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" role="dialog" aria-modal="true">
+          <Card className="max-w-md space-y-4 p-6">
+            <h2 className="text-lg font-semibold text-foreground">Delete this document?</h2>
+            <p className="text-sm text-muted">
+              This permanently removes the document and all its comments, versions, and reviews. This can&apos;t be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" size="sm" disabled={deleting} onClick={() => setConfirmingDelete(false)}>Cancel</Button>
+              <Button variant="danger" size="sm" disabled={deleting} data-testid="confirm-delete" onClick={handleDelete}>
+                {deleting ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{doc.title}</h1>
@@ -338,6 +366,11 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
             <Button variant="secondary" size="sm" onClick={() => { setDraft(markdown); setMode("edit"); }}>Edit</Button>
           )}
           <Link href={`/app/documents/${doc.id}/history`} data-testid="history-link" className="text-sm text-primary hover:underline">History</Link>
+          {isOwner && (
+            <Button variant="danger" size="sm" data-testid="delete-document" onClick={() => setConfirmingDelete(true)}>
+              Delete
+            </Button>
+          )}
         </div>
         {mode === "edit" ? (
           <DocumentEditor value={draft} onChange={setDraft} onSave={saveVersion} onCancel={() => { setDraft(markdown); setMode("review"); }} saving={saving} error={saveError} />
