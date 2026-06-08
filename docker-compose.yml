@@ -5,8 +5,8 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: "file:/data/app.db"
-      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET}"
-      BETTER_AUTH_URL: "http://localhost:3000"
+      AUTH_SECRET: "${AUTH_SECRET:?set AUTH_SECRET}"
+      BASE_URL: "http://localhost:3000"
     volumes:
       - quorum-data:/data
     healthcheck:

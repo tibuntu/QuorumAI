@@ -44,6 +44,8 @@ This product re-inserts the team at the highest-leverage moment: **before the ag
 - **Suggestions-as-edits** — reviewers propose concrete text; the owner accepts → a new version.
 - **Generic OIDC SSO** — one env-gated OIDC provider alongside email+password (see below).
 
+> **Breaking (M4):** the auth env vars were renamed — `BETTER_AUTH_SECRET` → `AUTH_SECRET`, `BETTER_AUTH_URL` → `BASE_URL`. Update your `.env` / deployment config before upgrading.
+
 See [`docs/superpowers/STATUS.md`](docs/superpowers/STATUS.md) for live build status and [`docs/superpowers/specs/2026-06-04-quorum-ai-design.md`](docs/superpowers/specs/2026-06-04-quorum-ai-design.md) for the full design.
 
 ## Quickstart
@@ -53,7 +55,7 @@ See [`docs/superpowers/STATUS.md`](docs/superpowers/STATUS.md) for live build st
 Quorum AI runs as **one container** with an embedded SQLite database (WAL) — no external services. Data persists in a named volume.
 
 ```bash
-BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up
+AUTH_SECRET=$(openssl rand -base64 32) docker compose up
 # → http://localhost:3000
 ```
 
@@ -82,7 +84,7 @@ startupProbe:
 ### Run locally (development)
 
 ```bash
-cp .env.example .env      # then set BETTER_AUTH_SECRET to a 32+ char random string
+cp .env.example .env      # then set AUTH_SECRET to a 32+ char random string
 CI=true pnpm install      # CI=true required: this repo uses pnpm v11
 pnpm db:migrate           # apply migrations to ./data/app.db
 pnpm dev                  # → http://localhost:3000
@@ -103,7 +105,7 @@ Set `NEXT_PUBLIC_OIDC_ENABLED=true` **only together with** the three `OIDC_*` va
 public flag just controls the button, so enabling it alone shows a button whose sign-in
 request 404s (no provider registered server-side).
 
-Configure your IdP's redirect URI to `<BETTER_AUTH_URL>/api/auth/oauth2/callback/oidc`.
+Configure your IdP's redirect URI to `<BASE_URL>/api/auth/oauth2/callback/oidc`.
 
 **Account linking.** An SSO sign-in whose email the IdP marks *verified* is linked
 to an existing user with that email; otherwise a new `member` user is created.

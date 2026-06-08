@@ -55,12 +55,12 @@ Execute P4/P5 each in its own session, e.g. `/superpowers-extended-cc:executing-
 
 ## Run locally
 ```
-cp .env.example .env          # set BETTER_AUTH_SECRET to 32+ random chars
+cp .env.example .env          # set AUTH_SECRET to 32+ random chars
 CI=true pnpm install
 pnpm db:migrate               # apply migrations to ./data/app.db
 pnpm dev                      # http://localhost:3000
 ```
-Container: `BETTER_AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
+Container: `AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
 M4 P1–P3 are implemented. P4 (health probes) + P5 (generic env vars) are planned (specs + plans + `.tasks.json`). Next: **execute P4 and P5 in dedicated sessions** in a fresh worktree off `main`, e.g. `/superpowers-extended-cc:executing-plans docs/superpowers/plans/2026-06-08-quorum-ai-m4-p4-health-probes.md`. Independent — any order. P5 is a **breaking** env rename (`BETTER_AUTH_*` → `BASE_URL`/`AUTH_SECRET`).

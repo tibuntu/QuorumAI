@@ -14,8 +14,8 @@ jobs:
       # Absolute path so the prisma CLI (migrate) and vitest open the SAME SQLite file
       # regardless of each process's working directory.
       DATABASE_URL: "file:${{ github.workspace }}/data/app.db"
-      BETTER_AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
-      BETTER_AUTH_URL: "http://localhost:3000"
+      AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
+      BASE_URL: "http://localhost:3000"
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
@@ -35,8 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: "file:${{ github.workspace }}/data/app.db"
-      BETTER_AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
-      BETTER_AUTH_URL: "http://localhost:3000"
+      AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
+      BASE_URL: "http://localhost:3000"
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6

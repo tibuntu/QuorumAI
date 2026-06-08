@@ -1,4 +1,4 @@
 # Mirror the GitHub Actions `lint-test-build` job locally before code reaches GitHub.
 # (e2e + docker are intentionally left to CI — too heavy for a push hook.)
-# Assumes local dev setup: a `.env` (BETTER_AUTH_SECRET, DATABASE_URL) and `pnpm db:migrate` run once.
+# Assumes local dev setup: a `.env` (AUTH_SECRET, DATABASE_URL) and `pnpm db:migrate` run once.
 pnpm lint && pnpm test:unit && pnpm build
