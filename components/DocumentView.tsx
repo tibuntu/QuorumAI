@@ -358,14 +358,16 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
           <Badge tone={stateTone(docState)} data-testid="doc-state">
             {STATE_LABELS[docState] ?? docState}
           </Badge>
-          <div className="flex gap-2">
-            <Button variant="primary" size="sm" onClick={() => submitReview("APPROVE")}>
-              Approve
-            </Button>
-            <Button variant="danger" size="sm" onClick={() => submitReview("REQUEST_CHANGES")}>
-              Request changes
-            </Button>
-          </div>
+          {!isOwner && (
+            <div className="flex gap-2">
+              <Button variant="primary" size="sm" onClick={() => submitReview("APPROVE")}>
+                Approve
+              </Button>
+              <Button variant="danger" size="sm" onClick={() => submitReview("REQUEST_CHANGES")}>
+                Request changes
+              </Button>
+            </div>
+          )}
         </Card>
 
         {selection && (
