@@ -17,6 +17,7 @@ model User {
   updatedAt     DateTime
   role          String?   @default("member")
   emailNotifications Boolean @default(true)
+  desktopNotifications Boolean @default(false)
   sessions      Session[]
   accounts      Account[]
   apiTokens        ApiToken[]
