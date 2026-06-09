@@ -1,0 +1,27 @@
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Please
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          # Use a PAT (RELEASE_PLEASE_TOKEN) instead of GITHUB_TOKEN so the release
+          # PR and the release tag are attributed to a real identity. Tags pushed by
+          # GITHUB_TOKEN do not trigger downstream workflows; using the PAT means the
+          # release tag triggers ci.yml, whose `docker` job builds and pushes the
+          # semver-tagged GHCR image. The PAT needs `contents: write` and
+          # `pull-requests: write` on this repo.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
