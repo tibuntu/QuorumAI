@@ -6,6 +6,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { buildQuote, type Quote } from "@/lib/anchoring";
 import { applyHighlights, buildHighlightRanges } from "@/lib/highlight";
+import { applyPresenceEvent } from "@/lib/presence-client";
+import PresenceRoster from "@/components/PresenceRoster";
+import type { PresenceEntry } from "@/lib/events";
 import CommentSidebar from "@/components/CommentSidebar";
 import DocumentEditor from "@/components/DocumentEditor";
 import { Button } from "@/components/ui/Button";
@@ -62,7 +65,7 @@ interface PendingSelection {
   endOffset: number;
 }
 
-export default function DocumentView({ doc, isOwner, editEnabled }: { doc: ClientDocument; isOwner: boolean; editEnabled: boolean }) {
+export default function DocumentView({ doc, isOwner, editEnabled, currentUserId, currentUserName }: { doc: ClientDocument; isOwner: boolean; editEnabled: boolean; currentUserId: string; currentUserName: string }) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [annotations, setAnnotations] = useState<ClientAnnotation[]>(doc.annotations);
@@ -82,6 +85,9 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
   const [statusById, setStatusById] = useState<Record<string, string>>({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [roster, setRoster] = useState<PresenceEntry[]>(() => [
+    { userId: currentUserId, name: currentUserName, lastSeen: Date.now() },
+  ]);
 
   async function handleDelete() {
     setDeleting(true);
@@ -270,6 +276,8 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
           setDocState(e.state);
         } else if (e.type === "version.created") {
           refetchDetail();
+        } else if (e.type === "presence.sync" || e.type === "presence.updated" || e.type === "presence.left") {
+          setRoster((prev) => applyPresenceEvent(prev, e, { userId: currentUserId, name: currentUserName }));
         }
       };
       es.onerror = () => {
@@ -280,7 +288,33 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
     }
     connect();
     return () => { stopped = true; es?.close(); if (retry) clearTimeout(retry); };
-  }, [doc.id, refetchDetail]);
+  }, [doc.id, refetchDetail, currentUserId, currentUserName]);
+
+  // Presence heartbeat: ride a throttled POST beacon (NOT a third EventSource).
+  useEffect(() => {
+    const url = `/api/documents/${doc.id}/presence`;
+    const send = () => {
+      fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+        keepalive: true,
+      }).catch(() => {});
+    };
+    const leave = () => {
+      const blob = new Blob([JSON.stringify({ leaving: true })], { type: "application/json" });
+      navigator.sendBeacon?.(url, blob);
+    };
+    send();
+    const intervalMs = Number(process.env.NEXT_PUBLIC_PRESENCE_HEARTBEAT_MS ?? 10_000);
+    const timer = setInterval(send, intervalMs);
+    window.addEventListener("pagehide", leave);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("pagehide", leave);
+      leave(); // best-effort fast departure on unmount
+    };
+  }, [doc.id]);
 
   async function saveVersion() {
     setSaving(true);
@@ -362,6 +396,7 @@ export default function DocumentView({ doc, isOwner, editEnabled }: { doc: Clien
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{doc.title}</h1>
+          <PresenceRoster roster={roster} currentUserId={currentUserId} />
           {mode === "review" && editEnabled && (
             <Button variant="secondary" size="sm" onClick={() => { setDraft(markdown); setMode("edit"); }}>Edit</Button>
           )}

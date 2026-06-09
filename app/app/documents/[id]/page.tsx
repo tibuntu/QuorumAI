@@ -37,6 +37,15 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
 
   const isOwner = doc.ownerId === session.user.id;
   const editEnabled = isEditUiEnabled();
+  const currentUserName = session.user.name?.trim() || session.user.email || "You";
 
-  return <DocumentView doc={serializable} isOwner={isOwner} editEnabled={editEnabled} />;
+  return (
+    <DocumentView
+      doc={serializable}
+      isOwner={isOwner}
+      editEnabled={editEnabled}
+      currentUserId={session.user.id}
+      currentUserName={currentUserName}
+    />
+  );
 }
