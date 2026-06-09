@@ -10,6 +10,12 @@ export interface ClientNotification {
   createdAt: string; // ISO
 }
 
+export interface PresenceEntry {
+  userId: string;
+  name: string;
+  lastSeen: number; // epoch ms
+}
+
 export type DocEvent =
   | { type: "annotation.created"; annotation: unknown }
   | { type: "comment.created"; annotationId: string; comment: unknown }
@@ -18,7 +24,10 @@ export type DocEvent =
   | { type: "version.created"; versionNumber: number; summary: unknown }
   | { type: "notification.created"; notification: ClientNotification }
   | { type: "notification.read"; id: string }
-  | { type: "notification.read.all" };
+  | { type: "notification.read.all" }
+  | { type: "presence.sync"; roster: PresenceEntry[] }
+  | { type: "presence.updated"; entry: PresenceEntry }
+  | { type: "presence.left"; userId: string };
 
 const globalForEvents = globalThis as unknown as { docEvents?: EventEmitter };
 const emitter = globalForEvents.docEvents ?? new EventEmitter();
