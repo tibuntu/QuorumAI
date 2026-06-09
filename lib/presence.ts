@@ -42,15 +42,19 @@ export function roster(documentId: string): PresenceEntry[] {
 export function evictStale(): void {
   const ttl = Number(process.env.PRESENCE_TTL_MS ?? 15_000);
   const cutoff = Date.now() - ttl;
+  const emptyDocs: string[] = [];
   for (const [documentId, docMap] of registry) {
+    const stale: string[] = [];
     for (const [userId, entry] of docMap) {
-      if (entry.lastSeen < cutoff) {
-        docMap.delete(userId);
-        publish(documentId, { type: "presence.left", userId });
-      }
+      if (entry.lastSeen < cutoff) stale.push(userId);
     }
-    if (docMap.size === 0) registry.delete(documentId);
+    for (const userId of stale) {
+      docMap.delete(userId);
+      publish(documentId, { type: "presence.left", userId });
+    }
+    if (docMap.size === 0) emptyDocs.push(documentId);
   }
+  for (const documentId of emptyDocs) registry.delete(documentId);
 }
 
 // One process-wide sweep, guarded so dev hot-reload doesn't spawn duplicates.

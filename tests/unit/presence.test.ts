@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { subscribe, type DocEvent } from "@/lib/events";
 import { heartbeat, leave, roster, evictStale } from "@/lib/presence";
 
@@ -9,10 +9,6 @@ function capture(docId: string): { events: DocEvent[]; stop: () => void } {
 }
 
 describe("presence registry", () => {
-  beforeEach(() => {
-    // isolate each test on its own doc id; registry is module-global
-  });
-
   it("heartbeat adds an entry and publishes presence.updated", () => {
     const { events, stop } = capture("p-doc-1");
     heartbeat("p-doc-1", { userId: "u1", name: "Ada" });
