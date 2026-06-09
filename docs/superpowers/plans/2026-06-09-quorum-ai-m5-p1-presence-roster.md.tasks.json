@@ -1,0 +1,54 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-09-quorum-ai-m5-p1-presence-roster.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Extend DocEvent union with presence events",
+      "status": "pending",
+      "description": "**Goal:** Add the PresenceEntry type and three presence event variants to the event bus so registry, routes, and client share one source of truth.\n\n**Files:**\n- Modify: lib/events.ts\n- Test: tests/unit/events.presence.test.ts (create)\n\n**Acceptance Criteria:**\n- PresenceEntry { userId; name; lastSeen } exported from lib/events.ts\n- DocEvent includes presence.sync { roster }, presence.updated { entry }, presence.left { userId }\n- publish/subscribe unchanged; deliver presence event to same-document subscriber\n\n**Verify:** CI=true pnpm test:unit tests/unit/events.presence.test.ts\n\n```json:metadata\n{\"files\": [\"lib/events.ts\", \"tests/unit/events.presence.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/events.presence.test.ts\", \"acceptanceCriteria\": [\"PresenceEntry exported from lib/events.ts\", \"DocEvent includes presence.sync/updated/left\", \"publish/subscribe deliver presence events\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Presence registry + TTL sweep (lib/presence.ts)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** A globalThis-stashed in-memory registry with heartbeat/leave/roster plus env-tunable TTL eviction that publishes presence.left for stale entries.\n\n**Files:**\n- Create: lib/presence.ts\n- Test: tests/unit/presence.test.ts (create)\n\n**Acceptance Criteria:**\n- heartbeat(docId,{userId,name}) upserts, bumps lastSeen, publishes presence.updated\n- roster(docId) dedupes by userId\n- leave removes + publishes presence.left; absent leave no-op\n- evictStale() evicts entries older than PRESENCE_TTL_MS, publishes presence.left; fresh survive\n- one globalThis-guarded unref'd setInterval every PRESENCE_SWEEP_MS\n\n**Verify:** CI=true pnpm test:unit tests/unit/presence.test.ts\n\n```json:metadata\n{\"files\": [\"lib/presence.ts\", \"tests/unit/presence.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence.test.ts\", \"acceptanceCriteria\": [\"heartbeat upserts + publishes presence.updated\", \"roster dedupes by userId\", \"leave removes + publishes presence.left, no-op when absent\", \"evictStale evicts stale, keeps fresh\", \"globalThis-guarded unref'd sweep interval\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Heartbeat POST route",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "**Goal:** A throttled beacon endpoint that records presence (or departure) for the authenticated participant.\n\n**Files:**\n- Create: app/api/documents/[id]/presence/route.ts\n- Test: tests/unit/presence.route.test.ts (create)\n\n**Acceptance Criteria:**\n- empty body -> heartbeat(id,{userId,name}); 204\n- { leaving: true } -> leave(id, userId); 204\n- 401 unauth; 404 non-participant\n- name falls back to email then 'Someone'\n\n**Verify:** CI=true pnpm test:unit tests/unit/presence.route.test.ts\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/presence/route.ts\", \"tests/unit/presence.route.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence.route.test.ts\", \"acceptanceCriteria\": [\"empty body heartbeats, returns 204\", \"leaving:true calls leave, returns 204\", \"401 unauth, 404 non-participant\", \"name falls back to email then Someone\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Emit presence.sync snapshot on SSE connect",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "**Goal:** When a client connects to the document stream, immediately send the current roster.\n\n**Files:**\n- Modify: app/api/documents/[id]/stream/route.ts\n- Test: tests/unit/stream.presence-sync.test.ts (create)\n\n**Acceptance Criteria:**\n- after ': connected', emit one data: line = { type: 'presence.sync', roster: roster(id) }\n- no third EventSource\n- existing 401/404 gating, forwarding, heartbeat comment unchanged\n\n**Verify:** CI=true pnpm test:unit tests/unit/stream.presence-sync.test.ts\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/stream/route.ts\", \"tests/unit/stream.presence-sync.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/stream.presence-sync.test.ts\", \"acceptanceCriteria\": [\"presence.sync snapshot emitted on connect\", \"no third EventSource\", \"existing stream behavior unchanged\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: PresenceRoster avatar-stack component",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Presentational avatar-stack component with +N overflow and (you) marking; logic in pure helpers (unit-tested), rendering covered by Task 7 E2E.\n\n**Files:**\n- Create: lib/presence-roster.ts\n- Create: components/PresenceRoster.tsx\n- Test: tests/unit/presence-roster.test.ts (create)\n\n**Acceptance Criteria:**\n- initials/colorFor/viewingLabel/orderRoster/displayName correct\n- component null on empty; caps at MAX_VISIBLE_AVATARS=4 with +N\n- data-testid presence-roster + aria-label; per-avatar presence-avatar + data-user-name\n\n**Verify:** CI=true pnpm test:unit tests/unit/presence-roster.test.ts && CI=true pnpm lint\n\n```json:metadata\n{\"files\": [\"lib/presence-roster.ts\", \"components/PresenceRoster.tsx\", \"tests/unit/presence-roster.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence-roster.test.ts && CI=true pnpm lint\", \"acceptanceCriteria\": [\"helpers correct\", \"component null on empty, caps at 4 with +N\", \"presence-roster + presence-avatar testids and data-user-name\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: Presence reducer + wire DocumentView and page",
+      "status": "pending",
+      "blockedBy": [3, 4, 5],
+      "description": "**Goal:** Pure client reducer, optimistic self-seed, heartbeats, render PresenceRoster, pass identity from server page.\n\n**Files:**\n- Create: lib/presence-client.ts\n- Test: tests/unit/presence-client.test.ts (create)\n- Modify: components/DocumentView.tsx\n- Modify: app/app/documents/[id]/page.tsx\n\n**Acceptance Criteria:**\n- applyPresenceEvent pure: sync replaces (re-adds self if missing), updated upserts, left removes, others unchanged\n- DocumentView accepts currentUserId/currentUserName, seeds roster, renders <PresenceRoster> in header\n- presence events handled on existing EventSource switch; no new EventSource\n- heartbeat on mount + every NEXT_PUBLIC_PRESENCE_HEARTBEAT_MS (10000); { leaving:true } sendBeacon on pagehide+unmount\n- page passes currentUserId + currentUserName (name->email->'You')\n\n**Verify:** CI=true pnpm test:unit tests/unit/presence-client.test.ts && CI=true pnpm lint\n\n```json:metadata\n{\"files\": [\"lib/presence-client.ts\", \"tests/unit/presence-client.test.ts\", \"components/DocumentView.tsx\", \"app/app/documents/[id]/page.tsx\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence-client.test.ts && CI=true pnpm lint\", \"acceptanceCriteria\": [\"applyPresenceEvent pure reducer correct\", \"DocumentView seeds self + renders PresenceRoster\", \"presence events on existing EventSource, no third\", \"heartbeat mount+interval, sendBeacon leave\", \"page passes identity props\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: Two-context Playwright E2E",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "**Goal:** Prove the roster works across two logged-in browsers and the tab holds only two EventSource connections.\n\n**Files:**\n- Create: tests/e2e/presence.spec.ts\n\n**Acceptance Criteria:**\n- two contexts (A creates doc; B opens URL via link-grant) each show 2 people, both names\n- after B closes, A drops to 1 within TTL\n- exactly 2 EventSource constructions in a viewing context, no third\n\n**Verify:** lsof -ti:3000 | xargs kill -9 2>/dev/null; CI=true PRESENCE_TTL_MS=3000 PRESENCE_SWEEP_MS=1000 pnpm test:e2e tests/e2e/presence.spec.ts\n\n```json:metadata\n{\"files\": [\"tests/e2e/presence.spec.ts\"], \"verifyCommand\": \"lsof -ti:3000 | xargs kill -9 2>/dev/null; CI=true PRESENCE_TTL_MS=3000 PRESENCE_SWEEP_MS=1000 pnpm test:e2e tests/e2e/presence.spec.ts\", \"acceptanceCriteria\": [\"both contexts show 2 people with both names\", \"A drops to 1 after B closes within TTL\", \"exactly 2 EventSource constructions\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-09"
+}
