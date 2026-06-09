@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/api";
 import { subscribe, type DocEvent } from "@/lib/events";
 import { isParticipant } from "@/lib/authz";
+import { roster } from "@/lib/presence";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -17,6 +18,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       const send = (e: DocEvent) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
       unsubscribe = subscribe(id, send);
       controller.enqueue(encoder.encode(`: connected\n\n`));
+      controller.enqueue(
+        encoder.encode(`data: ${JSON.stringify({ type: "presence.sync", roster: roster(id) })}\n\n`)
+      );
       heartbeat = setInterval(() => controller.enqueue(encoder.encode(`: heartbeat\n\n`)), 25_000);
     },
     cancel() {
