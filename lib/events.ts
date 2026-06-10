@@ -29,6 +29,21 @@ export interface PresenceEntry {
   cursor?: PresenceCursor; // absent when the pointer is outside the doc body
 }
 
+export interface SessionParticipant {
+  userId: string;
+  name: string;
+  joinedAt: number; // epoch ms
+}
+
+export interface ReviewSession {
+  sessionId: string; // crypto.randomUUID()
+  documentId: string;
+  leaderId: string;
+  leaderName: string;
+  participants: SessionParticipant[]; // includes the leader; ordered by joinedAt
+  startedAt: number; // epoch ms
+}
+
 export type DocEvent =
   | { type: "annotation.created"; annotation: unknown }
   | { type: "comment.created"; annotationId: string; comment: unknown }
@@ -40,7 +55,10 @@ export type DocEvent =
   | { type: "notification.read.all" }
   | { type: "presence.sync"; roster: PresenceEntry[] }
   | { type: "presence.updated"; entry: PresenceEntry }
-  | { type: "presence.left"; userId: string };
+  | { type: "presence.left"; userId: string }
+  | { type: "session.started"; session: ReviewSession }
+  | { type: "session.updated"; session: ReviewSession }
+  | { type: "session.ended" };
 
 const globalForEvents = globalThis as unknown as { docEvents?: EventEmitter };
 const emitter = globalForEvents.docEvents ?? new EventEmitter();

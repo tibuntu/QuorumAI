@@ -21,3 +21,6 @@ export type Severity = (typeof SEVERITIES)[number];
 
 export const WEBHOOK_EVENTS = ["version.created", "review.updated", "decision.changed", "comment.created"] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+export const SESSION_ACTIONS = ["start", "join", "leave", "end"] as const;
+export type SessionAction = (typeof SESSION_ACTIONS)[number];
