@@ -136,4 +136,19 @@
 
 ---
 
+## Subjective decisions (resolved)
+
+_Resolved with the user at the Task 3 checkpoint (2026-06-10). These, plus all objective findings, feed the fix tasks (P1 Tasks 4–5)._
+
+- **Leading-H1 duplication → FIX (demote the first body H1).** When the rendered markdown's first block is an `# H1`, render it de-emphasized / not as a second `<h1>` so it doesn't compete with the page-level title; the page title stays the canonical heading. — `components/DocumentView.tsx:635,664`
+- **Presence avatar/cursor/selection colors → FIX (derive from theme tokens).** Make them theme-aware instead of the fixed Tailwind rose→fuchsia ramp so they sit well on the dark surface. — `lib/presence-roster.ts:3-6`
+- **Diff per-column version headers → FIX.** Label the two diff columns with their version (old `v1` vs new `v2`) so the side is unambiguous on long documents. — `components/VersionHistory.tsx:38-44`
+- **Follow-the-leader / session controls helper → FIX (add short tooltip/helper).** Give first-time followers a brief affordance for what Start session / Join / Following do. — `components/SessionBanner.tsx:57-85`
+- **Cursor/selection color→person legend → FIX (add small legend).** Map color → participant name for 3+ participants. — `components/PresenceCursors.tsx:14-29`, `components/PresenceRoster.tsx:33-53`
+- **`◆ Quorum` glyph brand mark → LEAVE AS-IS.** Real iconography is a larger lift beyond this token-level polish phase; accepted for the current product stage.
+- **Mobile inline-editor pane height (locked `60vh`) → LEAVE AS-IS.** Minor; not worth churn this phase.
+- **Title-row crowding at mid widths (session banner + roster + Edit/History/Delete) → LEAVE AS-IS.** Already wraps; acceptable.
+
+---
+
 *Screenshots captured to `/tmp/m6p1-shots` (light+dark × 1280+390 for every static surface; desktop light+dark for the multi-context real-time surface — presence cursors/selection, session leader banner, follower + resume, suggestion/comment cards, and the v1→v2 diff). Not committed. The two-context real-time capture succeeded; the only surfaces captured desktop-only (not at 390px) are the multi-user real-time ones (presence/session/diff/sidebar cards), since they were driven through a second context at the default desktop width.*
