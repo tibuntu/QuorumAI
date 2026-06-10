@@ -110,3 +110,26 @@ describe("presence registry", () => {
     expect(entry.cursor).toEqual({ x: 0.3, y: 0.7 });
   });
 });
+
+describe("presence scroll (P5)", () => {
+  it("heartbeat stores a scroll and a later heartbeat without one clears it", () => {
+    heartbeat("p-scroll-1", { userId: "u1", name: "Ada" }, null, null, { y: 0.4 });
+    expect(roster("p-scroll-1")[0].scroll).toEqual({ y: 0.4 });
+    heartbeat("p-scroll-1", { userId: "u1", name: "Ada" });
+    expect(roster("p-scroll-1")[0].scroll).toBeUndefined();
+  });
+
+  it("scroll coexists with selection and cursor on one entry", () => {
+    heartbeat(
+      "p-scroll-2",
+      { userId: "u1", name: "Ada" },
+      { start: 1, end: 4, versionNumber: 2 },
+      { x: 0.1, y: 0.2 },
+      { y: 0.75 },
+    );
+    const entry = roster("p-scroll-2")[0];
+    expect(entry.selection).toEqual({ start: 1, end: 4, versionNumber: 2 });
+    expect(entry.cursor).toEqual({ x: 0.1, y: 0.2 });
+    expect(entry.scroll).toEqual({ y: 0.75 });
+  });
+});
