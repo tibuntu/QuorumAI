@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { buildQuote, type Quote } from "@/lib/anchoring";
+import { startsWithH1 } from "@/lib/markdown-heading";
 import { applyHighlights, applyPresenceSelections, buildHighlightRanges, clearPresenceSelections } from "@/lib/highlight";
 import { applyPresenceEvent, remoteCursors, remoteSelections } from "@/lib/presence-client";
 import { applySessionEvent, isLeader, isInSession } from "@/lib/session-client";
@@ -61,7 +62,36 @@ const STATE_LABELS: Record<string, string> = {
 // `markdown` is constant for a v1 document (no in-app editing in part 1), which
 // makes it safe for the highlight helper to mutate that DOM directly.
 const RenderedMarkdown = memo(function RenderedMarkdown({ markdown }: { markdown: string }) {
-  return <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>;
+  // When the body opens with `# Title`, that leading H1 stacks under the page-level
+  // <h1>{doc.title}</h1> as a duplicate top heading. Demote ONLY that first H1 to a
+  // de-emphasized non-h1 element so the page title stays the canonical heading.
+  // Mid-document H1s and docs that don't open with an H1 are untouched.
+  const demoteLeadingH1 = startsWithH1(markdown);
+  let h1Seen = 0;
+  const components = demoteLeadingH1
+    ? {
+        h1({ children, ...props }: React.ComponentPropsWithoutRef<"h1">) {
+          h1Seen += 1;
+          if (h1Seen === 1) {
+            return (
+              <p
+                {...props}
+                data-demoted-h1=""
+                className="mt-0 mb-4 text-sm font-medium text-muted"
+              >
+                {children}
+              </p>
+            );
+          }
+          return <h1 {...props}>{children}</h1>;
+        },
+      }
+    : undefined;
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      {markdown}
+    </ReactMarkdown>
+  );
 });
 
 interface PendingSelection {

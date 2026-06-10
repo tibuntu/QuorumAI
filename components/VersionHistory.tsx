@@ -36,6 +36,10 @@ export function VersionHistory({
         <p className="text-sm text-muted">Only one version exists — no earlier version to compare.</p>
       ) : rows ? (
         <div data-testid="diff" className="overflow-x-auto rounded border border-border">
+          <div className="grid grid-cols-1 border-b border-border bg-[var(--state-neutral-bg)] text-xs font-medium text-muted lg:grid-cols-2">
+            <span className="border-b border-border px-2 py-1 lg:border-b-0 lg:border-r">Old · v{from}</span>
+            <span className="px-2 py-1">New · v{to}</span>
+          </div>
           {rows.map((r, i) => (
             <div key={i} className="grid grid-cols-1 lg:grid-cols-2 font-mono text-xs">
               <Side spans={r.oldSpans} text={r.oldText} number={r.oldNumber} side="old" kind={r.kind} />

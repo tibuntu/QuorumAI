@@ -39,7 +39,8 @@ export default function PresenceRoster({
               data-testid="presence-avatar"
               data-user-name={name}
               title={name}
-              className={`${colorFor(e.userId)} flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white ring-2 ring-surface`}
+              style={{ backgroundColor: colorFor(e.userId) }}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white ring-2 ring-surface"
             >
               {initials(e.name)}
             </span>

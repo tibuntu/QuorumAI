@@ -1,13 +1,17 @@
 import type { PresenceEntry } from "@/lib/events";
 
+// Theme-aware presence palette. Each entry is a CSS custom-property reference
+// resolved from the "Violet consensus" tokens in app/globals.css, which flip
+// under :root.dark — so avatar/cursor/selection colors stay readable on both
+// the light and dark surfaces. Applied via inline `style`, not Tailwind classes.
 export const AVATAR_COLORS = [
-  "bg-rose-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500",
-  "bg-teal-500", "bg-sky-500", "bg-indigo-500", "bg-violet-500", "bg-fuchsia-500",
+  "var(--presence-1)", "var(--presence-2)", "var(--presence-3)", "var(--presence-4)",
+  "var(--presence-5)", "var(--presence-6)", "var(--presence-7)", "var(--presence-8)", "var(--presence-9)",
 ] as const;
 
 export const SELECTION_COLORS = [
-  "bg-rose-500/25", "bg-orange-500/25", "bg-amber-500/25", "bg-emerald-500/25",
-  "bg-teal-500/25", "bg-sky-500/25", "bg-indigo-500/25", "bg-violet-500/25", "bg-fuchsia-500/25",
+  "var(--presence-sel-1)", "var(--presence-sel-2)", "var(--presence-sel-3)", "var(--presence-sel-4)",
+  "var(--presence-sel-5)", "var(--presence-sel-6)", "var(--presence-sel-7)", "var(--presence-sel-8)", "var(--presence-sel-9)",
 ] as const;
 
 export const MAX_VISIBLE_AVATARS = 4;

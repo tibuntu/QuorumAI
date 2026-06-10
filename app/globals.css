@@ -22,6 +22,29 @@
   --danger: #dc2626;
   --danger-fg: #ffffff;
   --radius: 0.625rem;
+
+  /* Presence palette — stable per-user colors for avatars, remote cursors and
+     selections. Tuned for the light surface; the dark overrides below lift
+     lightness so they sit well on the dark panel. selection-* are translucent
+     tints of the same hue. */
+  --presence-1: hsl(347 77% 50%);
+  --presence-2: hsl(25 95% 53%);
+  --presence-3: hsl(43 96% 46%);
+  --presence-4: hsl(160 84% 39%);
+  --presence-5: hsl(173 80% 36%);
+  --presence-6: hsl(199 89% 48%);
+  --presence-7: hsl(239 84% 62%);
+  --presence-8: hsl(258 90% 60%);
+  --presence-9: hsl(292 84% 56%);
+  --presence-sel-1: hsl(347 77% 50% / 0.25);
+  --presence-sel-2: hsl(25 95% 53% / 0.25);
+  --presence-sel-3: hsl(43 96% 46% / 0.25);
+  --presence-sel-4: hsl(160 84% 39% / 0.25);
+  --presence-sel-5: hsl(173 80% 36% / 0.25);
+  --presence-sel-6: hsl(199 89% 48% / 0.25);
+  --presence-sel-7: hsl(239 84% 62% / 0.25);
+  --presence-sel-8: hsl(258 90% 60% / 0.25);
+  --presence-sel-9: hsl(292 84% 56% / 0.25);
 }
 
 :root.dark {
@@ -44,6 +67,27 @@
   --state-neutral-bg: #1e293b;
   --danger: #b91c1c;
   --danger-fg: #ffffff;
+
+  /* Dark overrides: lighter, slightly desaturated hues so the per-user colors
+     read against the dark surface without going hot. */
+  --presence-1: hsl(351 95% 71%);
+  --presence-2: hsl(27 96% 61%);
+  --presence-3: hsl(48 96% 64%);
+  --presence-4: hsl(156 72% 67%);
+  --presence-5: hsl(172 66% 60%);
+  --presence-6: hsl(199 95% 74%);
+  --presence-7: hsl(234 89% 74%);
+  --presence-8: hsl(255 92% 76%);
+  --presence-9: hsl(292 91% 73%);
+  --presence-sel-1: hsl(351 95% 71% / 0.3);
+  --presence-sel-2: hsl(27 96% 61% / 0.3);
+  --presence-sel-3: hsl(48 96% 64% / 0.3);
+  --presence-sel-4: hsl(156 72% 67% / 0.3);
+  --presence-sel-5: hsl(172 66% 60% / 0.3);
+  --presence-sel-6: hsl(199 95% 74% / 0.3);
+  --presence-sel-7: hsl(234 89% 74% / 0.3);
+  --presence-sel-8: hsl(255 92% 76% / 0.3);
+  --presence-sel-9: hsl(292 91% 73% / 0.3);
 }
 
 @theme inline {

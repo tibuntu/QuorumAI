@@ -10,23 +10,47 @@ import type { RemoteCursor } from "@/lib/presence-client";
 export default function PresenceCursors({ cursors }: { cursors: RemoteCursor[] }) {
   if (cursors.length === 0) return null;
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      {cursors.map((c) => (
-        <span
-          key={c.userId}
-          data-presence-cursor-user-id={c.userId}
-          data-user-name={c.name}
-          className="absolute flex items-center gap-1"
-          style={{ left: `${c.x * 100}%`, top: `${c.y * 100}%` }}
-        >
-          <span className={`${colorFor(c.userId)} block h-3 w-3 rounded-full ring-2 ring-surface`} />
+    <>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        {cursors.map((c) => (
           <span
-            className={`${colorFor(c.userId)} rounded px-1.5 py-0.5 text-xs font-medium text-white whitespace-nowrap`}
+            key={c.userId}
+            data-presence-cursor-user-id={c.userId}
+            data-user-name={c.name}
+            className="absolute flex items-center gap-1"
+            style={{ left: `${c.x * 100}%`, top: `${c.y * 100}%` }}
           >
-            {c.name}
+            <span
+              className="block h-3 w-3 rounded-full ring-2 ring-surface"
+              style={{ backgroundColor: colorFor(c.userId) }}
+            />
+            <span
+              className="rounded px-1.5 py-0.5 text-xs font-medium text-white whitespace-nowrap"
+              style={{ backgroundColor: colorFor(c.userId) }}
+            >
+              {c.name}
+            </span>
           </span>
-        </span>
-      ))}
-    </div>
+        ))}
+      </div>
+      {/* Color→person legend so 3+ participants are identifiable at a glance
+          without hovering each cursor/avatar. */}
+      {cursors.length >= 2 && (
+        <div
+          data-testid="cursor-legend"
+          className="absolute right-2 top-2 flex flex-col gap-1 rounded-[var(--radius-app)] border border-border bg-surface/90 px-2 py-1.5 text-xs shadow-sm backdrop-blur"
+        >
+          {cursors.map((c) => (
+            <span key={c.userId} className="flex items-center gap-1.5 whitespace-nowrap text-foreground">
+              <span
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: colorFor(c.userId) }}
+              />
+              {c.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

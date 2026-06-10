@@ -78,7 +78,9 @@ export function applyPresenceSelections(container: HTMLElement, selections: Remo
   for (const sel of selections) {
     wrapRange(container, sel, () => {
       const mark = document.createElement("mark");
-      mark.className = `${selectionColorFor(sel.userId)} rounded-sm`;
+      mark.className = "rounded-sm";
+      mark.style.backgroundColor = selectionColorFor(sel.userId);
+      mark.style.color = "inherit";
       mark.setAttribute("data-presence-user-id", sel.userId);
       mark.setAttribute("data-user-name", sel.name);
       mark.title = sel.name;

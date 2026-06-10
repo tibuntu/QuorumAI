@@ -25,6 +25,7 @@ export default function SessionBanner({
         variant="secondary"
         size="sm"
         data-testid="start-session"
+        title="Start a review session: others can join and follow your scroll position as you walk through the document."
         disabled={pending}
         onClick={() => onAction("start")}
       >
@@ -56,7 +57,11 @@ export default function SessionBanner({
       )}
       {joined && !leader &&
         (followAttached ? (
-          <span data-testid="following-indicator" className="text-muted">
+          <span
+            data-testid="following-indicator"
+            className="text-muted"
+            title={`Your view follows ${s.leaderName}'s scroll position. Scroll manually to detach.`}
+          >
             Following {s.leaderName}
           </span>
         ) : (
@@ -64,6 +69,7 @@ export default function SessionBanner({
             variant="secondary"
             size="sm"
             data-testid="resume-following"
+            title={`Re-attach to ${s.leaderName}'s view and follow their scrolling again.`}
             disabled={pending}
             onClick={onResumeFollow}
           >
@@ -79,7 +85,7 @@ export default function SessionBanner({
           Leave
         </Button>
       ) : (
-        <Button variant="secondary" size="sm" data-testid="join-session" disabled={pending} onClick={() => onAction("join")}>
+        <Button variant="secondary" size="sm" data-testid="join-session" title={`Join ${s.leaderName}'s review session and follow their scroll position.`} disabled={pending} onClick={() => onAction("join")}>
           Join
         </Button>
       )}
