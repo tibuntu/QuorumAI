@@ -31,7 +31,7 @@
     {
       "id": 5,
       "subject": "Task 5: Fix objective findings — medium + low — and chosen subjective fixes",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [4],
       "description": "**Goal:** Resolve every (objective) [medium]/[low] finding plus Task-3-approved subjective fixes, within the token system.\n\n**Files:** data-driven by review doc + Task 3 decisions; same candidate set as Task 4.\n\n**Acceptance Criteria:**\n- [ ] All medium/low objective findings resolved.\n- [ ] Approved subjective fixes applied; rejected ones not.\n- [ ] Tokens-only; no test-hook changes; test:unit+lint+tsc green.\n- [ ] Affected surfaces re-screenshotted.\n\n**Verify:** `CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit`; re-shot PNGs confirm.\n\n```json:metadata\n{\"files\": [\"app/globals.css\", \"components/ui\", \"components/DocumentView.tsx\", \"components/CommentSidebar.tsx\", \"components/SessionBanner.tsx\", \"components/VersionHistory.tsx\", \"components/WebhookManager.tsx\", \"components/TokenManager.tsx\", \"app/page.tsx\", \"app/login/page.tsx\", \"app/register/page.tsx\"], \"verifyCommand\": \"CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit\", \"acceptanceCriteria\": [\"all medium/low objective resolved\", \"approved subjective applied, rejected not\", \"tokens-only no test-hook changes\", \"unit/lint/tsc green\", \"affected surfaces re-shot\"]}\n```"
     },

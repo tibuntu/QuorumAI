@@ -152,3 +152,40 @@ _Resolved with the user at the Task 3 checkpoint (2026-06-10). These, plus all o
 ---
 
 *Screenshots captured to `/tmp/m6p1-shots` (light+dark × 1280+390 for every static surface; desktop light+dark for the multi-context real-time surface — presence cursors/selection, session leader banner, follower + resume, suggestion/comment cards, and the v1→v2 diff). Not committed. The two-context real-time capture succeeded; the only surfaces captured desktop-only (not at 390px) are the multi-user real-time ones (presence/session/diff/sidebar cards), since they were driven through a second context at the default desktop width.*
+
+---
+
+## Post-fix score
+
+> **Date:** 2026-06-10 (M6 Phase 1, Task 6 — final verification).
+> **Method:** Same harness as the pre-fix pass — live Playwright/Chromium full-page screenshots in light + dark at 1280px (and 390px for static surfaces) plus a two-context (Ada + Grace) real-time capture, saved to `/tmp/m6p1-final` (not committed). Each fixed finding was re-checked against the captures. Automated gates: **287 unit tests pass, lint 0, tsc 0, prod build 0 errors, all 29 e2e specs green.**
+
+| Pillar | Pre-fix /4 | Post-fix /4 |
+|--------|-----------:|------------:|
+| Copywriting | 4 | 4 |
+| Visuals | 3 | 4 |
+| Color | 3 | 3 |
+| Typography | 3 | 4 |
+| Spacing | 3 | 4 |
+| Experience Design | 3 | 4 |
+| **Overall** | **19** | **23** |
+
+**Delta:** **+6 vs the 17/24 2026-06-06 baseline**, and **+4 vs the 19/24 pre-fix score** in this doc.
+
+### Resolved (verified in the final captures)
+- **`[high]` CodeMirror editor white panel in dark mode → resolved** (Color, Experience Design). The editor pane now renders on the dark surface (dark background, dark gutter/line-numbers, violet `Save`) — it no longer breaks the theme. Drove the `[high]` items out of both Color and Experience Design. — `components/DocumentEditor.tsx`
+- **`[medium]` Editor long-line clipping → resolved** (Spacing). The CodeMirror pane wraps long lines and table rows instead of clipping at the pane edge — confirmed with a long paragraph + a 4-column table in edit mode. — `components/DocumentEditor.tsx`
+- **`[medium]` Leading-H1 duplication → resolved** (Typography). A document whose markdown opens with `# Title` now renders that first H1 de-emphasized (small, muted) beneath the canonical page title — no stacked duplicate top-level heading. — `components/DocumentView.tsx`
+- **`[low]` Native form controls default-blue → resolved** (Visuals, Color). Token-scope and webhook-event checkboxes plus the checked/created buttons now carry the violet `--primary` accent in both themes — confirmed on the tokens and webhooks settings forms. — `components/TokenManager.tsx`, `components/WebhookManager.tsx`
+- **`[low]` Dark unchecked task-list checkbox → resolved** (Color). The unchecked prose task-list box reads clearly on the dark surface now. — `app/globals.css`
+- **`[low]` Presence colors not token-driven → resolved** (Visuals/Color). Avatar + cursor + selection colors derive from the theme tokens and sit harmoniously on the dark surface — confirmed on the two-context collab capture. — `lib/presence-roster.ts`
+- **`[low]` Diff per-column version headers → resolved** (Typography). The diff now labels each column (`Old · v1` / `New · v2`) above the two sides. — `components/VersionHistory.tsx`
+- **`[low]` Follow/session controls had no helper → resolved** (Experience Design). The session/follow controls now carry helper tooltips. — `components/SessionBanner.tsx`
+- **`[low]` No cursor→person legend → resolved** (Experience Design). Remote cursors now render a person dot + name label mapping color→participant — confirmed (Grace's cursor + tinted selection) on the collab capture. — `components/PresenceCursors.tsx`, `components/PresenceRoster.tsx`
+
+### Residual / known follow-ups (all low severity — not blockers)
+- **`[low]` CodeMirror dark *syntax-token* dimness** (Color, held at 3/4). The editor base is dark and readable and the `[high]` white-panel finding is fully resolved, but the markdown syntax tokens (headings, list markers, table pipes) still use CodeMirror's light-tuned default highlight colors, so they read as low-contrast gray on the dark editor surface. Cosmetic only — text is legible and editing works; a future pass could supply a dark-tuned highlight style. This is why Color stays at 3 rather than 4.
+- **`[low]` Comment/suggestion sidebar has no scroll-to-anchor or count header** (Experience Design) — unchanged from the pre-fix pass; minor, deferred.
+- **Accepted leave-as-is (per Task-3 checkpoint):** the `◆ Quorum` literal-glyph wordmark, the mobile inline-editor `60vh` pane height, and mid-width title-row crowding (already wraps).
+
+*Final screenshots in `/tmp/m6p1-final` (not committed). Temporary capture spec removed.*
