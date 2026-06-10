@@ -10,10 +10,17 @@ export interface ClientNotification {
   createdAt: string; // ISO
 }
 
+export interface PresenceSelection {
+  start: number; // offset into the rendered container's textContent
+  end: number; // exclusive; start < end
+  versionNumber: number; // document version the offsets were measured against
+}
+
 export interface PresenceEntry {
   userId: string;
   name: string;
   lastSeen: number; // epoch ms
+  selection?: PresenceSelection; // absent when nothing selected
 }
 
 export type DocEvent =

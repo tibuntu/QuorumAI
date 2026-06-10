@@ -59,4 +59,23 @@ describe("presence registry", () => {
     expect(roster("p-doc-5")).toHaveLength(1);
     delete process.env.PRESENCE_TTL_MS;
   });
+
+  it("heartbeat stores the selection on the entry and publishes it", () => {
+    const { events, stop } = capture("p-doc-6");
+    heartbeat("p-doc-6", { userId: "u1", name: "Ada" }, { start: 4, end: 9, versionNumber: 1 });
+    expect(roster("p-doc-6")[0].selection).toEqual({ start: 4, end: 9, versionNumber: 1 });
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "presence.updated",
+        entry: expect.objectContaining({ selection: { start: 4, end: 9, versionNumber: 1 } }),
+      })
+    );
+    stop();
+  });
+
+  it("heartbeat without a selection clears a previously stored one", () => {
+    heartbeat("p-doc-7", { userId: "u1", name: "Ada" }, { start: 0, end: 3, versionNumber: 2 });
+    heartbeat("p-doc-7", { userId: "u1", name: "Ada" }, null);
+    expect(roster("p-doc-7")[0].selection).toBeUndefined();
+  });
 });
