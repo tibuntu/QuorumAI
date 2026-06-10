@@ -1,0 +1,54 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-10-quorum-ai-m5-p4-session-lifecycle.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Session types & action enum",
+      "status": "pending",
+      "description": "**Goal:** Add ReviewSession/SessionParticipant types and the three session.* events to the DocEvent union, plus the SESSION_ACTIONS value-set.\n\n**Files:**\n- Modify: lib/events.ts\n- Modify: lib/enums.ts\n- Test: tests/unit/enums.session.test.ts\n\n**Acceptance Criteria:**\n- ReviewSession + SessionParticipant exported from lib/events.ts\n- DocEvent includes session.started/updated/ended\n- SESSION_ACTIONS = [start,join,leave,end] + SessionAction exported\n- tsc --noEmit clean\n\n**Verify:** CI=true npx vitest run tests/unit/enums.session.test.ts && npx tsc --noEmit\n\n```json:metadata\n{\"files\": [\"lib/events.ts\", \"lib/enums.ts\", \"tests/unit/enums.session.test.ts\"], \"verifyCommand\": \"CI=true npx vitest run tests/unit/enums.session.test.ts && npx tsc --noEmit\", \"acceptanceCriteria\": [\"ReviewSession+SessionParticipant exported\", \"DocEvent includes session.* events\", \"SESSION_ACTIONS + SessionAction exported\", \"tsc clean\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Review-session registry & leader-drop sweep",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Implement lib/review-session.ts — in-memory session registry with start/join/leave/end lifecycle and the leader-drop / participant-prune sweep that reads presence.roster().\n\n**Files:**\n- Create: lib/review-session.ts\n- Test: tests/unit/review-session.test.ts\n\n**Acceptance Criteria:**\n- startSession auto-joins leader + emits session.started; second start null, no event\n- joinSession appends + emits session.updated; repeat idempotent\n- non-leader leaveSession emits session.updated; leader leaveSession ends\n- endSession non-leader false/no event; leader true + session.ended\n- evictStaleSessions ends on absent leader; prunes departed participants\n- getSession snapshot/null\n\n**Verify:** CI=true npx vitest run tests/unit/review-session.test.ts\n\n```json:metadata\n{\"files\": [\"lib/review-session.ts\", \"tests/unit/review-session.test.ts\"], \"verifyCommand\": \"CI=true npx vitest run tests/unit/review-session.test.ts\", \"acceptanceCriteria\": [\"startSession + one-at-a-time\", \"joinSession idempotent\", \"leave/end semantics\", \"evictStaleSessions sweep\", \"getSession\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Session action route",
+      "status": "pending",
+      "blockedBy": [1, 2],
+      "description": "**Goal:** Implement POST /api/documents/[id]/session dispatching start/join/leave/end with auth, participant, and conflict handling.\n\n**Files:**\n- Create: app/api/documents/[id]/session/route.ts\n- Test: tests/unit/session.route.test.ts\n\n**Acceptance Criteria:**\n- 401/404/400 guards\n- start 200/409; join 200/409; leave 204; end 204 leader / 403 non-leader\n- name resolves name.trim() || email || Someone\n\n**Verify:** CI=true npx vitest run tests/unit/session.route.test.ts\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/session/route.ts\", \"tests/unit/session.route.test.ts\"], \"verifyCommand\": \"CI=true npx vitest run tests/unit/session.route.test.ts\", \"acceptanceCriteria\": [\"401/404/400\", \"start 200/409\", \"join 200/409\", \"leave 204\", \"end 204/403\", \"name fallback\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Replay active session on SSE connect",
+      "status": "pending",
+      "blockedBy": [1, 2],
+      "description": "**Goal:** When a client connects to the document stream and a session is active, immediately send a session.started snapshot.\n\n**Files:**\n- Modify: app/api/documents/[id]/stream/route.ts\n- Test: tests/unit/stream.session-sync.test.ts\n\n**Acceptance Criteria:**\n- active session replayed as session.started on connect\n- no session.started when none active\n\n**Verify:** CI=true npx vitest run tests/unit/stream.session-sync.test.ts\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/stream/route.ts\", \"tests/unit/stream.session-sync.test.ts\"], \"verifyCommand\": \"CI=true npx vitest run tests/unit/stream.session-sync.test.ts\", \"acceptanceCriteria\": [\"replay on connect\", \"no replay when none active\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Client session reducer & predicates",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Implement lib/session-client.ts — a pure reducer and predicates the React layer uses to track session state.\n\n**Files:**\n- Create: lib/session-client.ts\n- Test: tests/unit/session-client.test.ts\n\n**Acceptance Criteria:**\n- applySessionEvent started/updated/ended/unrelated\n- isLeader / isInSession / canStart\n\n**Verify:** CI=true npx vitest run tests/unit/session-client.test.ts\n\n```json:metadata\n{\"files\": [\"lib/session-client.ts\", \"tests/unit/session-client.test.ts\"], \"verifyCommand\": \"CI=true npx vitest run tests/unit/session-client.test.ts\", \"acceptanceCriteria\": [\"applySessionEvent\", \"isLeader\", \"isInSession\", \"canStart\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: SessionBanner component & DocumentView wiring",
+      "status": "pending",
+      "blockedBy": [5],
+      "description": "**Goal:** Render the session UI in the document header and wire DocumentView to track session state from the SSE stream and POST lifecycle actions — no new EventSource.\n\n**Files:**\n- Create: components/SessionBanner.tsx\n- Modify: components/DocumentView.tsx\n\n**Acceptance Criteria:**\n- four banner states with testids (start/join/leave/end-session, session-banner, session-leader-name, session-participant-count)\n- buttons POST action + disable in flight\n- SSE switch updates session state on session.started/updated/ended\n- tsc + lint clean\n\n**Verify:** npx tsc --noEmit && CI=true pnpm lint\n\n```json:metadata\n{\"files\": [\"components/SessionBanner.tsx\", \"components/DocumentView.tsx\"], \"verifyCommand\": \"npx tsc --noEmit && CI=true pnpm lint\", \"acceptanceCriteria\": [\"four banner states\", \"buttons POST + disable\", \"SSE switch\", \"tsc + lint clean\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: E2E lifecycle test & full verification",
+      "status": "pending",
+      "blockedBy": [6, 3, 4],
+      "description": "**Goal:** Prove the full lifecycle across two browser contexts, confirm the no-third-EventSource invariant, then run the complete verification suite.\n\n**Files:**\n- Create: tests/e2e/sessions.spec.ts\n\n**Acceptance Criteria:**\n- start/join/end lifecycle across two contexts\n- exactly 2 EventSources in A's tab\n- leader-drop auto-end clears B's banner\n- test:unit + test:e2e + lint all pass\n\n**Verify:** CI=true pnpm test:e2e -- sessions; then CI=true pnpm test:unit && CI=true pnpm test:e2e && CI=true pnpm lint\n\n```json:metadata\n{\"files\": [\"tests/e2e/sessions.spec.ts\"], \"verifyCommand\": \"lsof -ti:3000 | xargs -r kill -9 2>/dev/null; CI=true pnpm test:unit && CI=true pnpm test:e2e && CI=true pnpm lint\", \"acceptanceCriteria\": [\"lifecycle two contexts\", \"2 EventSources\", \"leader-drop auto-end\", \"full suite passes\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-10"
+}
