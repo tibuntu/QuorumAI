@@ -187,6 +187,8 @@ export default function DocumentView({ doc, isOwner, editEnabled, currentUserId,
       return;
     }
     applyPresenceSelections(container, remoteSelections(roster, currentUserId, versionNumber));
+    // markdown is a dep so this re-runs after a version save re-renders the
+    // markdown subtree (fresh DOM), not because the value is read here.
   }, [roster, versionNumber, markdown, mode, currentUserId]);
 
   const onContainerClick = useCallback((e: React.MouseEvent) => {
