@@ -4,20 +4,20 @@
     {
       "id": 1,
       "subject": "Task 1: Bootstrap worktree + establish green baseline",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Get the fresh worktree runnable and capture the pre-change baseline of automated checks.\n\n**Files:**\n- Create: `.env` (gitignored — not committed). No source changes; no commit.\n\n**Acceptance Criteria:**\n- [ ] `CI=true pnpm install` completes; Prisma client generated.\n- [ ] `.env` with `AUTH_SECRET` 32+ chars + `BASE_URL=http://localhost:3000`.\n- [ ] `pnpm db:deploy` clean.\n- [ ] `pnpm build` ok; `pnpm start -p 3000` boots; /login 200.\n- [ ] Baseline `CI=true pnpm test:unit`, `pnpm lint`, `npx tsc --noEmit` green (counts noted).\n\n**Verify:** `CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit`\n\n```json:metadata\n{\"files\": [\".env\"], \"verifyCommand\": \"CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit\", \"acceptanceCriteria\": [\"install + generate ok\", \".env 32+ char AUTH_SECRET + BASE_URL\", \"db:deploy clean\", \"build ok + /login 200\", \"baseline green, counts noted\"]}\n```"
     },
     {
       "id": 2,
       "subject": "Task 2: Capture screenshots + author scored 6-pillar review doc",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** Produce `docs/superpowers/2026-06-10-quorum-ai-ui-review.md` — fresh scored 6-pillar audit of the whole app incl. M3-M5 surface, findings tagged [severity]+file:line, triaged objective/subjective.\n\n**Files:**\n- Create (temp, deleted before commit): `tests/e2e/_screenshots.spec.ts`\n- Create: `docs/superpowers/2026-06-10-quorum-ai-ui-review.md`\n- Reference: `docs/superpowers/2026-06-06-quorum-ai-ui-review.md`\n\n**Acceptance Criteria:**\n- [ ] All surfaces shot light+dark × 1280+390.\n- [ ] M3-M5 multi-user surfaces via TWO contexts (mirror presence/selections specs).\n- [ ] 6 pillars scored /24 in 2026-06-06 format.\n- [ ] Each finding: [severity] + file:line + (objective)/(subjective).\n- [ ] Temp spec removed; shots not committed.\n\n**Verify:** review doc has `## Score summary` (6 pillars); temp spec gone.\n\n```json:metadata\n{\"files\": [\"docs/superpowers/2026-06-10-quorum-ai-ui-review.md\", \"tests/e2e/_screenshots.spec.ts\"], \"verifyCommand\": \"test -f docs/superpowers/2026-06-10-quorum-ai-ui-review.md && ! test -f tests/e2e/_screenshots.spec.ts\", \"acceptanceCriteria\": [\"all surfaces light+dark × 1280+390\", \"M3-M5 via two contexts\", \"6 pillars scored /24\", \"findings: severity+file:line+obj/subj\", \"temp spec removed\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 3: Subjective-decisions checkpoint",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2],
       "description": "**Goal:** Resolve every (subjective) finding with the user via one question; record decisions in the review doc.\n\n**Files:**\n- Modify: `docs/superpowers/2026-06-10-quorum-ai-ui-review.md` (add `## Subjective decisions (resolved)`)\n\n**Acceptance Criteria:**\n- [ ] Every (subjective) finding presented as an option (recommended noted).\n- [ ] Decisions recorded with rationale.\n- [ ] No code changes.\n\n**Verify:** doc contains `## Subjective decisions (resolved)`.\n\n```json:metadata\n{\"files\": [\"docs/superpowers/2026-06-10-quorum-ai-ui-review.md\"], \"verifyCommand\": \"grep -q 'Subjective decisions (resolved)' docs/superpowers/2026-06-10-quorum-ai-ui-review.md\", \"acceptanceCriteria\": [\"subjective findings presented\", \"decisions recorded w/ rationale\", \"no code changes\"]}\n```"
     },
