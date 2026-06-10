@@ -39,7 +39,7 @@ describe("POST /api/documents/[id]/presence", () => {
     vi.mocked(authz.isParticipant).mockResolvedValueOnce(true);
     const res = await POST(req(), ctx);
     expect(res.status).toBe(204);
-    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null);
+    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null, null);
     expect(presence.leave).not.toHaveBeenCalled();
   });
 
@@ -56,7 +56,7 @@ describe("POST /api/documents/[id]/presence", () => {
     vi.mocked(api.requireUser).mockResolvedValueOnce({ id: "u1", name: "", email: "a@b.co" } as never);
     vi.mocked(authz.isParticipant).mockResolvedValueOnce(true);
     await POST(req(), ctx);
-    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "a@b.co" }, null, null);
+    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "a@b.co" }, null, null, null);
   });
 
   it("passes a valid selection through to heartbeat", async () => {
@@ -69,6 +69,7 @@ describe("POST /api/documents/[id]/presence", () => {
       { userId: "u1", name: "Ada" },
       { start: 2, end: 7, versionNumber: 3 },
       null,
+      null,
     );
   });
 
@@ -77,7 +78,7 @@ describe("POST /api/documents/[id]/presence", () => {
     vi.mocked(authz.isParticipant).mockResolvedValueOnce(true);
     const res = await POST(req({ selection: null }), ctx);
     expect(res.status).toBe(204);
-    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null);
+    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null, null);
   });
 
   it.each([
@@ -107,7 +108,7 @@ describe("POST /api/documents/[id]/presence", () => {
       ctx,
     );
     expect(res.status).toBe(204);
-    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null);
+    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null, null);
   });
 
   it("rejects selections beyond the sanity cap with 400", async () => {
@@ -128,6 +129,7 @@ describe("POST /api/documents/[id]/presence", () => {
       { userId: "u1", name: "Ada" },
       null,
       { x: 0.25, y: 0.75 },
+      null,
     );
   });
 
@@ -144,6 +146,7 @@ describe("POST /api/documents/[id]/presence", () => {
       { userId: "u1", name: "Ada" },
       { start: 2, end: 7, versionNumber: 3 },
       { x: 0, y: 1 },
+      null,
     );
   });
 
@@ -152,7 +155,7 @@ describe("POST /api/documents/[id]/presence", () => {
     vi.mocked(authz.isParticipant).mockResolvedValueOnce(true);
     const res = await POST(req({ cursor: null }), ctx);
     expect(res.status).toBe(204);
-    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null);
+    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null, null);
   });
 
   it.each([
@@ -169,6 +172,33 @@ describe("POST /api/documents/[id]/presence", () => {
     vi.mocked(api.requireUser).mockResolvedValueOnce({ id: "u1", name: "Ada" } as never);
     vi.mocked(authz.isParticipant).mockResolvedValueOnce(true);
     const res = await POST(req({ cursor }), ctx);
+    expect(res.status).toBe(400);
+    expect(presence.heartbeat).not.toHaveBeenCalled();
+  });
+});
+
+describe("scroll validation (P5)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(api.requireUser).mockResolvedValue({ id: "u1", name: "Ada" } as never);
+    vi.mocked(authz.isParticipant).mockResolvedValue(true);
+  });
+
+  it("forwards a valid scroll as the 5th heartbeat arg", async () => {
+    const res = await POST(req({ scroll: { y: 0.5 } }), ctx);
+    expect(res.status).toBe(204);
+    expect(presence.heartbeat).toHaveBeenCalledWith("doc1", { userId: "u1", name: "Ada" }, null, null, { y: 0.5 });
+  });
+
+  it.each([
+    ["y above 1", { y: 1.5 }],
+    ["y below 0", { y: -0.1 }],
+    ["y NaN", { y: Number.NaN }],
+    ["y Infinity", { y: Number.POSITIVE_INFINITY }],
+    ["y non-number", { y: "x" }],
+    ["missing y", {}],
+  ])("rejects %s with 400 and no heartbeat", async (_label, scroll) => {
+    const res = await POST(req({ scroll }), ctx);
     expect(res.status).toBe(400);
     expect(presence.heartbeat).not.toHaveBeenCalled();
   });
