@@ -76,7 +76,9 @@ P1 Presence roster        (foundation: registry + bus events + roster snapshot)
 ```
 
 ## Explicitly deferred → M6+
-Postgres migration & multi-instance (presence registry stays in-memory single-instance until then) · teams/org model & multi-tenancy · optional git export · dedicated Slack/Teams message formatters · enforced-SSO / multiple-provider / SCIM · admin/moderator roles · soft-delete / trash / recovery · quorum / N-approver thresholds · version checkpointing/compaction · multi-hunk suggestion patches · granular per-type notification preferences · the deferred general UI-polish phase.
+Postgres migration & multi-instance (presence registry stays in-memory single-instance until then) · teams/org model & multi-tenancy · enforced-SSO / multiple-provider / SCIM · admin/moderator roles · soft-delete / trash / recovery · quorum / N-approver thresholds · version checkpointing/compaction · multi-hunk suggestion patches · granular per-type notification preferences · the deferred general UI-polish phase.
+
+> **Update (M6 scoping, 2026-06-10):** _git export_ and _dedicated Slack/Teams message formatters_ have been **dropped from the backlog entirely** — not carried forward. The generic signed-webhook system remains the integration surface. See `specs/2026-06-10-quorum-ai-m6-roadmap.md`.
 
 ## Per-phase workflow
 For each phase, in a fresh session on a fresh branch off the latest `main`:

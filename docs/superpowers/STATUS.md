@@ -35,7 +35,7 @@ Roadmap: `specs/2026-06-06-quorum-ai-m3-roadmap.md`; per-phase design specs `spe
 - **P5 · Suggestions-as-edits** ✅ — `Annotation.suggestedText` + `appliedInVersion`; owner-only apply route → new version via `createVersion()`; orphan/resolved guards; suggest-edit + diff-card UI; provenance surfaced in feedback.
 - **P6 · Generic OIDC login** ✅ — env-gated generic OIDC provider alongside password, link-by-verified-email, self-service register guarded under SSO; no schema change (reuses `Account`). _ADR candidate — confirm an ADR was drafted._
 
-Deferred → M5+: Postgres & multi-instance · teams/org & multi-tenancy · presence/live "review together" · git export · dedicated Slack/Teams formatters (beyond generic webhooks) · enforced-SSO / multiple-provider / SCIM · version checkpointing/compaction · multi-hunk suggestion patches.
+Deferred → M5+: Postgres & multi-instance · teams/org & multi-tenancy · presence/live "review together" · enforced-SSO / multiple-provider / SCIM · version checkpointing/compaction · multi-hunk suggestion patches.
 
 ### M4 — Governance, Lifecycle & Notification Polish  ✅ shipped
 
@@ -47,10 +47,28 @@ Roadmap: `specs/2026-06-08-quorum-ai-m4-roadmap.md`; per-phase design specs `spe
 - **P4 · Health & readiness probes** ✅ — `/healthz` (liveness) + `/readyz` (DB `SELECT 1`, 503 on failure); Docker `HEALTHCHECK` + compose healthcheck (node `fetch`); k8s probe docs in README.
 - **P5 · Generic env vars** ✅ — hard rename `BETTER_AUTH_URL`→`BASE_URL`, `BETTER_AUTH_SECRET`→`AUTH_SECRET`; wired into `betterAuth()` explicitly (`secret`/`baseURL`); `baseUrl()` helper DRYs origin reads; `.env.example`/compose/CI/README updated.
 
-Deferred → M5+ (unchanged): Postgres & multi-instance · teams/org & multi-tenancy · presence/live · git export · Slack/Teams formatters · enforced-SSO/SCIM · admin/moderator roles · soft-delete/trash · quorum thresholds · version checkpointing · multi-hunk patches · granular per-type notification prefs.
+Deferred → M5+ (unchanged): Postgres & multi-instance · teams/org & multi-tenancy · presence/live · enforced-SSO/SCIM · admin/moderator roles · soft-delete/trash · quorum thresholds · version checkpointing · multi-hunk patches · granular per-type notification prefs.
+
+### M5 — Real-Time Review Sessions  ✅ shipped (all on `main`)
+
+Roadmap: `specs/2026-06-09-quorum-ai-m5-roadmap.md`; per-phase design specs `specs/2026-06-09/10-quorum-ai-m5-p1..p5-*-design.md`. All five phases implemented on `main`. Transport: SSE (server→client) + throttled POST beacon (client→server) fanned through the existing `lib/events.ts` bus — **no WebSockets**, no new infra. Presence state is ephemeral/in-memory/single-instance behind `lib/presence.ts`.
+- **P1 · Presence roster** ✅ — `lib/presence.ts` registry + TTL sweep; heartbeat POST; roster snapshot on SSE connect; "N viewing" UI. Rides the existing document `EventSource` (no third connection).
+- **P2 · Shared selections** ✅ — beacon carries text-selection range; other users' selections rendered via `lib/highlight.ts`.
+- **P3 · Live cursors** ✅ — pointer position on the beacon (tighter throttle); floating cursor labels.
+- **P4 · Session lifecycle** ✅ — explicit start/end review session with a `sessionId` + leader; `session.started/ended` events on the registry.
+- **P5 · Follow-the-leader scroll** ✅ — leader broadcasts throttled scroll position; followers smooth-scroll; detach/resume.
+
+### M6 — Review Depth & Polish  🔜 scoped (roadmap approved)
+
+Roadmap: `specs/2026-06-10-quorum-ai-m6-roadmap.md`. Deliberately small + infra-free. Three phases:
+- **P1 · General UI polish** — finish the long-deferred polish phase from a *fresh* audit (the 2026-06-06 UI-review is stale; dark-mode prose + danger contrast already fixed). Likely: responsive doc page/nav, auth affordances. No Settings nav button.
+- **P2 · Granular per-type notification prefs** — per-type (comment/review/version/resolve) control over in-app + email + desktop, replacing the two global booleans.
+- **P3 · Quorum / N-approver thresholds** — expose `Document.requiredApprovals` (engine already honors it) on create/edit + machine API + progress display.
+
+Dropped from the backlog entirely in M6: dedicated Slack/Teams formatters; git export.
 
 ## Git state
-- `main`: M1–M4 all landed locally. M4's phases committed directly to `main`. **`main` is ahead of `origin` — not yet pushed.**
+- `main`: M1–M5 all landed locally; phases committed directly to `main`. **`main` is ahead of `origin` — not yet pushed.** M6 scoped (roadmap on `main`), no phases started.
 - No active feature branches locally. Merged feature branches may still exist on `origin` (cleanup optional). User manages pushes.
 
 ## Run locally
@@ -63,7 +81,7 @@ pnpm dev                      # http://localhost:3000
 Container: `AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
-M4 is complete — all five phases implemented on local `main` (M1–M4 shipped). Next is a milestone-level decision: **push `main` to `origin`**, then scope **M5** from the deferred list (Postgres & multi-instance, teams/org multi-tenancy, presence/live, git export, Slack/Teams formatters, enforced-SSO/SCIM) via a new roadmap. Reminder: P5 was a **breaking** env rename — deploys must set `BASE_URL`/`AUTH_SECRET` before upgrading.
+M5 is complete — all five real-time-session phases on local `main` (M1–M5 shipped). **M6 is scoped** (roadmap `specs/2026-06-10-quorum-ai-m6-roadmap.md`, approved). Next: **start M6 / P1 (General UI polish)** in a fresh worktree via the `brainstorming` skill — begin from a *fresh* UI audit (the 2026-06-06 UI-review is stale). Then P2 (granular notification prefs) → P3 (quorum thresholds). Standing reminder: M4/P5 was a **breaking** env rename — deploys must set `BASE_URL`/`AUTH_SECRET` before upgrading.
 
 ## Env/workflow notes (carried from M1)
 - This repo's **pnpm is v11** → prefix script runs with `CI=true` (avoids the no-TTY `node_modules` purge abort).
