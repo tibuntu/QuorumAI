@@ -1,4 +1,6 @@
 import { relocate } from "@/lib/anchoring";
+import type { RemoteSelection } from "@/lib/presence-client";
+import { selectionColorFor } from "@/lib/presence-roster";
 
 export interface HighlightRange {
   id: string;
@@ -50,12 +52,47 @@ export function buildHighlightRanges(
 export function applyHighlights(container: HTMLElement, ranges: HighlightRange[]): void {
   clearHighlights(container);
   for (const range of ranges) {
-    wrapRange(container, range);
+    wrapRange(container, range, () => {
+      const mark = document.createElement("mark");
+      const moved = range.status === "MOVED";
+      mark.className = `${moved ? "bg-orange-200" : "bg-yellow-200"} cursor-pointer`;
+      mark.setAttribute("data-annotation-id", range.id);
+      mark.setAttribute("data-status", range.status ?? "ACTIVE");
+      if (moved) mark.title = "This comment moved when the document was edited.";
+      return mark;
+    });
   }
 }
 
 export function clearHighlights(container: HTMLElement): void {
-  const marks = container.querySelectorAll("mark[data-annotation-id]");
+  unwrapMarks(container, "mark[data-annotation-id]");
+}
+
+/**
+ * Render other users' live selections as a separate mark layer. Operates
+ * exclusively on mark[data-presence-user-id]; annotation marks are never
+ * touched, so high-frequency presence churn can't thrash that layer.
+ */
+export function applyPresenceSelections(container: HTMLElement, selections: RemoteSelection[]): void {
+  clearPresenceSelections(container);
+  for (const sel of selections) {
+    wrapRange(container, sel, () => {
+      const mark = document.createElement("mark");
+      mark.className = `${selectionColorFor(sel.userId)} rounded-sm`;
+      mark.setAttribute("data-presence-user-id", sel.userId);
+      mark.setAttribute("data-user-name", sel.name);
+      mark.title = sel.name;
+      return mark;
+    });
+  }
+}
+
+export function clearPresenceSelections(container: HTMLElement): void {
+  unwrapMarks(container, "mark[data-presence-user-id]");
+}
+
+function unwrapMarks(container: HTMLElement, selector: string): void {
+  const marks = container.querySelectorAll(selector);
   marks.forEach((mark) => {
     const parent = mark.parentNode;
     if (!parent) return;
@@ -65,7 +102,11 @@ export function clearHighlights(container: HTMLElement): void {
   });
 }
 
-function wrapRange(container: HTMLElement, range: HighlightRange): void {
+function wrapRange(
+  container: HTMLElement,
+  range: { start: number; end: number },
+  makeMark: () => HTMLElement,
+): void {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   let offset = 0;
   let node = walker.nextNode() as Text | null;
@@ -78,14 +119,8 @@ function wrapRange(container: HTMLElement, range: HighlightRange): void {
       const domRange = document.createRange();
       domRange.setStart(node, localStart);
       domRange.setEnd(node, localEnd);
-      const mark = document.createElement("mark");
-      const moved = range.status === "MOVED";
-      mark.className = `${moved ? "bg-orange-200" : "bg-yellow-200"} cursor-pointer`;
-      mark.setAttribute("data-annotation-id", range.id);
-      mark.setAttribute("data-status", range.status ?? "ACTIVE");
-      if (moved) mark.title = "This comment moved when the document was edited.";
       try {
-        domRange.surroundContents(mark);
+        domRange.surroundContents(makeMark());
       } catch {
         // Crosses an element boundary — fallback: no inline mark for this range.
       }
