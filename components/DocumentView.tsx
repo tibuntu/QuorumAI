@@ -139,6 +139,8 @@ export default function DocumentView({ doc, isOwner, editEnabled, currentUserId,
       const sel = document.getSelection();
       const container = containerRef.current;
       const clearShared = () => {
+        // Only send on the transition to "no selection" — collapsing focus on
+        // other UI (e.g. the comment composer) must not burn redundant POSTs.
         if (selectionRef.current !== null) {
           selectionRef.current = null;
           queueSelectionSend();
@@ -343,6 +345,8 @@ export default function DocumentView({ doc, isOwner, editEnabled, currentUserId,
     };
     sendPresence();
     const intervalMs = Number(process.env.NEXT_PUBLIC_PRESENCE_HEARTBEAT_MS ?? 10_000);
+    // Interval heartbeats bypass the selection throttle bookkeeping on purpose:
+    // they are keep-alives, not selection sends, so they never delay one.
     const timer = setInterval(sendPresence, intervalMs);
     window.addEventListener("pagehide", leave);
     return () => {
