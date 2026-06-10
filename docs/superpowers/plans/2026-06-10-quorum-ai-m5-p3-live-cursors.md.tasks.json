@@ -4,37 +4,37 @@
     {
       "id": 0,
       "subject": "Task 1: Cursor data shape + registry storage",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Add the `PresenceCursor` type and let `heartbeat` store/clear a cursor on the presence entry, full-truth like P2 selection.\n\n**Files:**\n- Modify: `lib/events.ts` (add `PresenceCursor`, add `cursor?` to `PresenceEntry`)\n- Modify: `lib/presence.ts` (re-export `PresenceCursor`; `heartbeat` 4th arg `cursor?: PresenceCursor | null`)\n- Test: `tests/unit/presence.test.ts`\n\n**Acceptance Criteria:**\n- [ ] `PresenceCursor { x: number; y: number }` exported from `lib/events.ts`; `PresenceEntry.cursor?` added.\n- [ ] `heartbeat(documentId, user, selection?, cursor?)` stores cursor when object given, omits when null/undefined.\n- [ ] A cursor and a selection coexist on one entry.\n- [ ] Existing presence-registry tests still pass.\n\n**Verify:** `CI=true pnpm test:unit tests/unit/presence.test.ts`\n\n```json:metadata\n{\"files\": [\"lib/events.ts\", \"lib/presence.ts\", \"tests/unit/presence.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence.test.ts\", \"acceptanceCriteria\": [\"PresenceCursor exported and PresenceEntry.cursor added\", \"heartbeat 4th arg stores/clears cursor\", \"cursor and selection coexist\", \"existing registry tests pass\"]}\n```"
     },
     {
       "id": 1,
       "subject": "Task 2: Beacon route cursor validation",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0],
       "description": "**Goal:** Parse and validate a `cursor` field on the presence beacon and forward it to `heartbeat` as the 4th arg, rejecting malformed values with 400.\n\n**Files:**\n- Modify: `app/api/documents/[id]/presence/route.ts` (`parseCursor`, import `PresenceCursor`, pass 4th arg)\n- Test: `tests/unit/presence.route.test.ts` (add cursor matrix; update existing `toHaveBeenCalledWith` for the new trailing `null` cursor arg)\n\n**Acceptance Criteria:**\n- [ ] Valid `cursor: {x,y}` (finite, in [0,1]) -> 204 and passed as 4th arg.\n- [ ] `cursor: null`/absent -> heartbeat called with null cursor.\n- [ ] x/y out of [0,1], non-finite, non-number, missing field, or non-object -> 400, heartbeat not called.\n- [ ] All pre-existing route tests pass (updated for 4th arg).\n\n**Verify:** `CI=true pnpm test:unit tests/unit/presence.route.test.ts`\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/presence/route.ts\", \"tests/unit/presence.route.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence.route.test.ts\", \"acceptanceCriteria\": [\"valid cursor 204 + forwarded\", \"null/absent clears\", \"malformed cursor 400 untouched\", \"existing route tests pass with 4th arg\"]}\n```"
     },
     {
       "id": 2,
       "subject": "Task 3: remoteCursors filter",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [0],
       "description": "**Goal:** A pure helper that selects other users' cursors from the roster for rendering.\n\n**Files:**\n- Modify: `lib/presence-client.ts` (`RemoteCursor` interface, `remoteCursors`)\n- Test: `tests/unit/presence-client.test.ts` (add `remoteCursors` describe block; update import line)\n\n**Acceptance Criteria:**\n- [ ] `remoteCursors(roster, selfId)` returns `{ userId, name, x, y }[]`, dropping self and cursor-less entries.\n- [ ] No version filtering (cursors are not version-bound).\n\n**Verify:** `CI=true pnpm test:unit tests/unit/presence-client.test.ts`\n\n```json:metadata\n{\"files\": [\"lib/presence-client.ts\", \"tests/unit/presence-client.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence-client.test.ts\", \"acceptanceCriteria\": [\"remoteCursors drops self and cursor-less entries\", \"returns {userId,name,x,y}\", \"no version filter\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 4: PresenceCursors overlay component",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2],
       "description": "**Goal:** A presentational overlay rendering each remote cursor as a colored marker + name pill at left:x%, top:y%.\n\n**Files:**\n- Create: `components/PresenceCursors.tsx`\n\n**Acceptance Criteria:**\n- [ ] Renders null when no cursors.\n- [ ] Each cursor -> element with `data-presence-cursor-user-id` + `data-user-name`, positioned via left/top percent style, colored via `colorFor(userId)`.\n- [ ] Overlay is `pointer-events-none absolute inset-0` (never intercepts clicks / affects layout).\n- [ ] `pnpm lint` + type-check pass; full behavior verified by Task 5 e2e.\n\n**Verify:** `CI=true pnpm lint` (full behavior via Task 5 e2e).\n\n```json:metadata\n{\"files\": [\"components/PresenceCursors.tsx\"], \"verifyCommand\": \"CI=true pnpm lint\", \"acceptanceCriteria\": [\"null when empty\", \"data-presence-cursor-user-id + data-user-name + percent position + colorFor\", \"pointer-events-none absolute inset-0\", \"lint clean\"]}\n```"
     },
     {
       "id": 4,
       "subject": "Task 5: Wire cursor send path + overlay in DocumentView, with e2e",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1, 2, 3],
       "description": "**Goal:** Track the local pointer over the doc body (review mode), send it on a ~10Hz throttle through the existing beacon, render remote cursors via the overlay; verify e2e with two browser contexts.\n\n**Files:**\n- Modify: `components/DocumentView.tsx` (imports; `cursorRef` next to `selectionRef`; `sendPresence` body sends both refs; `cursorThrottleRef`+`queueCursorSend`; mousemove/mouseleave effect gated on review mode with teardown; `relative` doc body; render `<PresenceCursors cursors={remoteCursors(roster, currentUserId)} />`)\n- Create: `tests/e2e/cursors.spec.ts`\n\n**Acceptance Criteria:**\n- [ ] `sendPresence` posts `{ selection: selectionRef.current, cursor: cursorRef.current }`.\n- [ ] mousemove over doc body -> normalized [0,1] coords in cursorRef, sent via `NEXT_PUBLIC_PRESENCE_CURSOR_THROTTLE_MS` (default 100), separate from selection throttle.\n- [ ] mouseleave clears + sends once on transition; edit mode tears listeners down and clears cursor.\n- [ ] doc body is `relative`; overlay rendered in review mode.\n- [ ] e2e: B moves mouse -> A sees `[data-presence-cursor-user-id]` with data-user-name \"Grace\"; B leaves -> disappears; cursor + selection coexist; tab stays at 2 EventSources.\n\n**Verify:** `CI=true pnpm test:e2e cursors` (free port 3000 first), then full gates `CI=true pnpm test:unit`, `CI=true pnpm test:e2e`, `CI=true pnpm lint`.\n\n```json:metadata\n{\"files\": [\"components/DocumentView.tsx\", \"tests/e2e/cursors.spec.ts\"], \"verifyCommand\": \"CI=true pnpm test:e2e cursors\", \"acceptanceCriteria\": [\"sendPresence sends selection+cursor\", \"mousemove normalized + own throttle\", \"mouseleave/edit-mode clears\", \"doc body relative + overlay in review mode\", \"e2e cursor appears/clears/coexists, 2 EventSources\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-10T07:06:44Z"
+  "lastUpdated": "2026-06-10T07:37:04Z"
 }
