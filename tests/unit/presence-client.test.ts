@@ -40,7 +40,7 @@ describe("applyPresenceEvent", () => {
 
 describe("remoteSelections", () => {
   const versionNumber = 3;
-  const roster = [
+  const roster: PresenceEntry[] = [
     { userId: "self", name: "Me", lastSeen: 1, selection: { start: 0, end: 4, versionNumber } },
     { userId: "u2", name: "Grace", lastSeen: 1, selection: { start: 5, end: 9, versionNumber } },
     { userId: "u3", name: "Linus", lastSeen: 1 }, // no selection
