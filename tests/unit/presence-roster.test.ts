@@ -6,6 +6,8 @@ import {
   orderRoster,
   displayName,
   AVATAR_COLORS,
+  SELECTION_COLORS,
+  selectionColorFor,
 } from "@/lib/presence-roster";
 import type { PresenceEntry } from "@/lib/events";
 
@@ -38,5 +40,20 @@ describe("presence-roster helpers", () => {
   it("displayName: marks only the current user", () => {
     expect(displayName(entry("me", "Ada"), "me")).toBe("Ada (you)");
     expect(displayName(entry("u2", "Grace"), "me")).toBe("Grace");
+  });
+});
+
+describe("selectionColorFor", () => {
+  it("is deterministic and drawn from SELECTION_COLORS", () => {
+    const c = selectionColorFor("user-abc");
+    expect(selectionColorFor("user-abc")).toBe(c);
+    expect(SELECTION_COLORS).toContain(c);
+  });
+
+  it("uses the same palette index as the avatar color", () => {
+    for (const id of ["u1", "user-abc", "cmh000xyz"]) {
+      expect(SELECTION_COLORS.indexOf(selectionColorFor(id) as (typeof SELECTION_COLORS)[number]))
+        .toBe(AVATAR_COLORS.indexOf(colorFor(id) as (typeof AVATAR_COLORS)[number]));
+    }
   });
 });

@@ -1,5 +1,27 @@
 import type { DocEvent, PresenceEntry } from "@/lib/events";
 
+export interface RemoteSelection {
+  userId: string;
+  name: string;
+  start: number;
+  end: number;
+}
+
+/** Other users' selections that are valid for the local document version. */
+export function remoteSelections(
+  roster: PresenceEntry[],
+  selfId: string,
+  versionNumber: number,
+): RemoteSelection[] {
+  const out: RemoteSelection[] = [];
+  for (const e of roster) {
+    if (e.userId === selfId || !e.selection) continue;
+    if (e.selection.versionNumber !== versionNumber) continue;
+    out.push({ userId: e.userId, name: e.name, start: e.selection.start, end: e.selection.end });
+  }
+  return out;
+}
+
 /** Pure reduction of a presence event into the next roster, keyed by userId. */
 export function applyPresenceEvent(
   roster: PresenceEntry[],

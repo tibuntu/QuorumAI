@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyPresenceEvent } from "@/lib/presence-client";
+import { applyPresenceEvent, remoteSelections } from "@/lib/presence-client";
 import type { PresenceEntry } from "@/lib/events";
 
 const self = { userId: "me", name: "Ada" };
@@ -35,5 +35,25 @@ describe("applyPresenceEvent", () => {
     const start = [entry("me", "Ada")];
     const next = applyPresenceEvent(start, { type: "review.updated", state: "OPEN" }, self);
     expect(next).toBe(start);
+  });
+});
+
+describe("remoteSelections", () => {
+  const versionNumber = 3;
+  const roster = [
+    { userId: "self", name: "Me", lastSeen: 1, selection: { start: 0, end: 4, versionNumber } },
+    { userId: "u2", name: "Grace", lastSeen: 1, selection: { start: 5, end: 9, versionNumber } },
+    { userId: "u3", name: "Linus", lastSeen: 1 }, // no selection
+    { userId: "u4", name: "Old", lastSeen: 1, selection: { start: 1, end: 2, versionNumber: 2 } }, // stale version
+  ];
+
+  it("keeps only other users' selections matching the local version", () => {
+    expect(remoteSelections(roster, "self", versionNumber)).toEqual([
+      { userId: "u2", name: "Grace", start: 5, end: 9 },
+    ]);
+  });
+
+  it("returns an empty array when nobody else has a current selection", () => {
+    expect(remoteSelections(roster.slice(0, 1), "self", versionNumber)).toEqual([]);
   });
 });

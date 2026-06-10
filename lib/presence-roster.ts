@@ -5,6 +5,11 @@ export const AVATAR_COLORS = [
   "bg-teal-500", "bg-sky-500", "bg-indigo-500", "bg-violet-500", "bg-fuchsia-500",
 ] as const;
 
+export const SELECTION_COLORS = [
+  "bg-rose-500/25", "bg-orange-500/25", "bg-amber-500/25", "bg-emerald-500/25",
+  "bg-teal-500/25", "bg-sky-500/25", "bg-indigo-500/25", "bg-violet-500/25", "bg-fuchsia-500/25",
+] as const;
+
 export const MAX_VISIBLE_AVATARS = 4;
 
 export function initials(name: string): string {
@@ -14,10 +19,19 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export function colorFor(userId: string): string {
+function hashOf(userId: string): number {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+  return hash;
+}
+
+export function colorFor(userId: string): string {
+  return AVATAR_COLORS[hashOf(userId) % AVATAR_COLORS.length];
+}
+
+/** Translucent selection tint matching the user's avatar color. */
+export function selectionColorFor(userId: string): string {
+  return SELECTION_COLORS[hashOf(userId) % SELECTION_COLORS.length];
 }
 
 export function viewingLabel(count: number): string {
