@@ -4,34 +4,34 @@
     {
       "id": 1,
       "subject": "Task 1: presence scroll field + heartbeat 5th arg",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Add the normalized `PresenceScroll` type and let `heartbeat` store/clear a `scroll` on the presence entry, full-truth like P3's cursor.\n\n**Files:**\n- Modify: `lib/events.ts` (add `PresenceScroll`; add `scroll?` to `PresenceEntry`)\n- Modify: `lib/presence.ts` (re-export `PresenceScroll`; `heartbeat` gains a 5th `scroll?` arg)\n- Test: `tests/unit/presence.test.ts`\n\n**Acceptance Criteria:**\n- PresenceScroll {y} exported and re-exported\n- PresenceEntry.scroll optional\n- heartbeat 5th arg stores/clears scroll\n- scroll coexists with selection and cursor\n\n**Verify:** `CI=true pnpm test:unit tests/unit/presence.test.ts`\n\n```json:metadata\n{\"files\": [\"lib/events.ts\", \"lib/presence.ts\", \"tests/unit/presence.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence.test.ts\", \"acceptanceCriteria\": [\"PresenceScroll {y} exported and re-exported\", \"PresenceEntry.scroll optional\", \"heartbeat 5th arg stores/clears scroll\", \"scroll coexists with selection and cursor\"]}\n```"
     },
     {
       "id": 2,
       "subject": "Task 2: beacon route parseScroll validation",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** Validate and forward an optional `scroll` on the presence beacon, mirroring `parseCursor`; malformed → 400 with no side effect.\n\n**Files:**\n- Modify: `app/api/documents/[id]/presence/route.ts`\n- Test: `tests/unit/presence.route.test.ts`\n\n**Acceptance Criteria:**\n- valid scroll forwarded as 5th arg, 204\n- invalid scroll -> 400 no heartbeat\n- null/absent scroll -> 204 forwarded null\n- existing route tests updated to 5-arg and passing\n\n**Verify:** `CI=true pnpm test:unit tests/unit/presence.route.test.ts`\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/presence/route.ts\", \"tests/unit/presence.route.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/presence.route.test.ts\", \"acceptanceCriteria\": [\"valid scroll forwarded as 5th arg, 204\", \"invalid scroll -> 400 no heartbeat\", \"null/absent scroll -> 204 forwarded null\", \"existing route tests updated to 5-arg and passing\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 3: lib/follow-client.ts pure helpers",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** Pure, React-free selection of the leader's scroll for a follower, plus the follower's target-scrollTop arithmetic — both unit-tested.\n\n**Files:**\n- Create: `lib/follow-client.ts`\n- Test: `tests/unit/follow-client.test.ts`\n\n**Acceptance Criteria:**\n- leaderScroll returns leader y for non-leader participant only\n- leaderScroll null for leader-self/non-participant/no-session/no-scroll\n- scrollTargetTop arithmetic\n\n**Verify:** `CI=true pnpm test:unit tests/unit/follow-client.test.ts`\n\n```json:metadata\n{\"files\": [\"lib/follow-client.ts\", \"tests/unit/follow-client.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit tests/unit/follow-client.test.ts\", \"acceptanceCriteria\": [\"leaderScroll returns leader y for non-leader participant only\", \"leaderScroll null for leader-self/non-participant/no-session/no-scroll\", \"scrollTargetTop arithmetic\"]}\n```"
     },
     {
       "id": 4,
       "subject": "Task 4: client follow integration — SessionBanner + DocumentView",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2, 3],
       "description": "**Goal:** Leader broadcasts scroll on the beacon; non-leader participants auto-follow, detach on manual scroll, and resume via the banner.\n\n**Files:**\n- Modify: `components/SessionBanner.tsx`\n- Modify: `components/DocumentView.tsx`\n\n**Acceptance Criteria:**\n- following-indicator while attached, resume-following while detached\n- leader broadcasts scroll fraction; null when not leading/edit (one-shot clear)\n- follower auto-scrolls; manual scroll detaches; resume re-attaches and jumps\n- tsc + lint + unit green\n\n**Verify:** `CI=true pnpm tsc --noEmit && CI=true pnpm lint && CI=true pnpm test:unit`\n\n```json:metadata\n{\"files\": [\"components/SessionBanner.tsx\", \"components/DocumentView.tsx\"], \"verifyCommand\": \"CI=true pnpm tsc --noEmit && CI=true pnpm lint && CI=true pnpm test:unit\", \"acceptanceCriteria\": [\"following-indicator while attached, resume-following while detached\", \"leader broadcasts scroll fraction; null when not leading/edit\", \"follower auto-scrolls; manual scroll detaches; resume re-attaches and jumps\", \"tsc + lint + unit green\"]}\n```"
     },
     {
       "id": 5,
       "subject": "Task 5: e2e follow.spec.ts",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [4],
       "description": "**Goal:** Prove follow-the-leader end-to-end across two browser contexts: auto-follow, scroll tracking, manual-scroll detach, resume, session-end teardown, and the 2-EventSource cap.\n\n**Files:**\n- Create: `tests/e2e/follow.spec.ts`\n\n**Acceptance Criteria:**\n- B sees following-indicator after join\n- B tracks A's scroll\n- manual scroll detaches; A no longer moves B; resume-following shown\n- resume re-attaches and tracks\n- session end clears follow UI\n- exactly 2 EventSources\n\n**Verify:** `lsof -ti:3000 | xargs kill -9 2>/dev/null; CI=true pnpm test:e2e tests/e2e/follow.spec.ts`\n\n```json:metadata\n{\"files\": [\"tests/e2e/follow.spec.ts\"], \"verifyCommand\": \"lsof -ti:3000 | xargs kill -9 2>/dev/null; CI=true pnpm test:e2e tests/e2e/follow.spec.ts\", \"acceptanceCriteria\": [\"B sees following-indicator after join\", \"B tracks A's scroll\", \"manual scroll detaches; A no longer moves B; resume-following shown\", \"resume re-attaches and tracks\", \"session end clears follow UI\", \"exactly 2 EventSources\"]}\n```"
     }
