@@ -38,7 +38,7 @@
     {
       "id": 6,
       "subject": "Task 6: Final verification + post-fix score",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [5],
       "description": "**Goal:** Prove the whole suite green end-to-end, final screenshot pass, record post-fix 6-pillar score vs 17/24 baseline.\n\n**Files:**\n- Modify: `docs/superpowers/2026-06-10-quorum-ai-ui-review.md` (add `## Post-fix score` + delta)\n\n**Acceptance Criteria:**\n- [ ] test:unit green (>= baseline count).\n- [ ] test:e2e green (free port 3000 first).\n- [ ] lint 0; tsc 0; build 0/0.\n- [ ] No Settings nav button; test hooks intact (navigation/theme/presence/selections/suggestions specs pass).\n- [ ] Doc has `## Post-fix score` + delta vs 17/24.\n\n**Verify:** all five commands green; `grep -c 'Post-fix score' doc` → 1.\n\n```json:metadata\n{\"files\": [\"docs/superpowers/2026-06-10-quorum-ai-ui-review.md\"], \"verifyCommand\": \"CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit && pnpm build && (lsof -ti tcp:3000 | xargs -r kill -9; pnpm test:e2e)\", \"acceptanceCriteria\": [\"test:unit green >= baseline\", \"test:e2e green\", \"lint 0 + tsc 0 + build 0/0\", \"no Settings nav button; hooks intact\", \"doc has Post-fix score + delta\"]}\n```"
     }
