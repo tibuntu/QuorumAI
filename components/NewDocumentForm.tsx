@@ -9,6 +9,7 @@ export default function NewDocumentForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [markdown, setMarkdown] = useState("");
+  const [requiredApprovals, setRequiredApprovals] = useState(1);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +21,7 @@ export default function NewDocumentForm() {
       const res = await fetch("/api/documents", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title, markdown }),
+        body: JSON.stringify({ title, markdown, requiredApprovals }),
       });
       if (res.status !== 201) {
         const data = await res.json().catch(() => null);
@@ -55,6 +56,18 @@ export default function NewDocumentForm() {
           onChange={(e) => setMarkdown(e.target.value)}
           rows={8}
           className="font-mono"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm text-foreground">
+        Required approvals
+        <Input
+          aria-label="required approvals"
+          type="number"
+          min={1}
+          max={10}
+          value={requiredApprovals}
+          onChange={(e) => setRequiredApprovals(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
+          className="w-24"
         />
       </label>
       {error && (
