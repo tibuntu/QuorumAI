@@ -44,7 +44,10 @@ describe("notifications", () => {
     const actor = await makeUser(); // A, opted in
     const optedIn = await makeUser(); // B, opted in (default)
     const optedOut = await makeUser(); // C, opted out
-    await prisma.user.update({ where: { id: optedOut.id }, data: { emailNotifications: false } });
+    await prisma.user.update({
+      where: { id: optedOut.id },
+      data: { notificationPrefs: { comment: { inApp: true, email: false, desktop: false } } },
+    });
 
     const docId = await createDocument(actor.id, "Plan", "Some body text."); // actor auto-added as participant
     await prisma.documentParticipant.create({ data: { documentId: docId, userId: optedIn.id } });
@@ -56,6 +59,23 @@ describe("notifications", () => {
     expect(calls).toContain(optedIn.id);
     expect(calls).not.toContain(optedOut.id); // opted out
     expect(calls).not.toContain(actor.id); // actor excluded
+
+    await prisma.document.delete({ where: { id: docId } });
+  });
+
+  it("does not create an in-app notification when inApp is muted for the type", async () => {
+    const actor = await makeUser();
+    const muted = await makeUser();
+    await prisma.user.update({
+      where: { id: muted.id },
+      data: { notificationPrefs: { comment: { inApp: false, email: false, desktop: false } } },
+    });
+    const docId = await createDocument(actor.id, "Plan", "Some body text.");
+    await prisma.documentParticipant.create({ data: { documentId: docId, userId: muted.id } });
+
+    await notifyParticipants(docId, actor.id, "comment");
+    expect(await unreadCount(muted.id)).toBe(0);
+    expect(await listNotifications(muted.id)).toHaveLength(0);
 
     await prisma.document.delete({ where: { id: docId } });
   });
