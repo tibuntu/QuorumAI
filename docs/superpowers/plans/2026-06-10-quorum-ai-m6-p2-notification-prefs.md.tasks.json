@@ -1,0 +1,54 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-10-quorum-ai-m6-p2-notification-prefs.md",
+  "tasks": [
+    {
+      "id": 7,
+      "subject": "Task 1: Matrix value-sets + pure notification-prefs helper",
+      "status": "pending",
+      "description": "**Goal:** Value-sets in lib/enums.ts + pure lib/notification-prefs.ts (DEFAULT_PREFS, parsePrefs, isEnabled, isValidCell, applyPatch), TDD.\n\n**Verify:** CI=true pnpm test:unit notification-prefs\n\n```json:metadata\n{\"files\": [\"lib/enums.ts\", \"lib/notification-prefs.ts\", \"tests/unit/notification-prefs.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit notification-prefs\", \"acceptanceCriteria\": [\"value-sets exported\", \"DEFAULT_PREFS preserves behavior\", \"parsePrefs merges/strips/never-throws\", \"isEnabled/isValidCell/applyPatch correct\", \"unit-tested\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 2: Schema — add notificationPrefs JSON + backfill (keep booleans)",
+      "status": "pending",
+      "blockedBy": [7],
+      "description": "**Goal:** Add User.notificationPrefs Json? + backfill migration from the two booleans (kept for now). Prisma 7.8 supports Json on SQLite.\n\n**Verify:** npx tsc --noEmit\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations\"], \"verifyCommand\": \"npx tsc --noEmit\", \"acceptanceCriteria\": [\"notificationPrefs Json? added, booleans kept\", \"migration adds col + backfills real JSON booleans\", \"prisma generate ok\", \"tsc clean\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 3: Per-type dispatch filtering in notifyParticipants",
+      "status": "pending",
+      "blockedBy": [8],
+      "description": "**Goal:** notifyParticipants consults per-type prefs — in-app row only if inApp enabled; email only if EMAILABLE && email enabled. Update notifications.test.ts (opt-out via prefs + in-app-mute case).\n\n**Verify:** CI=true pnpm test:unit notifications.test\n\n```json:metadata\n{\"files\": [\"lib/notifications.ts\", \"tests/unit/notifications.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit notifications.test\", \"acceptanceCriteria\": [\"query selects notificationPrefs\", \"in-app gated by inApp pref\", \"email gated by EMAILABLE + email pref\", \"tests updated: opt-out via prefs + in-app-mute case\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 4: Per-type desktop notification firing (client)",
+      "status": "pending",
+      "blockedBy": [9],
+      "description": "**Goal:** shouldFireOsNotification per-type via desktopPrefs+type; NotificationProvider prop desktopPrefs; layout builds desktopPrefs from parsePrefs. Update notification-client.test.ts.\n\n**Verify:** CI=true pnpm test:unit notification-client && npx tsc --noEmit\n\n```json:metadata\n{\"files\": [\"lib/notification-client.ts\", \"components/NotificationProvider.tsx\", \"app/app/layout.tsx\", \"tests/unit/notification-client.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit notification-client && npx tsc --noEmit\", \"acceptanceCriteria\": [\"shouldFireOsNotification per-type\", \"provider prop desktopPrefs + passes type\", \"layout builds desktopPrefs from parsePrefs\", \"client test updated\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 5: Settings API — per-cell PATCH",
+      "status": "pending",
+      "blockedBy": [10],
+      "description": "**Goal:** PATCH body {type,channel,enabled} validated (400 on invalid/unknown/non-boolean/resolve+email); applyPatch(parsePrefs) → persist → return {ok,prefs}. Rewrite settings.notifications.test.ts.\n\n**Verify:** CI=true pnpm test:unit settings.notifications\n\n```json:metadata\n{\"files\": [\"app/api/settings/notifications/route.ts\", \"tests/unit/settings.notifications.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit settings.notifications\", \"acceptanceCriteria\": [\"per-cell body validated\", \"400 on invalid/unknown/non-boolean/resolve+email\", \"persists via applyPatch + returns prefs\", \"test rewritten\"], \"modelTier\": \"mechanical\"}\n```"
+    },
+    {
+      "id": 12,
+      "subject": "Task 6: Settings matrix UI + e2e rewrite",
+      "status": "pending",
+      "blockedBy": [11],
+      "description": "**Goal:** NotificationSettings matrix (rows=types, cols=channels; resolve+email disabled cell); per-cell optimistic PATCH + desktop permission gate; pref-<type>-<channel> testids. Page passes parsePrefs. Rewrite notifications-pref.spec.ts.\n\n**Verify:** npx tsc --noEmit && pnpm lint\n\n```json:metadata\n{\"files\": [\"components/NotificationSettings.tsx\", \"app/app/settings/notifications/page.tsx\", \"tests/e2e/notifications-pref.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && pnpm lint\", \"acceptanceCriteria\": [\"matrix with resolve+email disabled cell\", \"per-cell optimistic PATCH + desktop permission gate\", \"pref-<type>-<channel> testids + SMTP copy\", \"page parsePrefs + e2e rewritten\"], \"modelTier\": \"standard\"}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "Task 7: Drop legacy boolean columns + full verification",
+      "status": "pending",
+      "blockedBy": [12],
+      "description": "**Goal:** Drop emailNotifications/desktopNotifications (nothing references them now) + prove the phase green end-to-end.\n\n**Verify:** CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit && pnpm build && (free 3000; pnpm test:e2e); grep legacy booleans → empty.\n\n```json:metadata\n{\"files\": [\"prisma/schema.prisma\", \"prisma/migrations\"], \"verifyCommand\": \"CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit && pnpm build && (lsof -ti tcp:3000 | xargs -r kill -9; pnpm test:e2e)\", \"acceptanceCriteria\": [\"no refs to legacy booleans\", \"columns dropped via migration + client regenerated\", \"unit+e2e+lint+tsc+build all green\"], \"modelTier\": \"standard\"}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-10"
+}
