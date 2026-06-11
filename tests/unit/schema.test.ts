@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { prisma } from "@/lib/db";
+import { parsePrefs, DEFAULT_PREFS } from "@/lib/notification-prefs";
 
 describe("domain schema", () => {
   it("round-trips a document chain and cascades on delete", async () => {
@@ -29,12 +30,15 @@ describe("domain schema", () => {
     expect(await prisma.annotation.findUnique({ where: { id: ann.id } })).toBeNull();
   });
 
-  it("User has emailNotifications defaulting to true", async () => {
+  it("User notificationPrefs is null on create and parses to defaults", async () => {
     const now = new Date();
     const u = await prisma.user.create({
       data: { id: `pref-${Date.now()}`, name: "Pref", email: `pref-${Date.now()}@e.com`, emailVerified: false, createdAt: now, updatedAt: now },
     });
-    expect(u.emailNotifications).toBe(true);
+    expect(u.notificationPrefs).toBeNull();
+    const prefs = parsePrefs(u.notificationPrefs);
+    expect(prefs).toEqual(DEFAULT_PREFS);
+    expect(prefs.comment.email).toBe(true);
   });
 
   it("OutboxJob defaults to PENDING with attempts=0, maxAttempts=6", async () => {

@@ -16,8 +16,6 @@ model User {
   createdAt     DateTime
   updatedAt     DateTime
   role          String?   @default("member")
-  emailNotifications Boolean @default(true)
-  desktopNotifications Boolean @default(false)
   notificationPrefs Json?
   sessions      Session[]
   accounts      Account[]
