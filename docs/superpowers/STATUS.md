@@ -58,17 +58,17 @@ Roadmap: `specs/2026-06-09-quorum-ai-m5-roadmap.md`; per-phase design specs `spe
 - **P4 · Session lifecycle** ✅ — explicit start/end review session with a `sessionId` + leader; `session.started/ended` events on the registry.
 - **P5 · Follow-the-leader scroll** ✅ — leader broadcasts throttled scroll position; followers smooth-scroll; detach/resume.
 
-### M6 — Review Depth & Polish  🔄 in progress (P1 shipped)
+### M6 — Review Depth & Polish  🔄 in progress (P1 + P2 shipped)
 
 Roadmap: `specs/2026-06-10-quorum-ai-m6-roadmap.md`. Deliberately small + infra-free. Three phases:
 - **P1 · General UI polish** ✅ shipped (on `main`) — ran a fresh whole-app **6-pillar re-audit** (the 2026-06-06 review was stale; all 7 of its findings already fixed). Fresh audit (`2026-06-10-quorum-ai-ui-review.md`) scored 19/24, then fixed all objective + approved-subjective findings → **23/24** (+6 vs the 17/24 baseline). Changes: dark-themed CodeMirror editor (reactive, token-driven via `lib/use-resolved-dark.ts`; theme store hoisted into `lib/theme.ts`), editor line-wrapping, violet `accent-color` on form controls, dark unchecked task-list checkbox, leading-H1 demotion (`lib/markdown-heading.ts`), presence colors → theme tokens, diff per-column version headers, session helper tooltips, cursor→person legend. 287 unit + 29 e2e green, lint/tsc/build clean. Residual (low, deferred): CodeMirror dark *syntax-token* dimness. No Settings nav button added; design system preserved. Plan: `plans/2026-06-10-quorum-ai-m6-p1-ui-polish.md`; design: `specs/2026-06-10-quorum-ai-m6-p1-ui-polish-design.md`.
-- **P2 · Granular per-type notification prefs** 🔜 — per-type (comment/review/version/resolve) control over in-app + email + desktop, replacing the two global booleans.
+- **P2 · Granular per-type notification prefs** ✅ shipped (on `main`) — replaced the two global `User` booleans with a per-(type×channel) matrix in a new `User.notificationPrefs Json?` column (Prisma 7.8 Json on SQLite). Full 3-channel matrix (in-app/email/desktop) × 4 types; `resolve` stays non-emailable. Pure `lib/notification-prefs.ts` (DEFAULT_PREFS, parsePrefs, isEnabled, isValidCell, applyPatch) is the single source of truth; dispatch (`lib/notifications.ts`) gates in-app + email per pref; desktop fires per-type client-side (`lib/notification-client.ts` + layout-sourced `desktopPrefs`); per-cell PATCH `{type,channel,enabled}`; settings matrix UI (`pref-<type>-<channel>` testids, resolve×email disabled). **Two migrations**: add+backfill `notificationPrefs` from the old booleans, then drop the booleans (data preserved, empirically verified). Defaults preserve prior behavior. 296 unit + 29 e2e green, lint/tsc/build clean. Plan: `plans/2026-06-10-quorum-ai-m6-p2-notification-prefs.md`; design: `specs/2026-06-10-quorum-ai-m6-p2-notification-prefs-design.md`.
 - **P3 · Quorum / N-approver thresholds** 🔜 — expose `Document.requiredApprovals` (engine already honors it) on create/edit + machine API + progress display.
 
 Dropped from the backlog entirely in M6: dedicated Slack/Teams formatters; git export.
 
 ## Git state
-- `main`: M1–M5 + M6/P1 all landed locally (P1 fast-forwarded in from its worktree branch, which is now removed). **`main` is ahead of `origin` — not yet pushed.** M6/P2 + P3 not started.
+- `main`: M1–M5 + M6/P1 + M6/P2 all landed locally (each fast-forwarded in from its worktree branch, now removed). **`main` is ahead of `origin` — not yet pushed.** M6/P3 not started. **P2 added 2 migrations** — run `pnpm db:deploy` (+ `pnpm prisma generate`) on the main checkout before `pnpm dev`/tests (DB is per-checkout).
 - No active feature branches locally. Merged feature branches may still exist on `origin` (cleanup optional). User manages pushes.
 
 ## Run locally
@@ -81,7 +81,7 @@ pnpm dev                      # http://localhost:3000
 Container: `AUTH_SECRET=$(openssl rand -base64 32) docker compose up`.
 
 ## Next action
-M6/P1 (UI polish) is shipped on local `main` (23/24). Next: **M6 / P2 — Granular per-type notification prefs** in a fresh worktree via the `brainstorming` skill (touch points already scoped in the roadmap: `lib/notifications.ts` dispatch filtering, `components/NotificationSettings.tsx` → per-type matrix, `PATCH /api/settings/notifications`, a schema decision for per-(user,type,channel) prefs). Then P3 (quorum thresholds). Standing reminder: M4/P5 was a **breaking** env rename — deploys must set `BASE_URL`/`AUTH_SECRET` before upgrading.
+M6/P1 (UI polish, 23/24) and M6/P2 (granular notification prefs) are shipped on local `main`. Next: **M6 / P3 — Quorum / N-approver thresholds** in a fresh worktree via the `brainstorming` skill. The engine already honors `Document.requiredApprovals` (`lib/review-state.ts:8-13`, passed in at `lib/reviews.ts:18`) but the field is never set — so P3 is the config + display surface: owner sets the threshold on create/edit (`components/NewDocumentForm.tsx` + create route) and via the machine API (`POST /api/plans`, `PATCH /api/plans/[id]`); show "N of M approvals" progress; surface threshold+count in consolidated feedback (`lib/feedback.ts`); recompute state correctly when the threshold changes. After landing P3, M6 is complete. Standing reminder: M4/P5 was a **breaking** env rename — deploys must set `BASE_URL`/`AUTH_SECRET` before upgrading.
 
 ## Env/workflow notes (carried from M1)
 - This repo's **pnpm is v11** → prefix script runs with `CI=true` (avoids the no-TTY `node_modules` purge abort).
