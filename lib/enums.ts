@@ -24,3 +24,17 @@ export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 export const SESSION_ACTIONS = ["start", "join", "leave", "end"] as const;
 export type SessionAction = (typeof SESSION_ACTIONS)[number];
+
+export const NOTIFICATION_TYPES = ["comment", "review", "version", "resolve"] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+export const NOTIFICATION_CHANNELS = ["inApp", "email", "desktop"] as const;
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+
+// Which channels exist per type. `resolve` is never emailed.
+export const NOTIFICATION_CELLS: Record<NotificationType, readonly NotificationChannel[]> = {
+  comment: ["inApp", "email", "desktop"],
+  review: ["inApp", "email", "desktop"],
+  version: ["inApp", "email", "desktop"],
+  resolve: ["inApp", "desktop"],
+};
