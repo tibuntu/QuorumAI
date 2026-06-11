@@ -22,31 +22,30 @@ const req = (b: unknown) =>
   new Request("http://t", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
 
 describe("PATCH /api/settings/notifications", () => {
-  beforeEach(() => {
-    vi.mocked(api.requireUser).mockReset();
-  });
+  beforeEach(() => vi.mocked(api.requireUser).mockReset());
 
-  test("updates desktopNotifications", async () => {
+  test("updates a valid cell and persists", async () => {
     const u = await makeUser("a");
     vi.mocked(api.requireUser).mockResolvedValue({ id: u.id } as never);
-    const res = await PATCH(req({ desktopNotifications: true }));
+    const res = await PATCH(req({ type: "comment", channel: "email", enabled: false }));
     expect(res.status).toBe(200);
-    expect((await prisma.user.findUnique({ where: { id: u.id } }))?.desktopNotifications).toBe(true);
+    const row = await prisma.user.findUnique({ where: { id: u.id }, select: { notificationPrefs: true } });
+    const prefs = row?.notificationPrefs as Record<string, Record<string, boolean>>;
+    expect(prefs.comment.email).toBe(false);
+    expect(prefs.comment.inApp).toBe(true); // default preserved
   });
 
-  test("updates emailNotifications only when provided", async () => {
-    const u = await makeUser("c");
-    vi.mocked(api.requireUser).mockResolvedValue({ id: u.id } as never);
-    const res = await PATCH(req({ emailNotifications: false }));
-    expect(res.status).toBe(200);
-    const row = await prisma.user.findUnique({ where: { id: u.id } });
-    expect(row?.emailNotifications).toBe(false);
-    expect(row?.desktopNotifications).toBe(false); // untouched default
-  });
-
-  test("400 when neither field provided", async () => {
+  test("400 on the resolve+email cell", async () => {
     const u = await makeUser("b");
     vi.mocked(api.requireUser).mockResolvedValue({ id: u.id } as never);
-    expect((await PATCH(req({}))).status).toBe(400);
+    expect((await PATCH(req({ type: "resolve", channel: "email", enabled: true }))).status).toBe(400);
+  });
+
+  test("400 on unknown type/channel and non-boolean enabled", async () => {
+    const u = await makeUser("c");
+    vi.mocked(api.requireUser).mockResolvedValue({ id: u.id } as never);
+    expect((await PATCH(req({ type: "bogus", channel: "email", enabled: true }))).status).toBe(400);
+    expect((await PATCH(req({ type: "comment", channel: "bogus", enabled: true }))).status).toBe(400);
+    expect((await PATCH(req({ type: "comment", channel: "email", enabled: "yes" }))).status).toBe(400);
   });
 });
