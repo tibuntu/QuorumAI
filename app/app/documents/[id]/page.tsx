@@ -3,6 +3,7 @@ import { getDocumentDetail } from "@/lib/documents";
 import { getSession } from "@/lib/session";
 import { ensureParticipant } from "@/lib/authz";
 import { isEditUiEnabled } from "@/lib/config";
+import { approvalCount } from "@/lib/quorum";
 import DocumentView, { type ClientDocument } from "@/components/DocumentView";
 
 export default async function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +20,8 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     state: doc.state,
     versionNumber: doc.currentVersion?.versionNumber ?? 1,
     markdown: doc.currentVersion?.markdown ?? "",
+    requiredApprovals: doc.requiredApprovals,
+    approvals: approvalCount(doc.reviews),
     annotations: doc.annotations.map((a) => ({
       id: a.id,
       anchorExact: a.anchorExact,
