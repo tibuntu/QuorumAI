@@ -4,48 +4,48 @@
     {
       "id": 1,
       "subject": "Task 1: Bootstrap + pure lib/quorum.ts helper",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Bootstrap the fresh worktree, then add the pure quorum helper (validation bound + approval count) with unit tests.\n\n**Files:** Create `.env` (gitignored), `lib/quorum.ts`, `tests/unit/quorum.test.ts`.\n\n**Acceptance Criteria:**\n- [ ] Bootstrap: CI=true pnpm install; .env (AUTH_SECRET 32+, BASE_URL, DATABASE_URL=file:./data/app.db); pnpm db:deploy. No new migration.\n- [ ] MAX_REQUIRED_APPROVALS=10; parseRequiredApprovals 1..10 else null, never throws.\n- [ ] approvalCount = active APPROVE count.\n- [ ] Unit-tested.\n\n**Verify:** CI=true pnpm test:unit quorum && npx tsc --noEmit\n\nFull code in plan §Task 1. Shell: SCM Breeze breaks &&/heredocs → /usr/bin/git, separate calls, Write tool.\n\n```json:metadata\n{\"files\": [\".env\", \"lib/quorum.ts\", \"tests/unit/quorum.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit quorum && npx tsc --noEmit\", \"acceptanceCriteria\": [\"bootstrap ok\", \"parseRequiredApprovals 1..10 else null\", \"approvalCount active APPROVE\", \"unit-tested\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 2,
       "subject": "Task 2: Set requiredApprovals at creation (lib + both POST routes + form)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** Owner can set the threshold at document creation, web + machine APIs.\n\n**Files:** lib/documents.ts, app/api/documents/route.ts, app/api/plans/route.ts, components/NewDocumentForm.tsx, tests/unit/documents.test.ts.\n\n**Acceptance Criteria:**\n- [ ] createDocument opts.requiredApprovals?, persists ?? 1.\n- [ ] Both POST routes validate via parseRequiredApprovals → 400 if invalid; pass through; absent → 1.\n- [ ] NewDocumentForm number input (min1 max10 default1, aria-label=\"required approvals\").\n- [ ] Unit test: persists 3; absent → 1.\n\n**Verify:** CI=true pnpm test:unit documents && npx tsc --noEmit\n\nFull code in plan §Task 2.\n\n```json:metadata\n{\"files\": [\"lib/documents.ts\", \"app/api/documents/route.ts\", \"app/api/plans/route.ts\", \"components/NewDocumentForm.tsx\", \"tests/unit/documents.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit documents && npx tsc --noEmit\", \"acceptanceCriteria\": [\"createDocument persists requiredApprovals default 1\", \"both POST routes validate + 400\", \"form input\", \"unit-tested\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 3,
       "subject": "Task 3: setRequiredApprovals service + extracted shared recompute",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2],
       "description": "**Goal:** Service updating threshold + recomputing state, sharing recompute with submitReview (behavior unchanged).\n\n**Files:** lib/reviews.ts, tests/unit/reviews.test.ts.\n\n**Acceptance Criteria:**\n- [ ] Shared recomputeState(documentId)→{state,prevState}; submitReview delegates, behavior unchanged (delete+create review, notifyParticipants, dispatch review.updated always + decision.changed on change).\n- [ ] setRequiredApprovals(userId,documentId,n): update+recompute+publish review.updated+decision.changed on flip; NO notifyParticipants.\n- [ ] Tests: raise→OPEN, lower→APPROVED, REQUEST_CHANGES stays, persisted.\n\n**Verify:** CI=true pnpm test:unit reviews && CI=true pnpm test:unit notifications.test && npx tsc --noEmit\n\nFull code in plan §Task 3.\n\n```json:metadata\n{\"files\": [\"lib/reviews.ts\", \"tests/unit/reviews.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit reviews && CI=true pnpm test:unit notifications.test && npx tsc --noEmit\", \"acceptanceCriteria\": [\"shared recomputeState; submitReview unchanged\", \"setRequiredApprovals recompute+publish+decision.changed, no notify\", \"raise/lower/REQUEST_CHANGES cases\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 4,
       "subject": "Task 4: Dedicated settings routes (web + machine)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [3],
       "description": "**Goal:** Owner-only PATCH endpoints exposing setRequiredApprovals on both surfaces.\n\n**Files:** app/api/documents/[id]/settings/route.ts, app/api/plans/[id]/settings/route.ts, tests/unit/settings.quorum.test.ts.\n\n**Acceptance Criteria:**\n- [ ] Web: requireUser; non-participant→404; non-owner→403; invalid→400; success→200 {ok,requiredApprovals,state} + persists.\n- [ ] Machine: requireApiUser; non-owner→404; no plans:write→403; invalid→400; success→200 {requiredApprovals,state}.\n- [ ] Unit tests 200/400/403/404 (web).\n\n**Verify:** CI=true pnpm test:unit settings.quorum && npx tsc --noEmit\n\nFull code in plan §Task 4.\n\n```json:metadata\n{\"files\": [\"app/api/documents/[id]/settings/route.ts\", \"app/api/plans/[id]/settings/route.ts\", \"tests/unit/settings.quorum.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit settings.quorum && npx tsc --noEmit\", \"acceptanceCriteria\": [\"web 200/400/403/404 + persists\", \"machine 200/400/403(scope)/404\", \"unit-tested\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 5,
       "subject": "Task 5: Display N-of-M approvals + owner threshold control",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [4],
       "description": "**Goal:** Surface approval progress + owner inline threshold control in the document view.\n\n**Files:** app/app/documents/[id]/page.tsx, components/DocumentView.tsx.\n\n**Acceptance Criteria:**\n- [ ] ClientDocument gains requiredApprovals+approvals; page maps doc.requiredApprovals + approvalCount(doc.reviews).\n- [ ] \"{approvals} of {requiredApprovals} approvals\" (data-testid=\"approval-progress\") by the state badge.\n- [ ] Owner-only number input (aria-label=\"required approvals\", data-testid=\"required-approvals\", min1 max10) PATCHes /api/documents/[id]/settings + updates badge from returned state; not gated by EDIT_UI_ENABLED.\n- [ ] Existing test hooks preserved; tsc 0, lint 0.\n\n**Verify:** npx tsc --noEmit && pnpm lint\n\nFull code in plan §Task 5.\n\n```json:metadata\n{\"files\": [\"app/app/documents/[id]/page.tsx\", \"components/DocumentView.tsx\"], \"verifyCommand\": \"npx tsc --noEmit && pnpm lint\", \"acceptanceCriteria\": [\"ClientDocument threaded\", \"approval-progress N of M\", \"owner required-approvals input PATCHes + updates badge\", \"hooks preserved\"], \"modelTier\": \"standard\"}\n```"
     },
     {
       "id": 6,
       "subject": "Task 6: Surface threshold + approvals in feedback contract",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [5],
       "description": "**Goal:** Add requiredApprovals + approvals to consolidateFeedback for the agent loop.\n\n**Files:** lib/feedback.ts, tests/unit/feedback.test.ts.\n\n**Acceptance Criteria:**\n- [ ] Return includes requiredApprovals + approvals (=approvalCount(detail.reviews)).\n- [ ] markdown includes \"Approvals: {approvals} of {requiredApprovals}\".\n- [ ] schemaVersion stays 1 (additive).\n- [ ] Unit-tested.\n\n**Verify:** CI=true pnpm test:unit feedback && npx tsc --noEmit\n\nFull code in plan §Task 6.\n\n```json:metadata\n{\"files\": [\"lib/feedback.ts\", \"tests/unit/feedback.test.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit feedback && npx tsc --noEmit\", \"acceptanceCriteria\": [\"return has requiredApprovals + approvals\", \"markdown 'Approvals: N of M'\", \"schemaVersion 1\", \"unit-tested\"], \"modelTier\": \"mechanical\"}\n```"
     },
     {
       "id": 7,
       "subject": "Task 7: E2E + full verification gate",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [6],
       "description": "**Goal:** Prove the quorum flow end-to-end + whole suite green.\n\n**Files:** tests/e2e/quorum.spec.ts.\n\n**Acceptance Criteria:**\n- [ ] E2E: owner creates doc requiredApprovals=2; non-owner reviewer approves → Open + \"1 of 2\" (after reload); owner lowers to 1 → Approved.\n- [ ] Full gate green: CI=true pnpm test:unit; pnpm test:e2e; pnpm lint; npx tsc --noEmit; pnpm build 0/0.\n\n**Verify:** all five commands green.\n\nFull code in plan §Task 7. Leave branch ready to fast-forward into local main (no push/PR).\n\n```json:metadata\n{\"files\": [\"tests/e2e/quorum.spec.ts\"], \"verifyCommand\": \"CI=true pnpm test:unit && pnpm lint && npx tsc --noEmit && pnpm build && (lsof -ti tcp:3000 | xargs -r kill -9; pnpm test:e2e)\", \"acceptanceCriteria\": [\"e2e 2-approval gate\", \"unit+e2e+lint+tsc+build green\"], \"modelTier\": \"standard\"}\n```"
     }
