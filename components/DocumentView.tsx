@@ -47,6 +47,8 @@ export interface ClientDocument {
   state: string;
   versionNumber: number;
   markdown: string;
+  requiredApprovals: number;
+  approvals: number;
   annotations: ClientAnnotation[];
 }
 
@@ -112,6 +114,7 @@ export default function DocumentView({ doc, isOwner, editEnabled, currentUserId,
   const [suggestDraft, setSuggestDraft] = useState("");
   const [applyError, setApplyError] = useState<string | null>(null);
   const [docState, setDocState] = useState(doc.state);
+  const [requiredApprovals, setRequiredApprovals] = useState(doc.requiredApprovals);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [mode, setMode] = useState<"review" | "edit">("review");
   const [markdown, setMarkdown] = useState(doc.markdown);
@@ -644,6 +647,20 @@ export default function DocumentView({ doc, isOwner, editEnabled, currentUserId,
     }
   }
 
+  async function changeThreshold(n: number) {
+    const clamped = Math.max(1, Math.min(10, n || 1));
+    setRequiredApprovals(clamped);
+    const res = await fetch(`/api/documents/${doc.id}/settings`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ requiredApprovals: clamped }),
+    }).catch(() => null);
+    if (res && res.ok) {
+      const data = await res.json();
+      if (typeof data.state === "string") setDocState(data.state);
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row">
       {confirmingDelete && (
@@ -700,20 +717,40 @@ export default function DocumentView({ doc, isOwner, editEnabled, currentUserId,
       </div>
 
       <aside className="flex w-full shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-80 lg:self-start lg:overflow-y-auto">
-        <Card className="flex items-center justify-between gap-2 p-3">
-          <Badge tone={stateTone(docState)} data-testid="doc-state">
-            {STATE_LABELS[docState] ?? docState}
-          </Badge>
-          {!isOwner && (
-            <div className="flex gap-2">
-              <Button variant="primary" size="sm" onClick={() => submitReview("APPROVE")}>
-                Approve
-              </Button>
-              <Button variant="danger" size="sm" onClick={() => submitReview("REQUEST_CHANGES")}>
-                Request changes
-              </Button>
-            </div>
-          )}
+        <Card className="flex flex-col gap-2 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <Badge tone={stateTone(docState)} data-testid="doc-state">
+              {STATE_LABELS[docState] ?? docState}
+            </Badge>
+            {!isOwner && (
+              <div className="flex gap-2">
+                <Button variant="primary" size="sm" onClick={() => submitReview("APPROVE")}>
+                  Approve
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => submitReview("REQUEST_CHANGES")}>
+                  Request changes
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-2 text-sm text-muted">
+            <span data-testid="approval-progress">{doc.approvals} of {requiredApprovals} approvals</span>
+            {isOwner && (
+              <label className="flex items-center gap-1 text-xs">
+                Required
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  aria-label="required approvals"
+                  data-testid="required-approvals"
+                  value={requiredApprovals}
+                  onChange={(e) => changeThreshold(Number(e.target.value))}
+                  className="w-16 rounded-md border border-border bg-surface px-1.5 py-0.5 text-foreground accent-[var(--primary)]"
+                />
+              </label>
+            )}
+          </div>
         </Card>
 
         {selection && (
