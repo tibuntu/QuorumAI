@@ -14,12 +14,18 @@ export function nextUnread(count: number, e: DocEvent): number {
 }
 
 export function shouldFireOsNotification(args: {
-  desktopEnabled: boolean;
+  desktopPrefs: Record<string, boolean>;
+  type: string;
   permission: NotificationPermission;
   visibility: DocumentVisibilityState;
   seen: Set<string>;
   id: string;
 }): boolean {
-  const { desktopEnabled, permission, visibility, seen, id } = args;
-  return desktopEnabled && permission === "granted" && visibility === "hidden" && !seen.has(id);
+  const { desktopPrefs, type, permission, visibility, seen, id } = args;
+  return (
+    desktopPrefs[type] === true &&
+    permission === "granted" &&
+    visibility === "hidden" &&
+    !seen.has(id)
+  );
 }

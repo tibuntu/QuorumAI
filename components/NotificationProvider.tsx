@@ -20,12 +20,12 @@ export function useNotifications(): Ctx {
 
 export function NotificationProvider({
   initialUnread,
-  desktopEnabled,
+  desktopPrefs,
   initialItems = [],
   children,
 }: {
   initialUnread: number;
-  desktopEnabled: boolean;
+  desktopPrefs: Record<string, boolean>;
   initialItems?: ClientNotification[];
   children: React.ReactNode;
 }) {
@@ -47,7 +47,8 @@ export function NotificationProvider({
           setItems((prev) => (prev.some((n) => n.id === e.notification.id) ? prev : [e.notification, ...prev]));
           if (
             shouldFireOsNotification({
-              desktopEnabled,
+              desktopPrefs,
+              type: e.notification.type,
               permission: typeof Notification !== "undefined" ? Notification.permission : "denied",
               visibility: document.visibilityState,
               seen: seen.current,
@@ -75,7 +76,7 @@ export function NotificationProvider({
       es?.close();
       if (retry) clearTimeout(retry);
     };
-  }, [desktopEnabled]);
+  }, [desktopPrefs]);
 
   useEffect(() => {
     document.title = unread > 0 ? `(${unread}) Quorum AI` : "Quorum AI";

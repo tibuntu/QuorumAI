@@ -14,15 +14,17 @@ describe("nextUnread", () => {
 
 describe("shouldFireOsNotification", () => {
   const base = {
-    desktopEnabled: true,
+    desktopPrefs: { comment: true } as Record<string, boolean>,
+    type: "comment",
     permission: "granted" as const,
     visibility: "hidden" as const,
     seen: new Set<string>(),
     id: "n1",
   };
-  test("fires only when all conditions hold", () => {
+  test("fires only when the type's desktop pref is on and all guards hold", () => {
     expect(shouldFireOsNotification(base)).toBe(true);
-    expect(shouldFireOsNotification({ ...base, desktopEnabled: false })).toBe(false);
+    expect(shouldFireOsNotification({ ...base, desktopPrefs: { comment: false } })).toBe(false);
+    expect(shouldFireOsNotification({ ...base, type: "review" })).toBe(false); // not in prefs map
     expect(shouldFireOsNotification({ ...base, permission: "default" })).toBe(false);
     expect(shouldFireOsNotification({ ...base, visibility: "visible" })).toBe(false);
     expect(shouldFireOsNotification({ ...base, seen: new Set(["n1"]) })).toBe(false);

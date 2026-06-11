@@ -4,6 +4,8 @@ import { listNotifications, unreadCount } from "@/lib/notifications";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { NotificationProvider } from "@/components/NotificationProvider";
+import { parsePrefs } from "@/lib/notification-prefs";
+import { NOTIFICATION_TYPES } from "@/lib/enums";
 import type { ClientNotification } from "@/lib/events";
 
 export default async function AppLayout({
@@ -17,8 +19,13 @@ export default async function AppLayout({
   const [unread, rows, pref] = await Promise.all([
     unreadCount(session.user.id),
     listNotifications(session.user.id),
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { desktopNotifications: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { notificationPrefs: true } }),
   ]);
+
+  const prefs = parsePrefs(pref?.notificationPrefs);
+  const desktopPrefs = Object.fromEntries(
+    NOTIFICATION_TYPES.map((t) => [t, prefs[t].desktop === true]),
+  ) as Record<string, boolean>;
 
   const initialItems: ClientNotification[] = rows.map((n) => ({
     id: n.id,
@@ -33,7 +40,7 @@ export default async function AppLayout({
   return (
     <NotificationProvider
       initialUnread={unread}
-      desktopEnabled={pref?.desktopNotifications ?? false}
+      desktopPrefs={desktopPrefs}
       initialItems={initialItems}
     >
       <div className="min-h-screen bg-background">
