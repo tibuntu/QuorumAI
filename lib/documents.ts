@@ -6,10 +6,17 @@ export async function createDocument(
   userId: string,
   title: string,
   markdown: string,
-  opts?: { source?: DocumentSource; agentContext?: string }
+  opts?: { source?: DocumentSource; agentContext?: string; requiredApprovals?: number }
 ) {
   const doc = await prisma.document.create({
-    data: { title, ownerId: userId, state: "OPEN", source: opts?.source ?? "WEB", agentContext: opts?.agentContext ?? null },
+    data: {
+      title,
+      ownerId: userId,
+      state: "OPEN",
+      source: opts?.source ?? "WEB",
+      agentContext: opts?.agentContext ?? null,
+      requiredApprovals: opts?.requiredApprovals ?? 1,
+    },
   });
   const version = await prisma.documentVersion.create({
     data: {

@@ -41,6 +41,16 @@ describe("documents service", () => {
     await prisma.document.delete({ where: { id } });
   });
 
+  it("persists requiredApprovals (default 1)", async () => {
+    const u = await makeUser();
+    const a = await createDocument(u.id, "T", "body", { requiredApprovals: 3 });
+    expect((await prisma.document.findUnique({ where: { id: a } }))?.requiredApprovals).toBe(3);
+    const b = await createDocument(u.id, "T2", "body");
+    expect((await prisma.document.findUnique({ where: { id: b } }))?.requiredApprovals).toBe(1);
+    await prisma.document.delete({ where: { id: a } });
+    await prisma.document.delete({ where: { id: b } });
+  });
+
   it("seeds an owner participant row on create", async () => {
     const user = await makeUser();
     const id = await createDocument(user.id, "Plan", "body");
