@@ -31,7 +31,17 @@ test("quorum threshold gates approval", async ({ browser }) => {
 
   // Reviewer opens the same doc (becomes a participant on access-grant) and approves.
   await reviewer.goto(url);
+  // The Approve button is server-rendered; wait for the client component to hydrate
+  // (it POSTs presence on mount) before clicking, or the click is a no-op against an
+  // un-wired handler and the review never registers.
+  await reviewer.waitForResponse(
+    (r) => r.url().includes(`/presence`) && r.request().method() === "POST",
+  );
+  const approved = reviewer.waitForResponse(
+    (r) => r.url().includes(`/reviews`) && r.request().method() === "POST",
+  );
   await reviewer.getByRole("button", { name: "Approve" }).click();
+  expect((await approved).ok()).toBeTruthy();
   // 1 of 2 → still Open.
   await expect(reviewer.getByTestId("doc-state")).toHaveText("Open");
 

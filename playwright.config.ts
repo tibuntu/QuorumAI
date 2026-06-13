@@ -6,6 +6,8 @@ const BASE_URL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
+  // A real bug fails all attempts (still red); a residual hydration/timing flake self-heals.
+  retries: process.env.CI ? 2 : 0,
   use: { baseURL: BASE_URL },
   webServer: {
     command: `pnpm build && pnpm start -p ${PORT}`,

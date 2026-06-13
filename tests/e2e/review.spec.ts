@@ -38,6 +38,11 @@ test("create, annotate, comment, request changes", async ({ browser }) => {
   const pageB = await ctxB.newPage();
   await register(pageB, "Reviewer");
   await pageB.goto(url);
+  // Wait for the client component to hydrate (it POSTs presence on mount) before
+  // clicking the server-rendered button, or the click is a no-op against an un-wired handler.
+  await pageB.waitForResponse(
+    (r) => r.url().includes(`/presence`) && r.request().method() === "POST",
+  );
   await expect(pageB.getByTestId("doc-body")).toContainText("cloud setup");
   await pageB.getByRole("button", { name: "Request changes" }).click();
 
