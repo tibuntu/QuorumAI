@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1](https://github.com/tibuntu/QuorumAI/compare/v0.3.0...v0.3.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* **deps:** update better-auth monorepo to v1.6.16 ([8f29ff9](https://github.com/tibuntu/QuorumAI/commit/8f29ff9b2ce14d010a8287fee620e7dfe464b6ef))
+* **deps:** update better-auth monorepo to v1.6.17 ([ce540e4](https://github.com/tibuntu/QuorumAI/commit/ce540e477247848cce0c2d4618db6958057129fc))
+* **deps:** update nextjs monorepo to v16.2.9 ([572443c](https://github.com/tibuntu/QuorumAI/commit/572443cf5a7130be79d3612ec159103b5eabe5ee))
+
 ## [0.3.0](https://github.com/tibuntu/QuorumAI/compare/v0.2.0...v0.3.0) (2026-06-11)
 
 ### Features
