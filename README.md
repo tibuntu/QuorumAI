@@ -20,31 +20,34 @@ This product re-inserts the team at the highest-leverage moment: **before the ag
 2. The team gets a shareable link / sees it in their inbox, opens the **rendered** plan, and reviews async: select-to-comment, threads, suggestions, and an **Approve / Request-changes** verdict.
 3. The developer runs `/pull-feedback` → the agent receives the **consolidated** team feedback and revises the plan before implementing.
 
-## Status
+## Features
 
-**M1–M3 shipped.** The product runs end-to-end in a single Docker container.
+The product runs end-to-end in a single Docker container.
 
-**Core review loop (M1)**
+**The review loop**
 - **Push** a plan via the Bearer-token machine API (`/push-plan`).
 - **Review** it in a production-themed UI: rendered markdown, select-to-comment annotations, comment threads, resolve, and an Approve / Request-changes verdict.
-- **Edit** plans into new versions, with annotations **re-anchored** across edits.
-- **Live updates** via Server-Sent Events, plus in-app notifications.
+- **Suggestions-as-edits** — reviewers propose concrete text; the owner accepts → a new version.
+- **Edit** plans into new versions, with annotations **re-anchored** across edits, plus a side-by-side version diff.
+- **Configurable approval quorums** — require N approvals before a plan is considered approved.
 - **Pull** consolidated feedback back into the agent (`/pull-feedback`).
 
-**Access & collaboration (M2)**
-- **Per-document authorization** — owner + participants (link-grant on first open); scoped machine API.
-- **Email notifications** — env-gated SMTP, per-user on/off, debounced activity digests.
-- **Version history + diff** — browse versions and see a side-by-side markdown diff.
-- **Dark mode** — light / dark / system toggle, persisted, no-flash boot.
+**Real-time collaboration**
+- **Live presence** — see who else is viewing, with a participant roster, shared text selections, and live cursors.
+- **Review-together sessions** — a leader-led mode with follow-the-leader scrolling.
+- **Live updates** via Server-Sent Events.
 
-**Deepened agent loop + SSO + suggestions (M3)**
+**Agent integration**
 - **Structured feedback contract** — versioned JSON (`schemaVersion`) with per-thread severity/category, provenance, rollups, and `include`/`exclude` filtering — alongside the human markdown digest.
 - **Block-until-approved** — `GET /api/plans/[id]/feedback/wait?timeoutMs=` long-poll so an agent can wait for a decision.
 - **Outbound webhooks** — owner-registered, HMAC-signed, durably retried delivery on review events.
-- **Suggestions-as-edits** — reviewers propose concrete text; the owner accepts → a new version.
-- **Generic OIDC SSO** — one env-gated OIDC provider alongside email+password (see below).
 
-> **Breaking (M4):** the auth env vars were renamed — `BETTER_AUTH_SECRET` → `AUTH_SECRET`, `BETTER_AUTH_URL` → `BASE_URL`. Update your `.env` / deployment config before upgrading.
+**Access, notifications & deployment**
+- **Per-document authorization** — owner + participants (link-grant on first open); scoped machine API tokens.
+- **Authentication** — email + password, plus an optional generic OIDC SSO provider.
+- **Notifications** — in-app inbox, live stream, opt-in desktop, and env-gated SMTP email digests, with per-type and per-channel preferences.
+- **Dark mode** — light / dark / system toggle, persisted, no-flash boot.
+- **Single-container packaging** — embedded SQLite (WAL), liveness/readiness probes.
 
 See the [Architecture Decision Records](docs/adr/) for the rationale behind key design and security decisions.
 
