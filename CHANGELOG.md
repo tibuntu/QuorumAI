@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/tibuntu/QuorumAI/compare/v0.3.1...v0.3.2) (2026-06-14)
+
+
+### Bug Fixes
+
+* **deps:** update better-auth monorepo to v1.6.18 ([0fdb012](https://github.com/tibuntu/QuorumAI/commit/0fdb012d666e64d684b0677141eca005bd55ae30))
+
 ## [0.3.1](https://github.com/tibuntu/QuorumAI/compare/v0.3.0...v0.3.1) (2026-06-14)
 
 
