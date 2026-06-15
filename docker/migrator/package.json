@@ -1,0 +1,10 @@
+{
+  "name": "consensum-migrator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Minimal Prisma CLI install used ONLY to run `prisma migrate deploy` at container start. The application runtime is the self-contained Next.js standalone build; this isolated tree keeps the heavy prisma-CLI dependencies (Studio, the pglite dev DB, mysql/postgres drivers) and all devDependencies out of the shipped image. Versions are pinned to match the root package.json / pnpm-lock.yaml.",
+  "dependencies": {
+    "prisma": "7.8.0",
+    "dotenv": "17.4.2"
+  }
+}
