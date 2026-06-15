@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/tibuntu/consensum/compare/v0.3.1...v0.4.0) (2026-06-15)
+
+
+### Features
+
+* auto-proceed plan review via ExitPlanMode hook + installer ([bc05d9b](https://github.com/tibuntu/consensum/commit/bc05d9b55c3732a8b9f827633b00fe9c2232da85))
+* rename product from Quorum AI to Consensum ([7737ff9](https://github.com/tibuntu/consensum/commit/7737ff9ed5feaf8a8d10f79d17a89f6ea1fa14c9))
+* **ui:** merge theme buttons into a single cycling toggle ([cd2c9a8](https://github.com/tibuntu/consensum/commit/cd2c9a85fe5d5e3886e78bc8452e472ab8f31f61))
+
+
+### Bug Fixes
+
+* **deps:** update better-auth monorepo to v1.6.18 ([0fdb012](https://github.com/tibuntu/consensum/commit/0fdb012d666e64d684b0677141eca005bd55ae30))
+
 ## [0.3.1](https://github.com/tibuntu/QuorumAI/compare/v0.3.0...v0.3.1) (2026-06-14)
 
 
