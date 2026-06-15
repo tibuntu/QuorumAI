@@ -87,12 +87,36 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-      - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+      # Build and load locally first so Trivy can scan the exact image before it
+      # is ever pushed. The push happens in a later step, only if the scan passes.
+      - id: build
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: .
-          # Push on main pushes and on version tags; never on pull requests.
-          push: ${{ github.event_name != 'pull_request' }}
+          load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # Vulnerability gate: fail on CRITICAL/HIGH that have a fix available
+      # (ignore-unfixed) so actionable CVEs block, but un-patchable base-image
+      # CVEs don't red-line the pipeline. Scans by image id, independent of tag.
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.build.outputs.imageid }}
+          scanners: vuln
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      # Push only after a clean scan; never on pull requests. Layers are already
+      # in the gha cache from the build step, so this just exports and uploads.
+      - if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
