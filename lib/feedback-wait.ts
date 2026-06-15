@@ -13,6 +13,13 @@ export interface WaitDeps {
   readSnapshot?: (documentId: string) => Promise<Snapshot | null>;
 }
 
+/**
+ * Absolute ceiling for any long-poll timer, independent of the per-request max.
+ * Callers already clamp via clampTimeout, but we re-clamp at the setTimeout sink
+ * so the duration can never be attacker-controlled even if a caller forgets.
+ */
+const MAX_WAIT_MS = 60000;
+
 /** Clamp a client-requested timeout into (0, max], falling back to min(default, max) when absent/invalid. */
 export function clampTimeout(requested: number | undefined, max: number, dflt: number): number {
   if (requested === undefined || Number.isNaN(requested) || requested <= 0) return Math.min(dflt, max);
@@ -45,7 +52,10 @@ export async function waitForFeedbackChange(documentId: string, timeoutMs: numbe
     if (initial === null) return null;
     if (initial.decision !== "pending") return { ...initial, timedOut: false };
 
-    const timeoutPromise = new Promise<void>((resolve) => { timer = setTimeout(resolve, timeoutMs); });
+    // Re-clamp at the sink: defends the timer from an unbounded duration regardless
+    // of how the caller derived timeoutMs (CWE-400 resource exhaustion).
+    const safeTimeoutMs = Math.min(Math.max(0, timeoutMs), MAX_WAIT_MS);
+    const timeoutPromise = new Promise<void>((resolve) => { timer = setTimeout(resolve, safeTimeoutMs); });
     await Promise.race([eventPromise, timeoutPromise]);
 
     const snapshot = await readSnapshot(documentId);
