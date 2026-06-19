@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/tibuntu/consensum/compare/v0.5.0...v0.6.0) (2026-06-19)
+
+
+### Features
+
+* **ci:** build ARM docker image ([cf28b45](https://github.com/tibuntu/consensum/commit/cf28b4569f2d5334941fd7916f8d739f777b2ad2))
+
 ## [0.5.0](https://github.com/tibuntu/consensum/compare/v0.4.1...v0.5.0) (2026-06-19)
 
 
