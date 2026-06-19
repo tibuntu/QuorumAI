@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0](https://github.com/tibuntu/consensum/compare/v0.4.1...v0.5.0) (2026-06-19)
+
+
+### Features
+
+* **documents:** add copy-to-clipboard button for plan markdown ([793d860](https://github.com/tibuntu/consensum/commit/793d860c9a0c3240842db5cb56f02523c4b115eb))
+
+
+### Bug Fixes
+
+* **deps:** pin better-call override to 1.3.6 for better-auth compat ([162dbad](https://github.com/tibuntu/consensum/commit/162dbad74159117ee4880e0a436b0a3fb0b0e67d))
+* **deps:** update better-auth monorepo to v1.6.19 ([b8e8ad3](https://github.com/tibuntu/consensum/commit/b8e8ad3601a19406b546eb7c650d8d5b596d052d))
+* **deps:** update dependency nodemailer to v9 ([92d4c49](https://github.com/tibuntu/consensum/commit/92d4c49956c8d0c5bfeea30deff3ac584a67e21f))
+
 ## [0.4.1](https://github.com/tibuntu/consensum/compare/v0.4.0...v0.4.1) (2026-06-15)
 
 
