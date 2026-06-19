@@ -202,7 +202,7 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create \
-            $(jq -cr '.target."docker.meta".tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.IMAGE_NAME }}@sha256:%s ' *)
       - name: Inspect manifest
         run: docker buildx imagetools inspect "${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}"
