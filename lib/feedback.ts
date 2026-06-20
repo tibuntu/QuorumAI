@@ -38,6 +38,7 @@ export interface FeedbackThread {
   anchorState: string;
   raisedOnVersion: number | null;
   appliedInVersion: { versionNumber: number } | null;
+  suggestedText: string | null;
   comments: { author: string; body: string }[];
 }
 
@@ -96,6 +97,7 @@ export function consolidateFeedback(detail: FeedbackDetail) {
     anchorState: a.status, // canonical spec name for the same value as `status`
     raisedOnVersion: a.createdOnVersion?.versionNumber ?? null,
     appliedInVersion: a.appliedInVersion ?? null,
+    suggestedText: a.suggestedText ?? null,
     comments: a.comments.map((c) => ({ author: authorName(c.author ?? null), body: c.body })),
   }));
   const reviews = detail.reviews.map((r) => ({ reviewer: authorName(r.reviewer ?? null), verdict: r.verdict, dismissed: r.dismissed }));
@@ -136,6 +138,7 @@ export function consolidateFeedback(detail: FeedbackDetail) {
     const tags = `${t.anchorState === "ORPHANED" ? " (orphaned)" : t.anchorState === "MOVED" ? " (moved)" : ""}${t.threadStatus === "RESOLVED" ? " [resolved]" : ""}${t.appliedInVersion ? ` [applied as v${t.appliedInVersion.versionNumber}]` : ""}`;
     lines.push(`## ${sev}On "${t.quote ?? "(unanchored)"}"${tags}`);
     for (const c of t.comments) lines.push(`- **${c.author}:** ${c.body}`);
+    if (t.kind === "SUGGESTION" && t.suggestedText) lines.push(`- _Suggested replacement:_ "${t.suggestedText}"`);
     lines.push("");
   }
   if (reviews.length) {

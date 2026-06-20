@@ -187,3 +187,50 @@ describe("consolidateFeedback provenance", () => {
     expect(consolidateFeedback(detail).markdown).not.toContain("applied as");
   });
 });
+
+describe("consolidateFeedback suggestions", () => {
+  it("exposes suggestedText on suggestion threads and null on plain comments", () => {
+    const detail: FeedbackDetail = {
+      state: "CHANGES_REQUESTED",
+      annotations: [
+        {
+          anchorExact: "services",
+          status: "ACTIVE",
+          threadStatus: "OPEN",
+          kind: "SUGGESTION",
+          suggestedText: "URLs",
+          comments: [{ body: "Suggested edit", author: { name: "Tibuntu" } }],
+        },
+        {
+          anchorExact: "cloud setup",
+          status: "ACTIVE",
+          threadStatus: "OPEN",
+          kind: "COMMENT",
+          comments: [{ body: "which provider?", author: { name: "Sam" } }],
+        },
+      ],
+      reviews: [],
+    };
+    const { threads } = consolidateFeedback(detail);
+    expect(threads[0]).toMatchObject({ kind: "SUGGESTION", suggestedText: "URLs" });
+    expect(threads[1].suggestedText).toBeNull();
+  });
+
+  it("surfaces the suggested replacement in the markdown digest", () => {
+    const detail: FeedbackDetail = {
+      state: "CHANGES_REQUESTED",
+      annotations: [
+        {
+          anchorExact: "services",
+          status: "ACTIVE",
+          threadStatus: "OPEN",
+          kind: "SUGGESTION",
+          suggestedText: "URLs",
+          comments: [{ body: "Suggested edit", author: { name: "Tibuntu" } }],
+        },
+      ],
+      reviews: [],
+    };
+    expect(consolidateFeedback(detail).markdown).toContain('Suggested replacement:_ "URLs"');
+  });
+});
