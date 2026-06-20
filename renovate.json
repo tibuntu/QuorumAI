@@ -1,28 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
+    "github>tibuntu/renovate-presets",
+    "github>tibuntu/renovate-presets:automerge",
+    "github>tibuntu/renovate-presets:groupDevDependencies",
+    "github>tibuntu/renovate-presets:semanticCommitType(*, fix)",
     "helpers:pinGitHubActionDigests"
   ],
-  "prFooter": "",
-  "semanticCommits": "enabled",
-  "semanticCommitType": "fix",
   "packageRules": [
     {
       "description": "Hold every update for 2 days after release so it clears pnpm's minimumReleaseAge supply-chain gate (24h cutoff in CI). Avoids ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION on freshly published versions.",
       "matchPackageNames": ["*"],
       "minimumReleaseAge": "2 days"
-    },
-    {
-      "description": "Group all devDependency updates into a single PR to minimise tooling churn.",
-      "matchDepTypes": ["devDependencies"],
-      "groupName": "dev dependencies"
-    },
-    {
-      "description": "Auto-merge non-major updates once required CI checks pass. Major bumps still require manual review.",
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest", "lockFileMaintenance"],
-      "automerge": true,
-      "automergeType": "pr"
     },
     {
       "description": "kysely is pinned via pnpm.overrides for better-auth compatibility; 0.29.x removes DEFAULT_MIGRATION_TABLE and breaks the Next build. Do not update until better-auth no longer needs the pin.",
