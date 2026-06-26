@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { prisma } from "@/lib/db";
-import { createDocument, getDocumentDetail, listDocuments } from "@/lib/documents";
+import { createDocument, getDocumentDetail, listDocuments, findPlanByIdempotencyKey } from "@/lib/documents";
 import { createAnnotation } from "@/lib/annotations";
 import { buildQuote } from "@/lib/anchoring";
 
@@ -73,5 +73,22 @@ describe("documents service", () => {
     expect(detail?.versions?.[0]?.createdBy?.name).toBe("Alex");
     expect(detail?.annotations?.[0]?.createdOnVersion?.versionNumber).toBe(1);
     await prisma.document.delete({ where: { id: docId } });
+  });
+
+  it("stores and finds a plan by idempotency key, scoped per owner (F6)", async () => {
+    const u = await makeUser();
+    const id = await createDocument(u.id, "T", "body", { idempotencyKey: "k-abc" });
+    expect((await findPlanByIdempotencyKey(u.id, "k-abc"))?.id).toBe(id);
+    // The same key under a different owner does not collide.
+    const u2 = await makeUser();
+    expect(await findPlanByIdempotencyKey(u2.id, "k-abc")).toBeNull();
+    await prisma.document.delete({ where: { id } });
+  });
+
+  it("rejects a duplicate (ownerId, idempotencyKey) so the route can dedupe (F6)", async () => {
+    const u = await makeUser();
+    const id = await createDocument(u.id, "T", "body", { idempotencyKey: "k-dup" });
+    await expect(createDocument(u.id, "T2", "body2", { idempotencyKey: "k-dup" })).rejects.toMatchObject({ code: "P2002" });
+    await prisma.document.delete({ where: { id } });
   });
 });

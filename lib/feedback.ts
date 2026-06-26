@@ -13,6 +13,7 @@ interface DetailAnnotation {
   kind?: string;
   status: string;
   threadStatus: string;
+  resolution?: string | null;
   severity?: string | null;
   category?: string | null;
   createdOnVersion?: { versionNumber: number } | null;
@@ -26,6 +27,7 @@ interface DetailVersion { versionNumber: number; createdAt?: Date | string; crea
 export interface FeedbackDetail {
   state: string;
   requiredApprovals?: number;
+  agentContext?: string | null;
   currentVersion?: { versionNumber: number } | null;
   versions?: DetailVersion[];
   annotations: DetailAnnotation[];
@@ -42,9 +44,16 @@ export interface FeedbackThread {
   kind: string;
   status: string;
   threadStatus: string;
+  // Why a RESOLVED thread was closed (FIXED / WONTFIX / OBSOLETE), else null —
+  // lets the agent tell "addressed" from "won't-fix" without guessing.
+  resolution: string | null;
   severity: string | null;
   category: string | null;
   anchorState: string;
+  // Binding signal for an autonomous consumer: an open BLOCKER it must not
+  // proceed past. Severity alone is advisory; this makes the obligation explicit
+  // in the payload (the agent still decides — no decision-math change).
+  mustResolve: boolean;
   raisedOnVersion: number | null;
   appliedInVersion: { versionNumber: number } | null;
   suggestedText: string | null;
@@ -111,9 +120,11 @@ export function consolidateFeedback(detail: FeedbackDetail) {
     kind: a.kind ?? "COMMENT",
     status: a.status, // backward-compat alias; Annotation.status IS the anchor state (ACTIVE/MOVED/ORPHANED)
     threadStatus: a.threadStatus,
+    resolution: a.resolution ?? null,
     severity: a.severity ?? null,
     category: a.category ?? null,
     anchorState: a.status, // canonical spec name for the same value as `status`
+    mustResolve: a.severity === "BLOCKER" && a.threadStatus === "OPEN",
     raisedOnVersion: a.createdOnVersion?.versionNumber ?? null,
     appliedInVersion: a.appliedInVersion ?? null,
     suggestedText: a.suggestedText ?? null,
@@ -132,6 +143,13 @@ export function consolidateFeedback(detail: FeedbackDetail) {
   const approvals = approvalCount(detail.reviews);
   const requiredApprovals = detail.requiredApprovals ?? 1;
 
+  // Reviewer-conflict signals: the app can't detect semantic conflicts (no
+  // LLM), but it can flag when humans are split so the agent escalates to a
+  // decider instead of picking a side.
+  const activeReviews = detail.reviews.filter((r) => !r.dismissed);
+  const reviewersRequestingChanges = activeReviews.filter((r) => r.verdict === "REQUEST_CHANGES").length;
+  const reviewerSplit = activeReviews.some((r) => r.verdict === "APPROVE") && activeReviews.some((r) => r.verdict === "REQUEST_CHANGES");
+
   const byCategory: Record<string, number> = {};
   const byVersion: Record<string, number> = {};
   for (const t of threads) {
@@ -144,8 +162,15 @@ export function consolidateFeedback(detail: FeedbackDetail) {
   }
   const rollup = {
     blocking: threads.filter((t) => t.severity === "BLOCKER").length,
+    // Open blockers an autonomous consumer must clear before proceeding. The
+    // agent gate is `mustResolve === 0 && decision === "approved"`.
+    mustResolve: threads.filter((t) => t.mustResolve).length,
     unresolved: threads.filter((t) => t.threadStatus === "OPEN").length,
     total: threads.length,
+    // ≥2 ⇒ multiple humans want changes (possibly conflicting); reviewerSplit ⇒
+    // some approve while others reject. Either way: reconcile, don't guess.
+    reviewersRequestingChanges,
+    reviewerSplit,
     byCategory,
     byVersion,
   };
@@ -180,6 +205,9 @@ export function consolidateFeedback(detail: FeedbackDetail) {
     state: detail.state,
     requiredApprovals,
     approvals,
+    // Echoed back so an agent resuming a multi-day review can recover the
+    // context it supplied on push (previously write-only).
+    agentContext: detail.agentContext ?? null,
     markdown: lines.join("\n"),
     currentVersion: detail.currentVersion?.versionNumber ?? null,
     versions,

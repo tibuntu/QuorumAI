@@ -59,6 +59,19 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+      # Agent-contract conformance: a real push→request-changes→revise→409→approve
+      # round-trip against a booted app, on its own port + throwaway DB. Re-derives
+      # the evidence transcripts on every run so the agent contract can't silently rot.
+      - name: Agent-contract harness
+        run: pnpm test:harness
+        env:
+          HARNESS_DB_URL: "file:${{ github.workspace }}/data/harness.db"
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: agent-contract-evidence
+          path: .planning/ai-integration/evidence/
+          retention-days: 7
 
   # Multi-arch build matrix: one native runner per platform (no QEMU). Each leg
   # builds, Trivy-scans, and pushes its single-arch image BY DIGEST (no tag). The

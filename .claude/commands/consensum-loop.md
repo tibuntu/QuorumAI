@@ -23,14 +23,14 @@ Loop until the decision is terminal **and acted upon**:
      curl -s "$CONSENSUM_BASE_URL/api/plans/<id>/feedback" -H "Authorization: Bearer $CONSENSUM_API_TOKEN"
      ```
 
-2. **On `decision == "approved"`:** announce it and **proceed to implement the plan now**, in the current session, honoring whatever permission mode the session is already in (do not attempt to escalate permissions). Stop looping.
+2. **On `decision == "approved"`:** first check the binding gate — fetch `feedback` and confirm `rollup.mustResolve == 0` (no OPEN blockers remain). If clear, announce it and **proceed to implement the plan now**, in the current session, honoring whatever permission mode the session is already in (do not attempt to escalate permissions); stop looping. If `rollup.mustResolve > 0` (the team approved with open blockers still on the board), do **not** implement — surface those blocker threads to the user, and keep looping / hold for an explicit go-ahead. Severity is advisory; `mustResolve` is the binding signal.
 
 3. **On `decision == "changes_requested"`:** pull the actionable threads —
    ```
-   curl -s "$CONSENSUM_BASE_URL/api/plans/<id>/feedback?include=blocking,unresolved" \
+   curl -s "$CONSENSUM_BASE_URL/api/plans/<id>/feedback?include=blocking,unresolved&exclude=orphaned" \
      -H "Authorization: Bearer $CONSENSUM_API_TOKEN"
    ```
-   Present them in severity order (BLOCKER → MAJOR → MINOR → NIT), revise the plan to address every point (blockers first), and post the revision:
+   (`exclude=orphaned` drops threads whose anchored text a prior revision already removed — nothing left to act on.) Present them in severity order (BLOCKER → MAJOR → MINOR → NIT), revise the plan to address every point (blockers first), and post the revision:
    ```
    curl -s -X PATCH "$CONSENSUM_BASE_URL/api/plans/<id>" -H "Authorization: Bearer $CONSENSUM_API_TOKEN" \
      -H 'content-type: application/json' \
@@ -38,4 +38,6 @@ Loop until the decision is terminal **and acted upon**:
    ```
    On HTTP 409 (`stale version`), re-`GET .../feedback`, take the new `currentVersion`, and retry once. Announce the revision, then **continue looping** — but do **not** re-revise on the *same* feedback: a revision keeps the reviewer's `changes_requested` until they re-review, so wait for the `reviews`/thread set to actually change (a new verdict or new comments) before treating it as a fresh round. Track the prior reviewer state to detect this.
 
-4. **Stop conditions:** approved (→ implemented), or no terminal decision after a generous number of waits — then report it's still pending and stop. Never loop indefinitely.
+   **Conflicting reviewers:** if `rollup.reviewersRequestingChanges >= 2` or `rollup.reviewerSplit` is true, reviewers disagree (or some approve while others reject) — do not guess a reconciliation; surface the opposing threads and pause for an agreed direction rather than auto-revising.
+
+4. **Stop conditions:** approved (→ implemented), or no terminal decision after a generous number of waits — then report it's still pending and stop. Never loop indefinitely. (Rationale for the differing caps: the interactive commands stop after ~5 minutes since a human is present to re-run them; the plan-mode `ExitPlanMode` hook waits up to 4 days because it must block an *unattended* agent through a full asynchronous team review. Match your cap to how long your reviewers realistically take.)

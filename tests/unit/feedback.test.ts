@@ -127,6 +127,95 @@ it("stamps schemaVersion and structured fields", () => {
   expect(r.threads[0]).toMatchObject({ id: "ann_a", severity: "BLOCKER", category: "security", anchorState: "ACTIVE", raisedOnVersion: 4 });
 });
 
+describe("mustResolve (binding-severity signal, F2)", () => {
+  it("marks an open BLOCKER mustResolve and counts it in the rollup", () => {
+    const r = consolidateFeedback({
+      state: "APPROVED",
+      annotations: [
+        baseThread({ id: "blk", severity: "BLOCKER", threadStatus: "OPEN" }),
+        baseThread({ id: "maj", severity: "MAJOR", threadStatus: "OPEN" }),
+      ],
+      reviews: [{ verdict: "APPROVE", dismissed: false, reviewer: { name: "Sam" } }],
+    });
+    const blk = r.threads.find((t) => t.id === "blk")!;
+    const maj = r.threads.find((t) => t.id === "maj")!;
+    expect(blk.mustResolve).toBe(true);
+    expect(maj.mustResolve).toBe(false);
+    expect(r.rollup.mustResolve).toBe(1);
+    // The canonical loop-12 trap: decision can be "approved" while a binding
+    // blocker is still open — the agent's gate is mustResolve===0 AND approved.
+    expect(r.decision).toBe("approved");
+    expect(r.rollup.mustResolve).toBeGreaterThan(0);
+  });
+
+  it("does not mark a resolved BLOCKER mustResolve", () => {
+    const r = consolidateFeedback({
+      state: "OPEN",
+      annotations: [baseThread({ id: "blk", severity: "BLOCKER", threadStatus: "RESOLVED" })],
+      reviews: [],
+    });
+    expect(r.threads[0].mustResolve).toBe(false);
+    expect(r.rollup.mustResolve).toBe(0);
+  });
+});
+
+describe("agentContext echo (F7)", () => {
+  it("echoes agentContext back in the payload", () => {
+    const r = consolidateFeedback({
+      state: "OPEN",
+      agentContext: "session abc123; branch feat/x",
+      annotations: [],
+      reviews: [],
+    });
+    expect(r.agentContext).toBe("session abc123; branch feat/x");
+  });
+
+  it("is null when none was supplied", () => {
+    const r = consolidateFeedback({ state: "OPEN", annotations: [], reviews: [] });
+    expect(r.agentContext).toBeNull();
+  });
+});
+
+describe("resolution reason echo (F7)", () => {
+  it("surfaces a thread's resolution when RESOLVED", () => {
+    const r = consolidateFeedback({
+      state: "OPEN",
+      annotations: [baseThread({ id: "r1", threadStatus: "RESOLVED", resolution: "WONTFIX" })],
+      reviews: [],
+    });
+    expect(r.threads[0].resolution).toBe("WONTFIX");
+  });
+  it("is null on an open thread", () => {
+    const r = consolidateFeedback({ state: "OPEN", annotations: [baseThread({ id: "o1" })], reviews: [] });
+    expect(r.threads[0].resolution).toBeNull();
+  });
+});
+
+describe("reviewer-conflict signals (F4)", () => {
+  it("counts distinct reviewers requesting changes and flags an approve/reject split", () => {
+    const r = consolidateFeedback({
+      state: "CHANGES_REQUESTED",
+      annotations: [],
+      reviews: [
+        { verdict: "REQUEST_CHANGES", dismissed: false, reviewer: { name: "A" } },
+        { verdict: "REQUEST_CHANGES", dismissed: false, reviewer: { name: "B" } },
+        { verdict: "APPROVE", dismissed: false, reviewer: { name: "C" } },
+      ],
+    });
+    expect(r.rollup.reviewersRequestingChanges).toBe(2);
+    expect(r.rollup.reviewerSplit).toBe(true);
+  });
+  it("is calm when reviewers agree", () => {
+    const r = consolidateFeedback({
+      state: "APPROVED",
+      annotations: [],
+      reviews: [{ verdict: "APPROVE", dismissed: false, reviewer: { name: "A" } }],
+    });
+    expect(r.rollup.reviewersRequestingChanges).toBe(0);
+    expect(r.rollup.reviewerSplit).toBe(false);
+  });
+});
+
 it("computes rollups; null severity not blocking, null category bucketed", () => {
   const r = consolidateFeedback({
     state: "CHANGES_REQUESTED",

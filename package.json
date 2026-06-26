@@ -11,6 +11,7 @@
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:harness": "DATABASE_URL=\"${HARNESS_DB_URL:-file:./data/harness.db}\" prisma migrate deploy && playwright test --config playwright.harness.config.ts",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "postinstall": "prisma generate",

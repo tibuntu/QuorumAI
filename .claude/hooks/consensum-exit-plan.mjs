@@ -8,10 +8,13 @@
 //   - CHANGES_REQUESTED -> returns `deny` + a feedback digest (Claude revises and
 //                          re-presents the plan, which re-fires this hook -> the loop)
 //
-// It NEVER blocks a developer who hasn't configured Consensum: with no token it
-// returns `allow` immediately. State is scoped per Claude Code `session_id`, so a
-// fresh session creates a new plan while a re-fired ExitPlanMode in the same
-// session PATCHes a new version of the same plan.
+// FAIL-CLOSED: if the hook is installed but cannot complete a review — no token,
+// push failure, plan vanished, or an unexpected error — it returns `deny` with a
+// clear, in-band message rather than silently proceeding with an un-reviewed plan.
+// To deliberately bypass review (e.g. Consensum not used on this project), set
+// CONSENSUM_SKIP=1 (or remove the hook). State is scoped per Claude Code
+// `session_id`, so a fresh session creates a new plan while a re-fired
+// ExitPlanMode in the same session PATCHes a new version of the same plan.
 //
 // Verified against the format plannotator (plannotator.ai) uses for ExitPlanMode.
 // If a future Claude Code version changes the handshake, `allowDecision` /
@@ -19,9 +22,12 @@
 
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { titleFromMarkdown, buildDigest, decide, allowPayload, denyPayload } from "./consensum-hook-core.mjs";
 
 const BASE = (process.env.CONSENSUM_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
 const TOKEN = process.env.CONSENSUM_API_TOKEN || "";
+const SKIP = process.env.CONSENSUM_SKIP === "1" || process.env.CONSENSUM_DISABLED === "1";
 const WAIT_MS = 30000; // per long-poll request
 const STALE_POLL_MS = 8000; // backoff while waiting for a re-review of our revision
 const MAX_MS = Number(process.env.CONSENSUM_LOOP_MAX_MS) || 4 * 24 * 60 * 60 * 1000; // safety deadline
@@ -32,8 +38,8 @@ function emit(obj) {
   process.stdout.write(JSON.stringify(obj));
   process.exit(0);
 }
-const allowDecision = () => emit({ hookSpecificOutput: { hookEventName: "PermissionRequest", decision: { behavior: "allow" } } });
-const denyDecision = (message) => emit({ hookSpecificOutput: { hookEventName: "PermissionRequest", decision: { behavior: "deny", message } } });
+const allowDecision = () => emit(allowPayload());
+const denyDecision = (message) => emit(denyPayload(message));
 
 function readStdin() {
   try {
@@ -65,10 +71,10 @@ function saveState(cwd, all) {
 
 const authHeaders = { Authorization: `Bearer ${TOKEN}`, "content-type": "application/json" };
 
-async function api(method, path, body) {
+async function api(method, path, body, extraHeaders) {
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: authHeaders,
+    headers: { ...authHeaders, ...(extraHeaders || {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   let json = null;
@@ -78,52 +84,6 @@ async function api(method, path, body) {
     /* empty body */
   }
   return { status: res.status, json };
-}
-
-function titleFromMarkdown(md) {
-  const m = (md || "").match(/^\s*#\s+(.+?)\s*$/m);
-  return (m && m[1].trim()) || "Plan";
-}
-
-// A digest of reviewer activity (NOT the version), so PATCHing a revision alone
-// does not look like new feedback — only an actual re-review does.
-function fingerprint(fb) {
-  const reviews = (fb.reviews || [])
-    .map((r) => `${r.reviewer}|${r.verdict}|${r.dismissed}`)
-    .sort()
-    .join(";");
-  const threads = (fb.threads || [])
-    .map((t) => {
-      const cs = t.comments || [];
-      const last = cs.length ? cs[cs.length - 1].body : "";
-      return `${t.id}|${t.threadStatus}|${cs.length}|${last}`;
-    })
-    .sort()
-    .join(";");
-  return `a=${fb.approvals};r=[${reviews}];t=[${threads}]`;
-}
-
-const SEV_RANK = { BLOCKER: 0, MAJOR: 1, MINOR: 2, NIT: 3 };
-function buildDigest(fb, reviewUrl) {
-  const lines = [
-    `The team reviewed your plan and requested changes (approvals ${fb.approvals}/${fb.requiredApprovals}).`,
-    `Blocking: ${fb.rollup?.blocking ?? 0}, unresolved: ${fb.rollup?.unresolved ?? 0}.`,
-    "",
-  ];
-  const threads = [...(fb.threads || [])].sort((a, b) => {
-    const ra = SEV_RANK[a.severity] ?? (a.threadStatus === "OPEN" ? 4 : 5);
-    const rb = SEV_RANK[b.severity] ?? (b.threadStatus === "OPEN" ? 4 : 5);
-    return ra - rb;
-  });
-  if (threads.length === 0) lines.push("_No inline comments — see the review for verdict rationale._");
-  for (const t of threads) {
-    const sev = t.severity ? `[${t.severity}] ` : "";
-    const cs = t.comments || [];
-    const last = cs.length ? cs[cs.length - 1].body : "(no comment)";
-    lines.push(`- ${sev}On "${t.quote ?? "(unanchored)"}": ${last}`);
-  }
-  lines.push("", `Full review: ${reviewUrl}`, "Revise the plan to address every point (blockers first), then present the updated plan.");
-  return lines.join("\n");
 }
 
 // ---- main --------------------------------------------------------------------
@@ -136,8 +96,13 @@ async function main() {
 
   if (!plan) allowDecision(); // nothing to review
   if (!TOKEN) {
-    process.stderr.write("[consensum] CONSENSUM_API_TOKEN not set — skipping review, proceeding.\n");
-    allowDecision();
+    if (SKIP) allowDecision(); // deliberate opt-out
+    // Fail CLOSED: the hook is installed but misconfigured. Don't ship un-reviewed.
+    denyDecision(
+      "Consensum review is enabled (the ExitPlanMode hook is installed) but CONSENSUM_API_TOKEN is not set, " +
+        "so the plan cannot be submitted for review. Set CONSENSUM_API_TOKEN (and CONSENSUM_BASE_URL) and re-present " +
+        "the plan, or set CONSENSUM_SKIP=1 to deliberately bypass review for this session."
+    );
   }
 
   const all = loadState(cwd);
@@ -153,8 +118,11 @@ async function main() {
       const current = snap.json?.currentVersion;
       if (typeof current === "number") {
         const retry = await api("PATCH", `/api/plans/${entry.planId}`, { markdown: plan, baseVersionNumber: current });
-        if (!retry.json?.unchanged && retry.json?.version?.versionNumber) entry.baseVersionNumber = retry.json.version.versionNumber;
-        else entry.baseVersionNumber = current;
+        if (retry.json?.version?.versionNumber) entry.baseVersionNumber = retry.json.version.versionNumber;
+        else if (retry.json?.unchanged) entry.baseVersionNumber = current;
+        // else: retry itself failed (e.g. another concurrent bump) — leave
+        // baseVersionNumber untouched and re-sync on the next iteration rather
+        // than persisting a value we know to be stale.
       }
     } else if (patch.status === 404) {
       entry = undefined; // plan vanished (deleted / not owned) — fall through to a fresh push
@@ -165,10 +133,15 @@ async function main() {
   }
 
   if (!entry?.planId) {
-    const created = await api("POST", "/api/plans", { title: titleFromMarkdown(plan), markdown: plan });
+    // Idempotency-Key makes a retried create return the same plan instead of a duplicate.
+    const idemKey = `${sessionId}:${titleFromMarkdown(plan)}`;
+    const created = await api("POST", "/api/plans", { title: titleFromMarkdown(plan), markdown: plan }, { "Idempotency-Key": idemKey });
     if (created.status >= 400 || !created.json?.id) {
-      process.stderr.write(`[consensum] push failed (HTTP ${created.status}) — proceeding without review.\n`);
-      allowDecision();
+      // Fail CLOSED: the push failed, so the plan was not reviewed.
+      denyDecision(
+        `Consensum push failed (HTTP ${created.status}). The plan was NOT submitted for review, so I won't proceed. ` +
+          `Check CONSENSUM_BASE_URL/CONSENSUM_API_TOKEN, then re-present the plan to retry.`
+      );
     }
     entry = { planId: created.json.id, baseVersionNumber: 1, lastFingerprint: undefined };
     reviewUrl = created.json.reviewUrl || `${BASE}/app/documents/${entry.planId}`;
@@ -185,7 +158,13 @@ async function main() {
     // (a revision we already relayed, awaiting re-review), the wait endpoint
     // returns instantly, so back off with a fixed sleep before re-reading.
     const pendingProbe = await api("GET", `/api/plans/${entry.planId}/feedback`);
-    if (pendingProbe.status === 404) allowDecision(); // plan gone — don't trap the agent
+    if (pendingProbe.status === 404) {
+      // Fail CLOSED: the plan vanished mid-review (deleted / access revoked).
+      denyDecision(
+        `Consensum plan ${entry.planId} is no longer available (HTTP 404) — it may have been deleted or access revoked. ` +
+          `I won't proceed without review; re-present the plan to start a fresh review.`
+      );
+    }
     if (pendingProbe.json?.decision === "pending") {
       const waited = await api("GET", `/api/plans/${entry.planId}/feedback/wait?timeoutMs=${WAIT_MS}`);
       fb = waited.json || pendingProbe.json;
@@ -193,21 +172,20 @@ async function main() {
       fb = pendingProbe.json;
     }
 
-    if (fb?.decision === "approved") {
+    const verdict = decide(fb, entry.lastFingerprint);
+    if (verdict.action === "allow") {
       delete all[sessionId];
       saveState(cwd, all);
       allowDecision();
     }
-
-    if (fb?.decision === "changes_requested") {
-      const fp = fingerprint(fb);
-      if (fp !== entry.lastFingerprint) {
-        // New reviewer activity on the current version — relay it and let the agent revise.
-        entry.lastFingerprint = fp;
-        all[sessionId] = entry;
-        saveState(cwd, all);
-        denyDecision(buildDigest(fb, reviewUrl));
-      }
+    if (verdict.action === "deny") {
+      // New reviewer activity on the current version — relay it and let the agent revise.
+      entry.lastFingerprint = verdict.fingerprint;
+      all[sessionId] = entry;
+      saveState(cwd, all);
+      denyDecision(buildDigest(fb, reviewUrl));
+    }
+    if (verdict.action === "wait") {
       // Stale: same verdict we already relayed; reviewer hasn't re-reviewed our
       // revision yet. Wait quietly.
       await new Promise((r) => setTimeout(r, STALE_POLL_MS));
@@ -219,8 +197,18 @@ async function main() {
   denyDecision(`Plan still pending team review after the configured wait window. Re-enter plan mode and present it again when you're ready to retry. Review: ${reviewUrl}`);
 }
 
-main().catch((err) => {
-  // On any unexpected failure, fail OPEN so the agent is never trapped.
-  process.stderr.write(`[consensum] hook error: ${err?.stack || err}\n`);
-  allowDecision();
-});
+// Only run the blocking hook when executed directly (not when imported by a test).
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (isDirectRun) {
+  main().catch((err) => {
+    // FAIL CLOSED: on any unexpected failure, refuse to proceed with an
+    // un-reviewed plan and surface the reason in-band to the agent.
+    process.stderr.write(`[consensum] hook error: ${err?.stack || err}\n`);
+    denyDecision(
+      `Consensum review hook hit an unexpected error (${err?.message || err}). ` +
+        `I won't proceed without review; re-present the plan to retry, or set CONSENSUM_SKIP=1 to bypass.`
+    );
+  });
+}
+
+export { main };

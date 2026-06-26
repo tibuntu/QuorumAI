@@ -13,6 +13,11 @@ export type AnchorStatus = (typeof ANCHOR_STATUSES)[number];
 export const THREAD_STATUSES = ["OPEN", "RESOLVED"] as const;
 export type ThreadStatus = (typeof THREAD_STATUSES)[number];
 
+// Why a thread was resolved, so an autonomous consumer can tell "addressed"
+// from "won't-fix" from "no longer relevant".
+export const RESOLUTIONS = ["FIXED", "WONTFIX", "OBSOLETE"] as const;
+export type Resolution = (typeof RESOLUTIONS)[number];
+
 export const REVIEW_VERDICTS = ["APPROVE", "REQUEST_CHANGES", "COMMENT"] as const;
 export type ReviewVerdict = (typeof REVIEW_VERDICTS)[number];
 

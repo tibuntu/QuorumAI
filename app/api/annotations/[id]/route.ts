@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/api";
 import { setThreadStatus } from "@/lib/annotations";
-import { THREAD_STATUSES, type ThreadStatus } from "@/lib/enums";
+import { THREAD_STATUSES, type ThreadStatus, RESOLUTIONS, type Resolution } from "@/lib/enums";
 import { documentIdForAnnotation, isParticipant } from "@/lib/authz";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +16,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!body || !THREAD_STATUSES.includes(body.threadStatus as ThreadStatus)) {
     return NextResponse.json({ error: "valid threadStatus required" }, { status: 400 });
   }
-  const annotation = await setThreadStatus(user.id, id, body.threadStatus as ThreadStatus);
+  let resolution: Resolution | undefined;
+  if (body.resolution != null) {
+    if (typeof body.resolution !== "string" || !RESOLUTIONS.includes(body.resolution as Resolution)) {
+      return NextResponse.json({ error: `resolution must be one of ${RESOLUTIONS.join(", ")}` }, { status: 400 });
+    }
+    resolution = body.resolution as Resolution;
+  }
+  const annotation = await setThreadStatus(user.id, id, body.threadStatus as ThreadStatus, resolution);
   return NextResponse.json({ annotation });
 }

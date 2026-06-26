@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import type { Quote } from "@/lib/anchoring";
 import { relocate } from "@/lib/anchoring";
 import { createVersion } from "@/lib/versions";
-import type { AnnotationKind, Severity, ThreadStatus } from "@/lib/enums";
+import type { AnnotationKind, Severity, ThreadStatus, Resolution } from "@/lib/enums";
 import { publish } from "@/lib/events";
 import { notifyParticipants } from "@/lib/notifications";
 import { dispatch } from "@/lib/webhooks";
@@ -51,8 +51,12 @@ export async function addComment(userId: string, annotationId: string, body: str
   return comment;
 }
 
-export async function setThreadStatus(userId: string, annotationId: string, status: ThreadStatus) {
-  const annotation = await prisma.annotation.update({ where: { id: annotationId }, data: { threadStatus: status } });
+export async function setThreadStatus(userId: string, annotationId: string, status: ThreadStatus, resolution?: Resolution | null) {
+  const annotation = await prisma.annotation.update({
+    where: { id: annotationId },
+    // Resolution reason is meaningful only while RESOLVED; reopening clears it.
+    data: { threadStatus: status, resolution: status === "RESOLVED" ? (resolution ?? null) : null },
+  });
   publish(annotation.documentId, { type: "annotation.updated", annotationId, threadStatus: status });
   await notifyParticipants(annotation.documentId, userId, "resolve").catch(() => {});
   return annotation;
@@ -107,7 +111,7 @@ export async function applySuggestion(userId: string, annotationId: string, base
 
   const updated = await prisma.annotation.update({
     where: { id: annotationId },
-    data: { appliedInVersionId: appliedVersionId, threadStatus: "RESOLVED" },
+    data: { appliedInVersionId: appliedVersionId, threadStatus: "RESOLVED", resolution: "FIXED" },
   });
   publish(annotation.documentId, { type: "annotation.updated", annotationId, threadStatus: "RESOLVED" });
 

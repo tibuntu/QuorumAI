@@ -6,7 +6,7 @@ export async function createDocument(
   userId: string,
   title: string,
   markdown: string,
-  opts?: { source?: DocumentSource; agentContext?: string; requiredApprovals?: number }
+  opts?: { source?: DocumentSource; agentContext?: string; requiredApprovals?: number; idempotencyKey?: string }
 ) {
   const doc = await prisma.document.create({
     data: {
@@ -15,6 +15,7 @@ export async function createDocument(
       state: "OPEN",
       source: opts?.source ?? "WEB",
       agentContext: opts?.agentContext ?? null,
+      idempotencyKey: opts?.idempotencyKey ?? null,
       requiredApprovals: opts?.requiredApprovals ?? 1,
     },
   });
@@ -30,6 +31,12 @@ export async function createDocument(
   await prisma.document.update({ where: { id: doc.id }, data: { currentVersionId: version.id } });
   await prisma.documentParticipant.create({ data: { documentId: doc.id, userId } });
   return doc.id;
+}
+
+/** Idempotent-create support: find an owner's plan previously created with
+ *  the same client idempotency key, if any. */
+export async function findPlanByIdempotencyKey(ownerId: string, idempotencyKey: string) {
+  return prisma.document.findFirst({ where: { ownerId, idempotencyKey }, select: { id: true } });
 }
 
 /** Hard-delete a document and all dependents. Ordered to satisfy the

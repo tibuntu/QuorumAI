@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api";
 import { createVersion, ConcurrencyError } from "@/lib/versions";
 import { isOwner } from "@/lib/authz";
+import { maxPlanBytes } from "@/lib/config";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authd = await requireApiUser(req);
@@ -12,6 +13,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const body = await req.json().catch(() => null);
   if (!body || typeof body.markdown !== "string" || typeof body.baseVersionNumber !== "number") {
     return NextResponse.json({ error: "markdown and baseVersionNumber required" }, { status: 400 });
+  }
+  const maxBytes = maxPlanBytes();
+  if (Buffer.byteLength(body.markdown, "utf8") > maxBytes) {
+    return NextResponse.json({ error: `markdown exceeds ${maxBytes} bytes` }, { status: 413 });
   }
   try {
     const result = await createVersion(authd.user.id, id, body.baseVersionNumber, body.markdown);
