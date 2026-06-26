@@ -5,7 +5,8 @@
     "github>tibuntu/renovate-presets:automerge",
     "github>tibuntu/renovate-presets:groupDevDependencies",
     "github>tibuntu/renovate-presets:semanticCommitType(*, fix)",
-    "helpers:pinGitHubActionDigests"
+    "helpers:pinGitHubActionDigests",
+    "github>tibuntu/renovate-presets:githubMatrixRunners"
   ],
   "packageRules": [
     {

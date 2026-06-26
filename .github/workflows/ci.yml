@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   lint-test-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # Absolute path so the prisma CLI (migrate) and vitest open the SAME SQLite file
       # regardless of each process's working directory.
@@ -37,7 +37,7 @@ jobs:
       - run: pnpm build
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       DATABASE_URL: "file:${{ github.workspace }}/data/app.db"
       AUTH_SECRET: "ci-secret-not-for-production-change-me-32+"
@@ -75,7 +75,7 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
     env:
@@ -163,7 +163,7 @@ jobs:
   # multi-arch manifest list and apply the real tags. Runs only when the matrix
   # actually pushed (never on PRs).
   docker-merge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: docker
     if: github.event_name != 'pull_request'
     permissions:
