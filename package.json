@@ -2,7 +2,7 @@
   "name": "consensum",
   "version": "0.8.0",
   "private": true,
-  "packageManager": "pnpm@11.7.0",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
