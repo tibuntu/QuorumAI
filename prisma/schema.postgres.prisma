@@ -1,0 +1,259 @@
+// AUTO-GENERATED from prisma/schema.prisma — DO NOT EDIT.
+// Regenerate with: node scripts/gen-postgres-schema.mjs
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  role          String?   @default("member")
+  notificationPrefs Json?
+  sessions      Session[]
+  accounts      Account[]
+  apiTokens        ApiToken[]
+  webhooks         Webhook[]
+  ownedDocuments   Document[]        @relation("DocumentOwner")
+  authoredVersions DocumentVersion[]
+  annotations      Annotation[]
+  comments         Comment[]
+  reviews          Review[]
+  notifications    Notification[]
+  documentParticipations DocumentParticipant[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@index([userId])
+  @@unique([accountId, providerId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime
+  updatedAt  DateTime
+
+  @@index([identifier])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  label      String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  scopes     String    @default("plans:write,feedback:read")
+
+  @@index([userId])
+}
+
+model Document {
+  id                String           @id @default(cuid())
+  title             String
+  ownerId           String
+  owner             User             @relation("DocumentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  state             String           @default("DRAFT")
+  requiredApprovals Int              @default(1)
+  source            String           @default("WEB")
+  agentContext      String?
+  idempotencyKey    String?                            // client-supplied key for idempotent create
+  currentVersionId  String?          @unique
+  currentVersion    DocumentVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  versions          DocumentVersion[] @relation("DocumentVersions")
+  annotations       Annotation[]
+  reviews           Review[]
+  notifications     Notification[]
+  participants      DocumentParticipant[]
+
+  @@unique([ownerId, idempotencyKey])
+  @@index([ownerId])
+  @@index([state])
+}
+
+model DocumentVersion {
+  id            String   @id @default(cuid())
+  documentId    String
+  document      Document @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  markdown      String
+  contentHash   String
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  currentFor         Document?    @relation("CurrentVersion")
+  annotationsCreated Annotation[] @relation("AnnotationVersion")
+  appliedSuggestions Annotation[] @relation("AnnotationAppliedVersion")
+  reviewsOn          Review[]     @relation("ReviewVersion")
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId])
+  @@index([createdById])
+}
+
+model Annotation {
+  id                 String   @id @default(cuid())
+  documentId         String
+  document           Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdOnVersionId String
+  createdOnVersion   DocumentVersion @relation("AnnotationVersion", fields: [createdOnVersionId], references: [id], onDelete: Restrict)
+  kind               String   @default("COMMENT")
+  anchorExact        String?
+  anchorPrefix       String?
+  anchorSuffix       String?
+  startOffset        Int?
+  endOffset          Int?
+  status             String   @default("ACTIVE")
+  threadStatus       String   @default("OPEN")
+  resolution         String?  // why RESOLVED: FIXED | WONTFIX | OBSOLETE (see lib/enums.ts RESOLUTIONS)
+  severity           String?  // BLOCKER | MAJOR | MINOR | NIT (nullable; see lib/enums.ts SEVERITIES)
+  category           String?  // free-form short tag, e.g. "security", "scope", "naming"
+  authorId           String
+  author             User     @relation(fields: [authorId], references: [id])
+  createdAt          DateTime @default(now())
+  comments           Comment[]
+  suggestedText      String?
+  appliedInVersionId String?
+  appliedInVersion   DocumentVersion? @relation("AnnotationAppliedVersion", fields: [appliedInVersionId], references: [id], onDelete: Restrict)
+
+  @@index([documentId])
+  @@index([createdOnVersionId])
+  @@index([authorId])
+  @@index([appliedInVersionId])
+}
+
+model Comment {
+  id           String     @id @default(cuid())
+  annotationId String
+  annotation   Annotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id])
+  body         String
+  createdAt    DateTime   @default(now())
+
+  @@index([annotationId])
+  @@index([authorId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  reviewerId  String
+  reviewer    User     @relation(fields: [reviewerId], references: [id])
+  verdict     String
+  onVersionId String
+  onVersion   DocumentVersion @relation("ReviewVersion", fields: [onVersionId], references: [id], onDelete: Restrict)
+  dismissed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+  @@index([onVersionId])
+  @@index([reviewerId])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  type       String
+  actorId    String?
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([documentId])
+}
+
+model DocumentParticipant {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([documentId, userId])
+  @@index([userId])
+}
+
+model Webhook {
+  id              String   @id @default(cuid())
+  ownerId         String
+  owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  documentId      String?                       // null = all owner's documents
+  url             String
+  secretEnc       String                        // reveal-once; "v1:<iv>:<tag>:<ct>" (AES-256-GCM) or "v0:<plain>"
+  events          String                        // CSV filter: version.created,review.updated,…
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  lastStatus      String?                       // e.g. "200" | "DEAD"
+  lastError       String?
+  lastDeliveredAt DateTime?
+
+  @@index([ownerId])
+  @@index([documentId])
+}
+
+model OutboxJob {
+  id            String   @id @default(cuid())
+  type          String                       // "email.digest" | "webhook.deliver"
+  payload       String                       // JSON string (SQLite has no native JSON)
+  status        String   @default("PENDING") // PENDING | DELIVERING | DONE | DEAD
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(6)
+  nextAttemptAt DateTime @default(now())
+  lastError     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, nextAttemptAt])
+}

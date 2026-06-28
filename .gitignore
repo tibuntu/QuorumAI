@@ -36,6 +36,7 @@ test-results/
 
 # The user's global ~/.gitignore ignores *.sql; Prisma migrations MUST be tracked.
 !prisma/migrations/**/*.sql
+!prisma/migrations-postgres/**/*.sql
 .superpowers/
 
 # Internal GSD planning artifacts — not tracked in the public repo
