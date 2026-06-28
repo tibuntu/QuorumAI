@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 // The hook's verdict logic, extracted to a side-effect-free module so it can be
 // exercised without the blocking I/O loop.
-import { decide, fingerprint, buildDigest, titleFromMarkdown, allowPayload, denyPayload } from "../../.claude/hooks/consensum-hook-core.mjs";
+import { decide, fingerprint, buildDigest, titleFromMarkdown, allowPayload, denyPayload } from "../../dist/claude/hooks/consensum-hook-core.mjs";
 
 const approved = { decision: "approved", approvals: 1, reviews: [], threads: [] };
 const changes = (over: Record<string, unknown> = {}) => ({

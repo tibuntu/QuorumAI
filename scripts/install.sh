@@ -37,7 +37,7 @@ SRC=""
 _self="${BASH_SOURCE[0]:-}"
 if [ -n "$_self" ] && [ -f "$_self" ]; then
   _dir="$(cd "$(dirname "$_self")/.." && pwd)"
-  [ -f "$_dir/.claude/commands/consensum-push-plan.md" ] && SRC="$_dir"
+  [ -f "$_dir/dist/claude/commands/consensum-push-plan.md" ] && SRC="$_dir"
 fi
 
 # defaults / args
@@ -78,7 +78,7 @@ provide() {
 echo "Installing Consensum slash commands -> $COMMANDS_DIR"
 [ -n "$SRC" ] || echo "  (downloading from $RAW_BASE)"
 for f in "${COMMANDS[@]}"; do
-  provide ".claude/commands/$f" "$COMMANDS_DIR/$f"
+  provide "dist/claude/commands/$f" "$COMMANDS_DIR/$f"
   info "$f"
 done
 
@@ -86,8 +86,11 @@ done
 if [ "$WITH_HOOK" -eq 1 ]; then
   SETTINGS="$PROJECT_DIR/.claude/settings.json"
   echo "Installing ExitPlanMode hook -> $PROJECT_DIR/.claude"
-  provide ".claude/hooks/consensum-exit-plan.mjs" "$PROJECT_DIR/.claude/hooks/consensum-exit-plan.mjs"
+  provide "dist/claude/hooks/consensum-exit-plan.mjs" "$PROJECT_DIR/.claude/hooks/consensum-exit-plan.mjs"
   info "hooks/consensum-exit-plan.mjs"
+  # The entry hook imports ./consensum-hook-core.mjs at runtime, so it must ship too.
+  provide "dist/claude/hooks/consensum-hook-core.mjs" "$PROJECT_DIR/.claude/hooks/consensum-hook-core.mjs"
+  info "hooks/consensum-hook-core.mjs"
 
   read -r -d '' HOOK_ENTRY <<'JSON' || true
 {

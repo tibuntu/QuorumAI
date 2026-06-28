@@ -122,7 +122,7 @@ for the rationale.
 
 ## Connecting your agent
 
-The hero loop is driven by two Claude Code slash commands shipped in [`.claude/commands/`](.claude/commands/): [`/consensum-push-plan`](.claude/commands/consensum-push-plan.md) and [`/consensum-pull-feedback`](.claude/commands/consensum-pull-feedback.md). They talk to your instance via the machine API.
+The hero loop is driven by two Claude Code slash commands shipped in [`dist/claude/commands/`](dist/claude/commands/): [`/consensum-push-plan`](dist/claude/commands/consensum-push-plan.md) and [`/consensum-pull-feedback`](dist/claude/commands/consensum-pull-feedback.md). They talk to your instance via the machine API.
 
 **Install** them with the one-liner (no checkout needed):
 
@@ -145,14 +145,14 @@ Then from any agent session: `/consensum-push-plan` posts the current plan and r
 
 ### Auto-proceed (hands-off loop)
 
-For a fully hands-off loop — the agent waits for the verdict and **proceeds on its own** once approved — Consensum ships a Claude Code hook on the `ExitPlanMode` tool ([`.claude/hooks/consensum-exit-plan.mjs`](.claude/hooks/consensum-exit-plan.mjs), registered in [`.claude/settings.json`](.claude/settings.json)). When the agent finishes planning, the hook **blocks inside the plan-exit call**: it pushes the plan, waits on `/feedback/wait`, and then
+For a fully hands-off loop — the agent waits for the verdict and **proceeds on its own** once approved — Consensum ships a Claude Code hook on the `ExitPlanMode` tool ([`dist/claude/hooks/consensum-exit-plan.mjs`](dist/claude/hooks/consensum-exit-plan.mjs)), which `--with-hook` installs into your project's `.claude/hooks/` and registers in that project's `.claude/settings.json`. When the agent finishes planning, the hook **blocks inside the plan-exit call**: it pushes the plan, waits on `/feedback/wait`, and then
 
 - **Approved** → returns `allow`; the agent exits plan mode and implements automatically.
 - **Changes requested** → returns `deny` with a consolidated feedback digest; the agent revises and re-presents the plan, which re-fires the hook (PATCHing a new version) — that's the loop.
 
-State is scoped per Claude Code `session_id` (persisted in a git-ignored `.consensum/`), so a new session opens a new review while a re-presented plan revises the same one. With no `CONSENSUM_API_TOKEN` set the hook fails open (proceeds immediately), so it never blocks an unconfigured developer.
+State is scoped per Claude Code `session_id` (persisted in a git-ignored `.consensum/`), so a new session opens a new review while a re-presented plan revises the same one. With no `CONSENSUM_API_TOKEN` set the hook **fails closed** — it blocks plan-mode exit rather than shipping an unreviewed plan — so set `CONSENSUM_SKIP=1` (or omit `--with-hook`) on projects that don't use Consensum review.
 
-For plans pushed **outside** plan mode, [`/consensum-loop <id> [intervalMinutes]`](.claude/commands/consensum-loop.md) does the same wait-then-act loop on demand.
+For plans pushed **outside** plan mode, [`/consensum-loop <id> [intervalMinutes]`](dist/claude/commands/consensum-loop.md) does the same wait-then-act loop on demand.
 
 > **Permission mode is not auto-applied.** A team-chosen "implement with Accept Edits / Auto" setting is intentionally **deferred**: Claude Code does not let a hook switch the session's permission mode on approval ([claude-code#14044](https://github.com/anthropics/claude-code/issues/14044), closed as not-planned). The agent implements under whatever mode the session is already in.
 
