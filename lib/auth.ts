@@ -14,8 +14,12 @@ const trustedOrigins = [
 
 const oidcConfigured = isOidcConfigured();
 
+// Match the better-auth Prisma adapter dialect to the active database, the same
+// way lib/db.ts selects its driver adapter.
+const dbProvider = /^postgres(ql)?:\/\//.test(process.env.DATABASE_URL ?? "") ? "postgresql" : "sqlite";
+
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, { provider: "sqlite" }),
+  database: prismaAdapter(prisma, { provider: dbProvider }),
   secret: process.env.AUTH_SECRET,
   baseURL: baseUrl(),
   trustedOrigins,
@@ -23,7 +27,9 @@ export const auth = betterAuth({
   // test environment (which runs a production build) to opt out so the e2e
   // suite's burst of registrations isn't throttled. Production deployments
   // never set DISABLE_RATE_LIMIT, so they stay protected.
-  rateLimit: { enabled: process.env.NODE_ENV === "production" && process.env.DISABLE_RATE_LIMIT !== "true" },
+  // storage: "database" keeps the rate-limit counter shared across replicas — the
+  // default in-memory store is per-process and bypassable behind a load balancer.
+  rateLimit: { enabled: process.env.NODE_ENV === "production" && process.env.DISABLE_RATE_LIMIT !== "true", storage: "database" },
   // Self-service password signup is disabled under SSO so an attacker can't
   // pre-register an unverified email that a later OIDC sign-in would link into
   // (ADR-Security-000, D5a). Password LOGIN for existing users is unaffected.
