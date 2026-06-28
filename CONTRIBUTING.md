@@ -16,8 +16,8 @@ pnpm dev                  # → http://localhost:3000
 ```
 
 The `.env` file is gitignored — never commit secrets. `.env.example` documents every
-supported variable; see the [README](README.md) for the optional integrations (OIDC SSO,
-SMTP email, outbound webhooks).
+supported variable; see [docs/operations.md](docs/operations.md) for the optional
+integrations (OIDC SSO, SMTP email, outbound webhooks).
 
 > If you pull changes that touch the Prisma schema or migrations, re-run
 > `pnpm db:migrate` and regenerate the client (`pnpm prisma generate`) — the generated
@@ -45,8 +45,7 @@ The codebase follows a strict layering: **pure libs → services → thin routes
 - API routes in `app/api/*` stay thin — parse, authorize, delegate, respond.
 - Shared value-sets live in `lib/enums.ts`.
 
-See the [Project layout](README.md#project-layout) section of the README for where things
-go.
+See [docs/architecture.md](docs/architecture.md) for the project layout and where things go.
 
 ## Commit messages
 
