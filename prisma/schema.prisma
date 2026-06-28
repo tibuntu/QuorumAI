@@ -256,3 +256,12 @@ model OutboxJob {
 
   @@index([status, nextAttemptAt])
 }
+
+// better-auth rate-limit store (rateLimit.storage = "database"). better-auth manages
+// rows; lastRequest is an epoch-ms timestamp so it must be BigInt, not Int.
+model RateLimit {
+  id          String  @id
+  key         String?
+  count       Int?
+  lastRequest BigInt?
+}
