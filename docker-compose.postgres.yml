@@ -1,0 +1,74 @@
+# Multi-replica reference: Postgres + a one-shot migration + two active-active app
+# replicas behind a round-robin reverse proxy. This mirrors how a Kubernetes
+# Deployment (2+ pods) plus a migration Job/initContainer would be wired. The plain
+# `docker-compose.yml` remains the single-container SQLite quickstart.
+#
+#   AUTH_SECRET="$(openssl rand -base64 32)" docker compose -f docker-compose.postgres.yml up --build
+#   open http://localhost:8080
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: consensum
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-consensum}
+      POSTGRES_DB: consensum
+    volumes:
+      - consensum-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U consensum -d consensum"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: apply the Postgres migration lineage once, before any replica starts.
+  # The Kubernetes analog is a migration Job (or an initContainer).
+  migrate:
+    image: consensum-pg:local
+    command: ["sh", "-c", "cd /app/_prisma && node node_modules/prisma/build/index.js migrate deploy"]
+    environment:
+      DB_PROVIDER: postgres
+      DATABASE_URL: postgresql://consensum:${POSTGRES_PASSWORD:-consensum}@db:5432/consensum
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app1:
+    image: consensum-pg:local
+    build:
+      context: .
+      args:
+        DB_PROVIDER: postgres
+    environment: &app-env
+      DB_PROVIDER: postgres
+      DATABASE_URL: postgresql://consensum:${POSTGRES_PASSWORD:-consensum}@db:5432/consensum
+      RUN_MIGRATIONS_ON_START: "false" # the one-shot migrate service handles it
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET (>= 32 chars)}
+      BASE_URL: ${BASE_URL:-http://localhost:8080}
+      TRUSTED_ORIGINS: ${BASE_URL:-http://localhost:8080}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  app2:
+    image: consensum-pg:local
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  proxy:
+    image: caddy:2-alpine
+    volumes:
+      - ./docker/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - app1
+      - app2
+
+volumes:
+  consensum-pg:

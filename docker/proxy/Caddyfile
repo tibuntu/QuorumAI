@@ -1,0 +1,6 @@
+# Round-robins across the two app replicas (Caddy load-balances multiple upstreams
+# by default). Plain HTTP on :80 for a local reference; a real deployment terminates
+# TLS at its ingress/load balancer instead.
+:80 {
+	reverse_proxy app1:3000 app2:3000
+}
