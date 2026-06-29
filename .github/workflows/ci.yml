@@ -12,8 +12,42 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded PR runs; never cancel main/tag runs (they build+push images).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # Skip re-running the test suite on a push to main when the commit already
+  # arrived via a merged PR (validated there). Direct pushes to main and tag
+  # pushes still run. The docker job below still runs on main regardless (it
+  # builds and pushes the image) — see its `if`.
+  gate:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          prs=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq 'length')
+          if [ "$prs" -gt 0 ]; then
+            echo "From a merged PR — already validated; skipping test re-run on main."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   lint-test-build:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-24.04
     env:
       # Absolute path so the prisma CLI (migrate) and vitest open the SAME SQLite file
@@ -39,6 +73,8 @@ jobs:
       - run: pnpm build
 
   e2e:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-24.04
     env:
       DATABASE_URL: "file:${{ github.workspace }}/data/app.db"
@@ -78,6 +114,8 @@ jobs:
   # Provider parity: run the same unit suite against a real PostgreSQL service so the
   # dual-DB support can't silently regress. SQLite coverage stays in lint-test-build.
   test-postgres:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -116,9 +154,17 @@ jobs:
   # are compiled/generated on the real target arch — no emulation.
   docker:
     runs-on: ${{ matrix.runner }}
-    # Gate the (expensive, multi-arch) image build on a green test suite: only
-    # build/scan/push once lint+unit+build and the e2e/agent-contract suite pass.
+    # Gate the (expensive, multi-arch) image build on a green test suite: build
+    # only once lint+unit+build and the e2e/agent-contract suite pass — OR were
+    # skipped because the gate already validated this commit on its PR (a push to
+    # main from a merged PR). `result != 'failure'` covers success + skipped while
+    # still blocking on a genuine test failure.
     needs: [lint-test-build, e2e, test-postgres]
+    if: >-
+      !cancelled() &&
+      needs.lint-test-build.result != 'failure' &&
+      needs.e2e.result != 'failure' &&
+      needs.test-postgres.result != 'failure'
     permissions:
       contents: read
       packages: write # required to push images to GHCR
