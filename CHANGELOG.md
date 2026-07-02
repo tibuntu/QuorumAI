@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.1](https://github.com/tibuntu/consensum/compare/v0.11.0...v0.11.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* **deps:** update better-auth monorepo to v1.6.23 ([061785b](https://github.com/tibuntu/consensum/commit/061785bcd8d090f7cec589b814d4fcd2a46add17))
+* **deps:** update dev dependencies to v4.3.2 ([d2ece3b](https://github.com/tibuntu/consensum/commit/d2ece3bfddbb0c490d72aa5137df4ecae6bf81ed))
+
 ## [0.11.0](https://github.com/tibuntu/consensum/compare/v0.10.0...v0.11.0) (2026-06-28)
 
 
